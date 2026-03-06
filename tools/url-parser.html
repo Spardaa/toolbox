@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Parser | Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #8b5cf6;
+            --accent-hover: #a78bfa;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Input */
+        .input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-wrapper input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Components Grid */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .component-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .component-box.empty {
+            opacity: 0.5;
+        }
+
+        .component-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .component-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: var(--accent);
+        }
+
+        .component-copy {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.3rem 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .component-box:hover .component-copy {
+            opacity: 1;
+        }
+
+        .component-copy:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Query Params Table */
+        .params-section {
+            margin-top: 1.5rem;
+        }
+
+        .params-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .params-header h3 {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .params-count {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent);
+            border-radius: 12px;
+        }
+
+        .params-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .params-table th,
+        .params-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .params-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            width: 15%;
+        }
+
+        .params-table td {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+        }
+
+        .params-table tr:hover {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .param-key {
+            color: var(--accent);
+        }
+
+        .param-value {
+            color: var(--text-primary);
+        }
+
+        .param-actions {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .param-btn {
+            padding: 0.3rem 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .param-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .no-params {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Encoded/Decoded Section */
+        .encode-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .encode-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .encode-box {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .encode-box-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .encode-box-header h4 {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .encode-box-content {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* JSON Output */
+        .json-section {
+            margin-top: 1.5rem;
+        }
+
+        .json-output {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .json-key {
+            color: var(--accent);
+        }
+
+        .json-string {
+            color: #22c55e;
+        }
+
+        .json-number {
+            color: #f59e0b;
+        }
+
+        .json-null {
+            color: var(--text-secondary);
+        }
+
+        /* Error */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            border-radius: 8px;
+            padding: 1rem;
+            color: var(--error);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Sample URLs */
+        .sample-urls {
+            margin-top: 1rem;
+        }
+
+        .sample-urls h4 {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .sample-grid {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .sample-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sample-btn:hover {
+            border-color: var(--accent);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 URL Parser</h1>
+            <p class="subtitle">Parse, decode, and analyze URLs with query string visualization</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📝 URL Input</h2>
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="input-wrapper">
+                <input type="text" id="urlInput" placeholder="Enter a URL to parse (e.g., https://example.com/path?key=value#hash)">
+                <button class="btn btn-primary" onclick="parseUrl()">Parse</button>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-secondary btn-small" onclick="clearInput()">Clear</button>
+                <button class="btn btn-secondary btn-small" onclick="pasteFromClipboard()">📋 Paste</button>
+                <button class="btn btn-secondary btn-small" onclick="copyEncoded()">Copy Encoded</button>
+                <button class="btn btn-secondary btn-small" onclick="copyDecoded()">Copy Decoded</button>
+            </div>
+
+            <div class="sample-urls">
+                <h4>Sample URLs:</h4>
+                <div class="sample-grid">
+                    <button class="sample-btn" onclick="loadSample('simple')">Simple URL</button>
+                    <button class="sample-btn" onclick="loadSample('query')">With Query Params</button>
+                    <button class="sample-btn" onclick="loadSample('complex')">Complex URL</button>
+                    <button class="sample-btn" onclick="loadSample('encoded')">Encoded URL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Components Section -->
+        <div class="card" id="componentsCard" style="display: none;">
+            <div class="card-header">
+                <h2>🔍 URL Components</h2>
+                <button class="btn btn-secondary btn-small" onclick="copyJson()">📋 Copy JSON</button>
+            </div>
+
+            <div class="components-grid" id="componentsGrid"></div>
+        </div>
+
+        <!-- Query Parameters Section -->
+        <div class="card" id="paramsCard" style="display: none;">
+            <div class="params-header">
+                <h3>📋 Query Parameters</h3>
+                <span class="params-count" id="paramsCount">0 params</span>
+            </div>
+
+            <div id="paramsContent"></div>
+        </div>
+
+        <!-- Encoded/Decoded Section -->
+        <div class="card" id="encodeCard" style="display: none;">
+            <div class="card-header">
+                <h2>🔤 Encoding</h2>
+            </div>
+
+            <div class="encode-section">
+                <div class="encode-box">
+                    <div class="encode-box-header">
+                        <h4>Encoded URL</h4>
+                        <button class="btn btn-secondary btn-small" onclick="copyToClipboard(document.getElementById('encodedUrl').textContent, 'Encoded URL copied!')">Copy</button>
+                    </div>
+                    <div class="encode-box-content" id="encodedUrl"></div>
+                </div>
+                <div class="encode-box">
+                    <div class="encode-box-header">
+                        <h4>Decoded URL</h4>
+                        <button class="btn btn-secondary btn-small" onclick="copyToClipboard(document.getElementById('decodedUrl').textContent, 'Decoded URL copied!')">Copy</button>
+                    </div>
+                    <div class="encode-box-content" id="decodedUrl"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JSON Output -->
+        <div class="card" id="jsonCard" style="display: none;">
+            <div class="card-header">
+                <h2>📄 JSON Output</h2>
+            </div>
+            <div class="json-output" id="jsonOutput"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script>
+        // State
+        let parsedUrl = null;
+
+        // Sample URLs
+        const sampleUrls = {
+            simple: 'https://example.com/path/to/page',
+            query: 'https://api.example.com/search?q=hello+world&page=1&limit=10&sort=desc',
+            complex: 'https://user:password@sub.example.com:8080/path/to/resource?key1=value1&key2=value2&key2=value3#section-1',
+            encoded: 'https://example.com/search?q=hello%20world&url=https%3A%2F%2Fgoogle.com&text=%E4%BD%A0%E5%A5%BD'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('urlInput');
+            input.addEventListener('input', debounce(parseUrl, 300));
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') parseUrl();
+            });
+
+            // Load from URL
+            const params = new URLSearchParams(window.location.search);
+            const url = params.get('url');
+            if (url) {
+                input.value = url;
+                parseUrl();
+            }
+        });
+
+        function parseUrl() {
+            const input = document.getElementById('urlInput').value.trim();
+            const errorEl = document.getElementById('errorMessage');
+            const componentsCard = document.getElementById('componentsCard');
+            const paramsCard = document.getElementById('paramsCard');
+            const encodeCard = document.getElementById('encodeCard');
+            const jsonCard = document.getElementById('jsonCard');
+
+            if (!input) {
+                errorEl.classList.remove('show');
+                componentsCard.style.display = 'none';
+                paramsCard.style.display = 'none';
+                encodeCard.style.display = 'none';
+                jsonCard.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Try to parse the URL
+                let urlToParse = input;
+
+                // Add protocol if missing
+                if (!urlToParse.match(/^[a-zA-Z]+:\/\//)) {
+                    urlToParse = 'https://' + urlToParse;
+                }
+
+                const urlObj = new URL(urlToParse);
+
+                parsedUrl = {
+                    href: urlObj.href,
+                    origin: urlObj.origin,
+                    protocol: urlObj.protocol.replace(':', ''),
+                    username: urlObj.username || null,
+                    password: urlObj.password || null,
+                    host: urlObj.host,
+                    hostname: urlObj.hostname,
+                    port: urlObj.port || null,
+                    pathname: urlObj.pathname,
+                    search: urlObj.search,
+                    hash: urlObj.hash.replace('#', '') || null,
+                    params: Object.fromEntries(urlObj.searchParams)
+                };
+
+                // Get all params including duplicates
+                const allParams = [];
+                urlObj.searchParams.forEach((value, key) => {
+                    allParams.push({ key, value });
+                });
+
+                errorEl.classList.remove('show');
+                componentsCard.style.display = 'block';
+                paramsCard.style.display = 'block';
+                encodeCard.style.display = 'block';
+                jsonCard.style.display = 'block';
+
+                renderComponents();
+                renderParams(allParams);
+                renderEncoding(input);
+                renderJson();
+
+            } catch (e) {
+                errorEl.textContent = 'Invalid URL: ' + e.message;
+                errorEl.classList.add('show');
+                componentsCard.style.display = 'none';
+                paramsCard.style.display = 'none';
+                encodeCard.style.display = 'none';
+                jsonCard.style.display = 'none';
+            }
+        }
+
+        function renderComponents() {
+            const grid = document.getElementById('componentsGrid');
+            const components = [
+                { label: 'Protocol', value: parsedUrl.protocol, key: 'protocol' },
+                { label: 'Username', value: parsedUrl.username, key: 'username' },
+                { label: 'Password', value: parsedUrl.password ? '••••••••' : null, key: 'password' },
+                { label: 'Host', value: parsedUrl.host, key: 'host' },
+                { label: 'Hostname', value: parsedUrl.hostname, key: 'hostname' },
+                { label: 'Port', value: parsedUrl.port, key: 'port' },
+                { label: 'Path', value: parsedUrl.pathname, key: 'pathname' },
+                { label: 'Query String', value: parsedUrl.search || null, key: 'search' },
+                { label: 'Hash / Fragment', value: parsedUrl.hash, key: 'hash' },
+                { label: 'Origin', value: parsedUrl.origin, key: 'origin' }
+            ];
+
+            grid.innerHTML = components.map(comp => `
+                <div class="component-box ${comp.value ? '' : 'empty'}">
+                    <span class="component-label">${comp.label}</span>
+                    <div class="component-value">${comp.value || '—'}</div>
+                    ${comp.value ? `<button class="component-copy" onclick="copyComponent('${comp.key}')">Copy</button>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderParams(params) {
+            const content = document.getElementById('paramsContent');
+            const count = document.getElementById('paramsCount');
+
+            count.textContent = `${params.length} param${params.length !== 1 ? 's' : ''}`;
+
+            if (params.length === 0) {
+                content.innerHTML = '<div class="no-params">No query parameters in this URL</div>';
+                return;
+            }
+
+            content.innerHTML = `
+                <table class="params-table">
+                    <thead>
+                        <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Decoded</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${params.map((p, i) => `
+                            <tr>
+                                <td class="param-key">${escapeHtml(p.key)}</td>
+                                <td class="param-value">${escapeHtml(p.value)}</td>
+                                <td>${escapeHtml(decodeURIComponent(p.value))}</td>
+                                <td>
+                                    <div class="param-actions">
+                                        <button class="param-btn" onclick="copyToClipboard('${escapeJs(p.key)}=${escapeJs(p.value)}', 'Parameter copied!')">Copy</button>
+                                        <button class="param-btn" onclick="copyToClipboard('${escapeJs(decodeURIComponent(p.value))}', 'Decoded value copied!')">Copy Decoded</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderEncoding(originalUrl) {
+            const encoded = document.getElementById('encodedUrl');
+            const decoded = document.getElementById('decodedUrl');
+
+            // Show encoded version (re-encode)
+            encoded.textContent = encodeURI(originalUrl);
+
+            // Show decoded version
+            decoded.textContent = decodeURIComponent(originalUrl);
+        }
+
+        function renderJson() {
+            const output = document.getElementById('jsonOutput');
+            const json = JSON.stringify(parsedUrl, null, 2);
+
+            // Syntax highlight
+            const highlighted = json
+                .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+                .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+                .replace(/: (null)/g, ': <span class="json-null">$1</span>');
+
+            output.innerHTML = highlighted;
+        }
+
+        function copyComponent(key) {
+            const value = parsedUrl[key];
+            if (value) {
+                copyToClipboard(value, `${key} copied!`);
+            }
+        }
+
+        function copyEncoded() {
+            const encoded = document.getElementById('encodedUrl').textContent;
+            if (encoded) {
+                copyToClipboard(encoded, 'Encoded URL copied!');
+            }
+        }
+
+        function copyDecoded() {
+            const decoded = document.getElementById('decodedUrl').textContent;
+            if (decoded) {
+                copyToClipboard(decoded, 'Decoded URL copied!');
+            }
+        }
+
+        function copyJson() {
+            if (parsedUrl) {
+                copyToClipboard(JSON.stringify(parsedUrl, null, 2), 'JSON copied!');
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('urlInput').value = '';
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('componentsCard').style.display = 'none';
+            document.getElementById('paramsCard').style.display = 'none';
+            document.getElementById('encodeCard').style.display = 'none';
+            document.getElementById('jsonCard').style.display = 'none';
+            parsedUrl = null;
+        }
+
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                document.getElementById('urlInput').value = text;
+                parseUrl();
+                showToast('Pasted!');
+            }).catch(() => {
+                showToast('Could not paste');
+            });
+        }
+
+        function loadSample(type) {
+            document.getElementById('urlInput').value = sampleUrls[type];
+            parseUrl();
+        }
+
+        function copyToClipboard(text, message) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message || 'Copied!');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeJs(text) {
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Data Generator - Developer Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #475569;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            min-height: 300px;
+            resize: vertical;
+        }
+
+        .field-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: calc(100vh - 350px);
+            overflow-y: auto;
+        }
+
+        .field-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .field-item:hover {
+            background: var(--border);
+        }
+
+        .field-item.selected {
+            background: var(--accent);
+        }
+
+        .field-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .field-name {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .field-icon {
+            font-size: 16px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .format-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .format-tab {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .format-tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .preset-section {
+            margin-bottom: 20px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .preset-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .template-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .template-editor {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .template-editor textarea {
+            min-height: 100px;
+            background: transparent;
+            border: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>Fake Data</span> Generator</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="selectAll()">Select All</button>
+                <button class="btn btn-secondary" onclick="clearSelection()">Clear</button>
+                <button class="btn btn-primary" onclick="generateData()">Generate Data</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Field Selection</h2>
+                </div>
+
+                <div class="preset-section">
+                    <label style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block;">Quick Presets</label>
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="loadPreset('user')">👤 User</button>
+                        <button class="preset-btn" onclick="loadPreset('address')">📍 Address</button>
+                        <button class="preset-btn" onclick="loadPreset('company')">🏢 Company</button>
+                        <button class="preset-btn" onclick="loadPreset('product')">📦 Product</button>
+                        <button class="preset-btn" onclick="loadPreset('payment')">💳 Payment</button>
+                        <button class="preset-btn" onclick="loadPreset('internet')">🌐 Internet</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <div class="form-group">
+                        <label>Count</label>
+                        <input type="number" id="recordCount" value="10" min="1" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Locale</label>
+                        <select id="locale">
+                            <option value="en">English (US)</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日本語</option>
+                            <option value="ko">한국어</option>
+                            <option value="de">Deutsch</option>
+                            <option value="fr">Français</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field-list" id="fieldList">
+                    <!-- Fields will be rendered here -->
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Generated Data</h2>
+                </div>
+
+                <div class="format-tabs">
+                    <button class="format-tab active" onclick="setFormat('json')">JSON</button>
+                    <button class="format-tab" onclick="setFormat('csv')">CSV</button>
+                    <button class="format-tab" onclick="setFormat('sql')">SQL</button>
+                    <button class="format-tab" onclick="setFormat('typescript')">TypeScript</button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat">
+                        <span class="stat-label">Records:</span>
+                        <span class="stat-value" id="recordStat">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Fields:</span>
+                        <span class="stat-value" id="fieldStat">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Size:</span>
+                        <span class="stat-value" id="sizeStat">0 B</span>
+                    </div>
+                </div>
+
+                <div class="output-header">
+                    <span style="font-size: 13px; color: var(--text-secondary);">Output</span>
+                    <div class="output-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="copyOutput()">Copy</button>
+                        <button class="btn btn-sm btn-secondary" onclick="downloadOutput()">Download</button>
+                    </div>
+                </div>
+
+                <textarea id="output" readonly placeholder="Select fields and click 'Generate Data' to see results..."></textarea>
+
+                <div class="template-section">
+                    <label style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block;">
+                        Custom Template (use {{fieldName}} placeholders)
+                    </label>
+                    <div class="template-editor">
+                        <textarea id="template" placeholder="Custom JSON template:
+{
+  &quot;user&quot;: {
+    &quot;name&quot;: &quot;{{firstName}} {{lastName}}&quot;,
+    &quot;email&quot;: &quot;{{email}}&quot;,
+    &quot;age&quot;: {{age}}
+  }
+}"></textarea>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" style="margin-top: 10px;" onclick="useTemplate()">Use Template</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Field definitions
+        const fields = [
+            { id: 'uuid', name: 'UUID', icon: '🔑', generator: () => generateUUID() },
+            { id: 'firstName', name: 'First Name', icon: '👤', generator: () => randomFrom(['John', 'Jane', 'Mike', 'Sarah', 'David', 'Emma', 'Alex', 'Lisa', 'Chris', 'Amy']) },
+            { id: 'lastName', name: 'Last Name', icon: '👤', generator: () => randomFrom(['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Wilson', 'Moore']) },
+            { id: 'fullName', name: 'Full Name', icon: '👤', generator: () => `${randomFrom(['John', 'Jane', 'Mike', 'Sarah'])} ${randomFrom(['Smith', 'Johnson', 'Williams'])}` },
+            { id: 'email', name: 'Email', icon: '📧', generator: () => `${randomFrom(['john', 'jane', 'mike', 'sarah'])}${Math.floor(Math.random() * 100)}@${randomFrom(['gmail.com', 'yahoo.com', 'outlook.com', 'example.com'])}` },
+            { id: 'phone', name: 'Phone', icon: '📱', generator: () => `+1 (${Math.floor(Math.random() * 900) + 100}) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}` },
+            { id: 'username', name: 'Username', icon: '👤', generator: () => `${randomFrom(['cool', 'super', 'mega', 'awesome'])}${randomFrom(['user', 'dev', 'coder', 'ninja'])}${Math.floor(Math.random() * 100)}` },
+            { id: 'password', name: 'Password', icon: '🔐', generator: () => generatePassword(12) },
+            { id: 'age', name: 'Age', icon: '🎂', generator: () => Math.floor(Math.random() * 60) + 18 },
+            { id: 'birthday', name: 'Birthday', icon: '🎂', generator: () => generateDate(1970, 2005) },
+            { id: 'avatar', name: 'Avatar URL', icon: '🖼️', generator: () => `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}` },
+            { id: 'address', name: 'Street Address', icon: '📍', generator: () => `${Math.floor(Math.random() * 9999) + 1} ${randomFrom(['Main', 'Oak', 'Pine', 'Maple', 'Cedar'])} ${randomFrom(['St', 'Ave', 'Blvd', 'Rd'])}` },
+            { id: 'city', name: 'City', icon: '🏙️', generator: () => randomFrom(['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'San Francisco', 'Seattle', 'Boston', 'Miami', 'Denver']) },
+            { id: 'state', name: 'State', icon: '🗺️', generator: () => randomFrom(['CA', 'NY', 'TX', 'FL', 'WA', 'CO', 'MA', 'IL', 'AZ', 'OR']) },
+            { id: 'country', name: 'Country', icon: '🌍', generator: () => randomFrom(['USA', 'Canada', 'UK', 'Germany', 'France', 'Japan', 'Australia', 'Brazil', 'India', 'China']) },
+            { id: 'zipcode', name: 'Zip Code', icon: '📍', generator: () => String(Math.floor(Math.random() * 90000) + 10000) },
+            { id: 'company', name: 'Company', icon: '🏢', generator: () => `${randomFrom(['Tech', 'Global', 'Digital', 'Smart', 'Cloud'])} ${randomFrom(['Solutions', 'Systems', 'Corp', 'Inc', 'Labs'])}` },
+            { id: 'jobTitle', name: 'Job Title', icon: '💼', generator: () => randomFrom(['Software Engineer', 'Product Manager', 'Designer', 'Data Scientist', 'DevOps Engineer', 'Frontend Developer', 'Backend Developer', 'QA Engineer', 'Project Manager', 'CTO']) },
+            { id: 'department', name: 'Department', icon: '🏢', generator: () => randomFrom(['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Product', 'Design', 'Legal', 'Support']) },
+            { id: 'productName', name: 'Product Name', icon: '📦', generator: () => `${randomFrom(['Pro', 'Ultra', 'Max', 'Plus', 'Elite'])} ${randomFrom(['Widget', 'Gadget', 'Tool', 'Service', 'Platform'])}` },
+            { id: 'price', name: 'Price', icon: '💰', generator: () => (Math.random() * 1000 + 10).toFixed(2) },
+            { id: 'productDescription', name: 'Description', icon: '📝', generator: () => randomFrom(['High-quality product for everyday use', 'Premium solution for professionals', 'Affordable option for beginners', 'Innovative design meets functionality', 'Reliable and durable construction']) },
+            { id: 'category', name: 'Category', icon: '🏷️', generator: () => randomFrom(['Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Toys', 'Food', 'Health', 'Beauty', 'Automotive']) },
+            { id: 'sku', name: 'SKU', icon: '🏷️', generator: () => `SKU-${Math.random().toString(36).substr(2, 8).toUpperCase()}` },
+            { id: 'creditCard', name: 'Credit Card', icon: '💳', generator: () => generateCreditCard() },
+            { id: 'creditCardType', name: 'Card Type', icon: '💳', generator: () => randomFrom(['Visa', 'Mastercard', 'American Express', 'Discover']) },
+            { id: 'cvv', name: 'CVV', icon: '💳', generator: () => String(Math.floor(Math.random() * 900) + 100) },
+            { id: 'expiryDate', name: 'Expiry Date', icon: '💳', generator: () => `${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}/${Math.floor(Math.random() * 5) + 25}` },
+            { id: 'iban', name: 'IBAN', icon: '🏦', generator: () => generateIBAN() },
+            { id: 'bitcoin', name: 'Bitcoin Address', icon: '₿', generator: () => generateBitcoinAddress() },
+            { id: 'domain', name: 'Domain', icon: '🌐', generator: () => `${randomFrom(['example', 'test', 'demo', 'sample'])}${randomFrom(['', '-', '123'])}.${randomFrom(['com', 'io', 'net', 'org', 'dev'])}` },
+            { id: 'url', name: 'URL', icon: '🔗', generator: () => `https://${randomFrom(['www.', ''])}${randomFrom(['example', 'test', 'demo'])}.${randomFrom(['com', 'io', 'dev'])}/${randomFrom(['page', 'post', 'article'])}/${Math.floor(Math.random() * 1000)}` },
+            { id: 'ipv4', name: 'IPv4', icon: '🌐', generator: () => `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}` },
+            { id: 'ipv6', name: 'IPv6', icon: '🌐', generator: () => generateIPv6() },
+            { id: 'macAddress', name: 'MAC Address', icon: '💻', generator: () => generateMAC() },
+            { id: 'userAgent', name: 'User Agent', icon: '💻', generator: () => randomFrom(['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36', 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)', 'Mozilla/5.0 (Android 11; Mobile; rv:68.0)']) },
+            { id: 'color', name: 'Color (HEX)', icon: '🎨', generator: () => `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}` },
+            { id: 'rgb', name: 'Color (RGB)', icon: '🎨', generator: () => `rgb(${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)}, ${Math.floor(Math.random()*256)})` },
+            { id: 'date', name: 'Date', icon: '📅', generator: () => generateDate(2020, 2024) },
+            { id: 'time', name: 'Time', icon: '⏰', generator: () => `${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}` },
+            { id: 'timestamp', name: 'Timestamp', icon: '⏰', generator: () => Math.floor(Date.now() / 1000) - Math.floor(Math.random() * 31536000) },
+            { id: 'boolean', name: 'Boolean', icon: '✓', generator: () => Math.random() > 0.5 },
+            { id: 'number', name: 'Number', icon: '🔢', generator: () => Math.floor(Math.random() * 10000) },
+            { id: 'float', name: 'Float', icon: '🔢', generator: () => (Math.random() * 1000).toFixed(4) },
+            { id: 'percent', name: 'Percentage', icon: '📊', generator: () => `${(Math.random() * 100).toFixed(1)}%` },
+            { id: 'paragraph', name: 'Paragraph', icon: '📝', generator: () => randomFrom(['Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', 'Ut enim ad minim veniam, quis nostrud exercitation ullamco.', 'Duis aute irure dolor in reprehenderit in voluptate velit.', 'Excepteur sint occaecat cupidatat non proident.']) },
+            { id: 'sentence', name: 'Sentence', icon: '📝', generator: () => `${randomFrom(['The', 'A', 'This', 'That'])} ${randomFrom(['quick', 'lazy', 'happy', 'sad'])} ${randomFrom(['fox', 'dog', 'cat', 'bird'])} ${randomFrom(['jumps', 'runs', 'walks', 'flies'])} ${randomFrom(['over', 'under', 'around', 'through'])} the ${randomFrom(['fence', 'tree', 'house', 'car'])}.` },
+            { id: 'word', name: 'Word', icon: '📝', generator: () => randomFrom(['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do']) },
+        ];
+
+        // Presets
+        const presets = {
+            user: ['uuid', 'firstName', 'lastName', 'email', 'phone', 'username', 'avatar', 'age'],
+            address: ['address', 'city', 'state', 'country', 'zipcode'],
+            company: ['company', 'jobTitle', 'department', 'email', 'phone'],
+            product: ['productName', 'price', 'productDescription', 'category', 'sku'],
+            payment: ['creditCard', 'creditCardType', 'cvv', 'expiryDate', 'name' ],
+            internet: ['domain', 'url', 'ipv4', 'userAgent', 'email']
+        };
+
+        // State
+        let selectedFields = [];
+        let currentFormat = 'json';
+        let generatedData = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFields();
+            loadFromStorage();
+        });
+
+        // Render
+        function renderFields() {
+            const list = document.getElementById('fieldList');
+            list.innerHTML = fields.map(field => `
+                <div class="field-item ${selectedFields.includes(field.id) ? 'selected' : ''}" onclick="toggleField('${field.id}')">
+                    <input type="checkbox" class="field-checkbox" ${selectedFields.includes(field.id) ? 'checked' : ''} onclick="event.stopPropagation()">
+                    <span class="field-icon">${field.icon}</span>
+                    <span class="field-name">${field.name}</span>
+                </div>
+            `).join('');
+        }
+
+        // Field selection
+        function toggleField(fieldId) {
+            if (selectedFields.includes(fieldId)) {
+                selectedFields = selectedFields.filter(id => id !== fieldId);
+            } else {
+                selectedFields.push(fieldId);
+            }
+            renderFields();
+            saveToStorage();
+        }
+
+        function selectAll() {
+            selectedFields = fields.map(f => f.id);
+            renderFields();
+            saveToStorage();
+        }
+
+        function clearSelection() {
+            selectedFields = [];
+            renderFields();
+            saveToStorage();
+        }
+
+        function loadPreset(presetName) {
+            selectedFields = [...presets[presetName]];
+            renderFields();
+            saveToStorage();
+            showToast(`Loaded preset: ${presetName}`);
+        }
+
+        // Format
+        function setFormat(format) {
+            currentFormat = format;
+            document.querySelectorAll('.format-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent.toLowerCase().includes(format));
+            });
+            if (generatedData.length > 0) {
+                renderOutput();
+            }
+        }
+
+        // Generate
+        function generateData() {
+            if (selectedFields.length === 0) {
+                showToast('Please select at least one field', true);
+                return;
+            }
+
+            const count = parseInt(document.getElementById('recordCount').value) || 10;
+            generatedData = [];
+
+            for (let i = 0; i < count; i++) {
+                const record = {};
+                selectedFields.forEach(fieldId => {
+                    const field = fields.find(f => f.id === fieldId);
+                    if (field) {
+                        record[fieldId] = field.generator();
+                    }
+                });
+                generatedData.push(record);
+            }
+
+            renderOutput();
+            updateStats();
+            saveToStorage();
+            showToast(`Generated ${count} records`);
+        }
+
+        function renderOutput() {
+            const output = document.getElementById('output');
+            let content = '';
+
+            switch (currentFormat) {
+                case 'json':
+                    content = JSON.stringify(generatedData, null, 2);
+                    break;
+                case 'csv':
+                    content = generateCSV();
+                    break;
+                case 'sql':
+                    content = generateSQL();
+                    break;
+                case 'typescript':
+                    content = generateTypeScript();
+                    break;
+            }
+
+            output.value = content;
+        }
+
+        function generateCSV() {
+            if (generatedData.length === 0) return '';
+            const headers = Object.keys(generatedData[0]);
+            const rows = [headers.join(',')];
+            generatedData.forEach(record => {
+                const row = headers.map(h => {
+                    let val = record[h];
+                    if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+                        val = `"${val.replace(/"/g, '""')}"`;
+                    }
+                    return val;
+                });
+                rows.push(row.join(','));
+            });
+            return rows.join('\n');
+        }
+
+        function generateSQL() {
+            if (generatedData.length === 0) return '';
+            const tableName = 'generated_data';
+            const columns = Object.keys(generatedData[0]);
+            const inserts = generatedData.map(record => {
+                const values = columns.map(col => {
+                    const val = record[col];
+                    if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`;
+                    if (typeof val === 'boolean') return val ? 'TRUE' : 'FALSE';
+                    return val;
+                });
+                return `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values.join(', ')});`;
+            });
+            return inserts.join('\n');
+        }
+
+        function generateTypeScript() {
+            if (generatedData.length === 0) return '';
+            const typeDef = `interface GeneratedRecord {\n${Object.keys(generatedData[0]).map(key => {
+                const sample = generatedData[0][key];
+                const type = typeof sample;
+                return `  ${key}: ${type};`;
+            }).join('\n')}\n}\n\n`;
+            return typeDef + `const data: GeneratedRecord[] = ${JSON.stringify(generatedData, null, 2)};`;
+        }
+
+        function updateStats() {
+            document.getElementById('recordStat').textContent = generatedData.length;
+            document.getElementById('fieldStat').textContent = selectedFields.length;
+            const size = new Blob([document.getElementById('output').value]).size;
+            document.getElementById('sizeStat').textContent = formatSize(size);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Template
+        function useTemplate() {
+            const template = document.getElementById('template').value.trim();
+            if (!template) {
+                showToast('Please enter a template', true);
+                return;
+            }
+
+            const count = parseInt(document.getElementById('recordCount').value) || 10;
+            generatedData = [];
+
+            for (let i = 0; i < count; i++) {
+                let record = template;
+                fields.forEach(field => {
+                    const regex = new RegExp(`{{${field.id}}}`, 'g');
+                    record = record.replace(regex, field.generator());
+                });
+                try {
+                    generatedData.push(JSON.parse(record));
+                } catch (e) {
+                    generatedData.push({ raw: record });
+                }
+            }
+
+            currentFormat = 'json';
+            document.querySelectorAll('.format-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent.toLowerCase() === 'json');
+            });
+            renderOutput();
+            updateStats();
+            showToast(`Generated ${count} records from template`);
+        }
+
+        // Copy & Download
+        function copyOutput() {
+            const output = document.getElementById('output');
+            navigator.clipboard.writeText(output.value).then(() => {
+                showToast('Copied to clipboard');
+            }).catch(() => {
+                output.select();
+                document.execCommand('copy');
+                showToast('Copied to clipboard');
+            });
+        }
+
+        function downloadOutput() {
+            const output = document.getElementById('output').value;
+            const ext = currentFormat === 'typescript' ? 'ts' : currentFormat;
+            const blob = new Blob([output], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `fake-data-${Date.now()}.${ext}`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded file');
+        }
+
+        // Storage
+        function saveToStorage() {
+            localStorage.setItem('fakeDataGenerator', JSON.stringify({
+                selectedFields,
+                recordCount: document.getElementById('recordCount').value,
+                locale: document.getElementById('locale').value
+            }));
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('fakeDataGenerator');
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    selectedFields = data.selectedFields || [];
+                    if (data.recordCount) document.getElementById('recordCount').value = data.recordCount;
+                    if (data.locale) document.getElementById('locale').value = data.locale;
+                    renderFields();
+                } catch (e) {}
+            }
+        }
+
+        // Utility functions
+        function randomFrom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
+        function generatePassword(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let pass = '';
+            for (let i = 0; i < length; i++) {
+                pass += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return pass;
+        }
+
+        function generateDate(startYear, endYear) {
+            const year = Math.floor(Math.random() * (endYear - startYear)) + startYear;
+            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function generateCreditCard() {
+            const prefix = randomFrom(['4', '5', '3']);
+            let card = prefix;
+            for (let i = 0; i < 15; i++) {
+                card += Math.floor(Math.random() * 10);
+            }
+            return card.replace(/(.{4})/g, '$1 ').trim();
+        }
+
+        function generateIBAN() {
+            const country = randomFrom(['DE', 'FR', 'GB', 'IT', 'ES']);
+            let iban = country;
+            for (let i = 0; i < 14; i++) {
+                iban += Math.floor(Math.random() * 10);
+            }
+            return iban;
+        }
+
+        function generateBitcoinAddress() {
+            const prefix = randomFrom(['1', '3', 'bc1']);
+            let addr = prefix;
+            const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+            const length = prefix === 'bc1' ? 39 : 33;
+            for (let i = prefix.length; i < length; i++) {
+                addr += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return addr;
+        }
+
+        function generateIPv6() {
+            const parts = [];
+            for (let i = 0; i < 8; i++) {
+                parts.push(Math.floor(Math.random() * 65536).toString(16).padStart(4, '0'));
+            }
+            return parts.join(':');
+        }
+
+        function generateMAC() {
+            const parts = [];
+            for (let i = 0; i < 6; i++) {
+                parts.push(Math.floor(Math.random() * 256).toString(16).padStart(2, '0'));
+            }
+            return parts.join(':');
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = isError ? 'var(--error)' : 'var(--success)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

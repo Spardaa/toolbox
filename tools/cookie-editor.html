@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Editor - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        
+        .panel { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .panel h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1.1rem; }
+        
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        button { 
+            padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
+            font-weight: bold; transition: all 0.3s;
+        }
+        .add-btn { background: #27ae60; color: white; }
+        .import-btn { background: #3498db; color: white; }
+        .export-btn { background: #9b59b6; color: white; }
+        .clear-btn { background: #e74c3c; color: white; }
+        button:hover { opacity: 0.9; }
+        
+        .cookies-list { max-height: 500px; overflow-y: auto; }
+        .cookie-item { 
+            background: #1a1a2e; border-radius: 8px; padding: 15px; margin-bottom: 10px;
+        }
+        .cookie-header { 
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px;
+        }
+        .cookie-name { font-weight: bold; color: #00d4ff; }
+        .cookie-actions { display: flex; gap: 5px; }
+        .cookie-actions button { padding: 5px 10px; font-size: 12px; }
+        
+        .cookie-fields { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .field { }
+        .field label { display: block; color: #888; font-size: 12px; margin-bottom: 3px; }
+        .field input, .field select { 
+            width: 100%; background: #16213e; border: 1px solid #333; 
+            color: #eee; padding: 8px; border-radius: 4px;
+        }
+        
+        .empty-state { text-align: center; padding: 40px; color: #888; }
+        
+        .search-box { margin-bottom: 15px; }
+        .search-box input { 
+            width: 100%; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 12px; border-radius: 6px;
+        }
+        
+        .import-modal { 
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+            background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;
+        }
+        .import-modal.active { display: flex; }
+        .import-content { 
+            background: #16213e; padding: 20px; border-radius: 12px; 
+            max-width: 500px; width: 90%;
+        }
+        .import-content textarea { 
+            width: 100%; min-height: 150px; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 10px; border-radius: 6px; font-family: monospace;
+        }
+        .import-actions { display: flex; gap: 10px; margin-top: 15px; }
+        .import-actions button { flex: 1; }
+        
+        .stats { display: flex; gap: 20px; margin-bottom: 15px; }
+        .stat { 
+            flex: 1; background: #1a1a2e; border-radius: 8px; padding: 15px; text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #00d4ff; }
+        .stat-label { font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 Cookie Editor</h1>
+        
+        <div class="panel">
+            <h2>Cookie Manager</h2>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="total-cookies">0</div>
+                    <div class="stat-label">Total Cookies</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="secure-cookies">0</div>
+                    <div class="stat-label">Secure</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="session-cookies">0</div>
+                    <div class="stat-label">Session</div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="search" placeholder="Search cookies..." oninput="renderCookies()">
+            </div>
+            
+            <div class="toolbar">
+                <button class="add-btn" onclick="addCookie()">+ Add Cookie</button>
+                <button class="import-btn" onclick="showImport()">📥 Import</button>
+                <button class="export-btn" onclick="exportCookies()">📤 Export</button>
+                <button class="clear-btn" onclick="clearAll()">🗑️ Clear All</button>
+            </div>
+            
+            <div class="cookies-list" id="cookies-list"></div>
+        </div>
+    </div>
+    
+    <div class="import-modal" id="import-modal">
+        <div class="import-content">
+            <h2 style="margin-bottom: 15px; color: #00d4ff;">Import Cookies</h2>
+            <textarea id="import-text" placeholder="Paste cookies in JSON format or name=value pairs (one per line)"></textarea>
+            <div class="import-actions">
+                <button onclick="hideImport()">Cancel</button>
+                <button class="import-btn" onclick="importCookies()">Import</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let cookies = JSON.parse(localStorage.getItem('cookieEditor') || '[]');
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        
+        function saveCookies() {
+            localStorage.setItem('cookieEditor', JSON.stringify(cookies));
+            updateStats();
+        }
+        
+        function updateStats() {
+            document.getElementById('total-cookies').textContent = cookies.length;
+            document.getElementById('secure-cookies').textContent = cookies.filter(c => c.secure).length;
+            document.getElementById('session-cookies').textContent = cookies.filter(c => c.session).length;
+        }
+        
+        function renderCookies() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const filtered = cookies.filter(c => 
+                c.name.toLowerCase().includes(search) || 
+                c.value.toLowerCase().includes(search) ||
+                c.domain.toLowerCase().includes(search)
+            );
+            
+            const list = document.getElementById('cookies-list');
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty-state">No cookies found</div>';
+                return;
+            }
+            
+            list.innerHTML = filtered.map(cookie => `
+                <div class="cookie-item" data-id="${cookie.id}">
+                    <div class="cookie-header">
+                        <span class="cookie-name">${cookie.name}</span>
+                        <div class="cookie-actions">
+                            <button onclick="copyCookie('${cookie.id}')">📋 Copy</button>
+                            <button onclick="deleteCookie('${cookie.id}')" style="background: #e74c3c;">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="cookie-fields">
+                        <div class="field">
+                            <label>Value</label>
+                            <input type="text" value="${cookie.value}" onchange="updateCookie('${cookie.id}', 'value', this.value)">
+                        </div>
+                        <div class="field">
+                            <label>Domain</label>
+                            <input type="text" value="${cookie.domain}" onchange="updateCookie('${cookie.id}', 'domain', this.value)">
+                        </div>
+                        <div class="field">
+                            <label>Path</label>
+                            <input type="text" value="${cookie.path}" onchange="updateCookie('${cookie.id}', 'path', this.value)">
+                        </div>
+                        <div class="field">
+                            <label>Expires</label>
+                            <input type="datetime-local" value="${cookie.expires}" onchange="updateCookie('${cookie.id}', 'expires', this.value)">
+                        </div>
+                        <div class="field">
+                            <label>SameSite</label>
+                            <select onchange="updateCookie('${cookie.id}', 'sameSite', this.value)">
+                                <option value="Strict" ${cookie.sameSite === 'Strict' ? 'selected' : ''}>Strict</option>
+                                <option value="Lax" ${cookie.sameSite === 'Lax' ? 'selected' : ''}>Lax</option>
+                                <option value="None" ${cookie.sameSite === 'None' ? 'selected' : ''}>None</option>
+                            </select>
+                        </div>
+                        <div class="field" style="display: flex; align-items: center; gap: 10px; padding-top: 20px;">
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" ${cookie.secure ? 'checked' : ''} onchange="updateCookie('${cookie.id}', 'secure', this.checked)">
+                                Secure
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" ${cookie.httpOnly ? 'checked' : ''} onchange="updateCookie('${cookie.id}', 'httpOnly', this.checked)">
+                                HttpOnly
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" ${cookie.session ? 'checked' : ''} onchange="updateCookie('${cookie.id}', 'session', this.checked)">
+                                Session
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addCookie() {
+            const cookie = {
+                id: generateId(),
+                name: 'new_cookie',
+                value: '',
+                domain: 'example.com',
+                path: '/',
+                expires: '',
+                secure: false,
+                httpOnly: false,
+                sameSite: 'Lax',
+                session: false
+            };
+            cookies.push(cookie);
+            saveCookies();
+            renderCookies();
+        }
+        
+        function updateCookie(id, field, value) {
+            const cookie = cookies.find(c => c.id === id);
+            if (cookie) {
+                cookie[field] = value;
+                saveCookies();
+            }
+        }
+        
+        function deleteCookie(id) {
+            cookies = cookies.filter(c => c.id !== id);
+            saveCookies();
+            renderCookies();
+        }
+        
+        function copyCookie(id) {
+            const cookie = cookies.find(c => c.id === id);
+            if (cookie) {
+                const str = `${cookie.name}=${cookie.value}`;
+                navigator.clipboard.writeText(str);
+                alert('Copied: ' + str);
+            }
+        }
+        
+        function showImport() {
+            document.getElementById('import-modal').classList.add('active');
+        }
+        
+        function hideImport() {
+            document.getElementById('import-modal').classList.remove('active');
+        }
+        
+        function importCookies() {
+            const text = document.getElementById('import-text').value.trim();
+            if (!text) return;
+            
+            try {
+                // Try JSON first
+                const parsed = JSON.parse(text);
+                if (Array.isArray(parsed)) {
+                    parsed.forEach(c => {
+                        c.id = generateId();
+                        cookies.push(c);
+                    });
+                } else {
+                    cookies.push({ ...parsed, id: generateId() });
+                }
+            } catch {
+                // Try line-by-line format
+                const lines = text.split('\n');
+                lines.forEach(line => {
+                    const [name, ...valueParts] = line.split('=');
+                    if (name && valueParts.length > 0) {
+                        cookies.push({
+                            id: generateId(),
+                            name: name.trim(),
+                            value: valueParts.join('=').trim(),
+                            domain: 'example.com',
+                            path: '/',
+                            expires: '',
+                            secure: false,
+                            httpOnly: false,
+                            sameSite: 'Lax',
+                            session: false
+                        });
+                    }
+                });
+            }
+            
+            saveCookies();
+            renderCookies();
+            hideImport();
+            document.getElementById('import-text').value = '';
+        }
+        
+        function exportCookies() {
+            const json = JSON.stringify(cookies, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cookies.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function clearAll() {
+            if (confirm('Delete all cookies?')) {
+                cookies = [];
+                saveCookies();
+                renderCookies();
+            }
+        }
+        
+        // Initialize
+        renderCookies();
+        updateStats();
+    </script>
+</body>
+</html>

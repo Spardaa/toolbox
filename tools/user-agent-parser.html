@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Agent Parser - Analyze Browser & Device Info</title>
+    <meta name="description" content="Parse and analyze User Agent strings. Detect browser, OS, device type, and more. Useful for debugging and analytics.">
+    <meta name="keywords" content="user agent parser, UA parser, browser detection, device detection, user agent analyzer">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        .input-group button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .input-group button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,212,255,0.3);
+        }
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .quick-actions button {
+            padding: 8px 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .quick-actions button:hover {
+            border-color: #00d4ff;
+            background: rgba(0,212,255,0.1);
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .result-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .result-item .label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .result-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .result-item .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .result-item.detail .value {
+            font-size: 1rem;
+            color: #e0e0e0;
+            font-weight: normal;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .details-section {
+            margin-top: 20px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-row .key {
+            color: #888;
+        }
+        .detail-row .val {
+            color: #e0e0e0;
+            font-family: monospace;
+        }
+        .bot-warning {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #ef4444;
+        }
+        .bot-warning.success {
+            background: rgba(74, 222, 128, 0.2);
+            border-color: rgba(74, 222, 128, 0.3);
+            color: #4ade80;
+        }
+        .copy-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .history {
+            margin-top: 20px;
+        }
+        .history h3 {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .history-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .history-item .ua-text {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #aaa;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            margin-right: 10px;
+        }
+        .history-item .ua-time {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: #4ade80;
+            color: #000;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 User Agent Parser</h1>
+            <p class="subtitle">Analyze browser, OS, and device information from User Agent strings</p>
+        </header>
+
+        <div class="card">
+            <h2>📝 Enter User Agent</h2>
+            <div class="input-group">
+                <input type="text" id="uaInput" placeholder="Paste User Agent string here...">
+                <button onclick="parseUA()">Parse</button>
+            </div>
+            <div class="quick-actions">
+                <button onclick="useMyUA()">📋 Use My UA</button>
+                <button onclick="loadSample('chrome')">Chrome Desktop</button>
+                <button onclick="loadSample('firefox')">Firefox</button>
+                <button onclick="loadSample('safari')">Safari</button>
+                <button onclick="loadSample('mobile')">Mobile</button>
+                <button onclick="loadSample('bot')">Google Bot</button>
+            </div>
+        </div>
+
+        <div class="card" id="resultCard" style="display: none;">
+            <h2>📊 Parsed Results</h2>
+            <div class="result-grid" id="resultGrid"></div>
+            <div class="details-section" id="detailsSection"></div>
+            <div id="botWarning"></div>
+            <button class="copy-btn" onclick="copyJSON()">📋 Copy as JSON</button>
+        </div>
+
+        <div class="card history" id="historyCard" style="display: none;">
+            <h3>📜 Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script>
+        // Sample User Agents
+        const samples = {
+            chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+            safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            mobile: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+            bot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        };
+
+        // Bot patterns
+        const botPatterns = [
+            /bot/i, /crawler/i, /spider/i, /scraper/i, /curl/i, /wget/i,
+            /googlebot/i, /bingbot/i, /slurp/i, /duckduckbot/i, /baiduspider/i,
+            /yandexbot/i, /sogou/i, /exabot/i, /facebot/i, /facebookexternalhit/i,
+            /ia_archiver/i, /twitterbot/i, /linkedinbot/i, /pinterest/i,
+            /python/i, /java/i, /perl/i, /ruby/i, /node/i
+        ];
+
+        // Browser patterns
+        const browserPatterns = [
+            { name: 'Edge', pattern: /Edg\/([\d.]+)/, icon: '🌐' },
+            { name: 'Opera', pattern: /OPR\/([\d.]+)/, icon: '🔴' },
+            { name: 'Brave', pattern: /Brave\/([\d.]+)/, icon: '🦁' },
+            { name: 'Chrome', pattern: /Chrome\/([\d.]+)/, icon: '🌐' },
+            { name: 'Firefox', pattern: /Firefox\/([\d.]+)/, icon: '🦊' },
+            { name: 'Safari', pattern: /Version\/([\d.]+).*Safari/, icon: '🧭' },
+            { name: 'IE', pattern: /MSIE ([\d.]+)/, icon: '🌐' },
+            { name: 'IE', pattern: /Trident.*rv:([\d.]+)/, icon: '🌐' },
+            { name: 'Samsung', pattern: /SamsungBrowser\/([\d.]+)/, icon: '📱' }
+        ];
+
+        // OS patterns
+        const osPatterns = [
+            { name: 'Windows 11', pattern: /Windows NT 10.*Win64/ },
+            { name: 'Windows 10', pattern: /Windows NT 10/ },
+            { name: 'Windows 8.1', pattern: /Windows NT 6\.3/ },
+            { name: 'Windows 8', pattern: /Windows NT 6\.2/ },
+            { name: 'Windows 7', pattern: /Windows NT 6\.1/ },
+            { name: 'Windows Vista', pattern: /Windows NT 6\.0/ },
+            { name: 'Windows XP', pattern: /Windows NT 5\.[12]/ },
+            { name: 'macOS', pattern: /Mac OS X (\d+[._]\d+[._]?\d*)/ },
+            { name: 'iOS', pattern: /iPhone OS (\d+[._]\d+)/ },
+            { name: 'iOS', pattern: /iPad.*OS (\d+[._]\d+)/ },
+            { name: 'Android', pattern: /Android (\d+\.?\d*\.?\d*)/ },
+            { name: 'Linux', pattern: /Linux/ },
+            { name: 'Chrome OS', pattern: /CrOS/ },
+            { name: 'Ubuntu', pattern: /Ubuntu/ }
+        ];
+
+        // Device patterns
+        const devicePatterns = [
+            { type: 'Mobile', pattern: /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i, icon: '📱' },
+            { type: 'Tablet', pattern: /Tablet|iPad/i, icon: '📲' },
+            { type: 'Desktop', pattern: /.*/, icon: '💻' }
+        ];
+
+        // Parse User Agent
+        function parseUserAgent(ua) {
+            const result = {
+                userAgent: ua,
+                browser: { name: 'Unknown', version: '', icon: '🌐' },
+                os: { name: 'Unknown', version: '' },
+                device: { type: 'Unknown', icon: '❓' },
+                engine: { name: 'Unknown', version: '' },
+                isBot: false,
+                botName: null,
+                cpu: 'Unknown',
+                isMobile: false,
+                isTablet: false,
+                isDesktop: false
+            };
+
+            // Detect browser
+            for (const bp of browserPatterns) {
+                const match = ua.match(bp.pattern);
+                if (match) {
+                    result.browser.name = bp.name;
+                    result.browser.version = match[1] || '';
+                    result.browser.icon = bp.icon;
+                    break;
+                }
+            }
+
+            // Detect OS
+            for (const op of osPatterns) {
+                const match = ua.match(op.pattern);
+                if (match) {
+                    result.os.name = op.name;
+                    result.os.version = (match[1] || '').replace(/_/g, '.');
+                    break;
+                }
+            }
+
+            // Detect device type
+            if (/iPad|Tablet/i.test(ua)) {
+                result.device.type = 'Tablet';
+                result.device.icon = '📲';
+                result.isTablet = true;
+            } else if (/Mobi|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+                result.device.type = 'Mobile';
+                result.device.icon = '📱';
+                result.isMobile = true;
+            } else {
+                result.device.type = 'Desktop';
+                result.device.icon = '💻';
+                result.isDesktop = true;
+            }
+
+            // Detect rendering engine
+            if (/AppleWebKit/i.test(ua)) {
+                result.engine.name = 'WebKit';
+                const match = ua.match(/AppleWebKit\/([\d.]+)/);
+                if (match) result.engine.version = match[1];
+            } else if (/Gecko/i.test(ua)) {
+                result.engine.name = 'Gecko';
+                const match = ua.match(/rv:([\d.]+)/);
+                if (match) result.engine.version = match[1];
+            } else if (/Trident/i.test(ua)) {
+                result.engine.name = 'Trident';
+                const match = ua.match(/Trident\/([\d.]+)/);
+                if (match) result.engine.version = match[1];
+            }
+
+            // Detect CPU architecture
+            if (/Win64|x64|AMD64/i.test(ua)) {
+                result.cpu = '64-bit';
+            } else if (/Win32|x86|i686|i386/i.test(ua)) {
+                result.cpu = '32-bit';
+            } else if (/ARM|arm/i.test(ua)) {
+                result.cpu = 'ARM';
+            } else if (/aarch64/i.test(ua)) {
+                result.cpu = 'ARM64';
+            }
+
+            // Detect bots
+            for (const pattern of botPatterns) {
+                if (pattern.test(ua)) {
+                    result.isBot = true;
+                    const match = ua.match(/([A-Z][a-z]*bot\/?[\d.]*)/i);
+                    result.botName = match ? match[1] : 'Unknown Bot';
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        // Display results
+        function displayResults(result) {
+            const resultCard = document.getElementById('resultCard');
+            const resultGrid = document.getElementById('resultGrid');
+            const detailsSection = document.getElementById('detailsSection');
+            const botWarning = document.getElementById('botWarning');
+
+            // Main results
+            resultGrid.innerHTML = `
+                <div class="result-item">
+                    <div class="icon">${result.browser.icon}</div>
+                    <div class="label">Browser</div>
+                    <div class="value">${result.browser.name} ${result.browser.version}</div>
+                </div>
+                <div class="result-item">
+                    <div class="icon">💻</div>
+                    <div class="label">Operating System</div>
+                    <div class="value">${result.os.name} ${result.os.version}</div>
+                </div>
+                <div class="result-item">
+                    <div class="icon">${result.device.icon}</div>
+                    <div class="label">Device Type</div>
+                    <div class="value">${result.device.type}</div>
+                </div>
+                <div class="result-item">
+                    <div class="icon">⚡</div>
+                    <div class="label">Rendering Engine</div>
+                    <div class="value">${result.engine.name} ${result.engine.version}</div>
+                </div>
+            `;
+
+            // Details
+            detailsSection.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #888;">📋 Details</h3>
+                <div class="detail-row">
+                    <span class="key">CPU Architecture</span>
+                    <span class="val">${result.cpu}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="key">Is Mobile</span>
+                    <span class="val">${result.isMobile ? '✅ Yes' : '❌ No'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="key">Is Tablet</span>
+                    <span class="val">${result.isTablet ? '✅ Yes' : '❌ No'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="key">Is Desktop</span>
+                    <span class="val">${result.isDesktop ? '✅ Yes' : '❌ No'}</span>
+                </div>
+            `;
+
+            // Bot warning
+            if (result.isBot) {
+                botWarning.innerHTML = `
+                    <div class="bot-warning">
+                        🤖 <strong>Bot Detected!</strong><br>
+                        This appears to be a bot/crawler: ${result.botName}
+                    </div>
+                `;
+            } else {
+                botWarning.innerHTML = `
+                    <div class="bot-warning success">
+                        ✅ No bot detected - this appears to be a legitimate user agent
+                    </div>
+                `;
+            }
+
+            resultCard.style.display = 'block';
+        }
+
+        // Parse UA
+        function parseUA() {
+            const input = document.getElementById('uaInput').value.trim();
+            if (!input) return;
+
+            const result = parseUserAgent(input);
+            displayResults(result);
+
+            // Save to history
+            saveToHistory(input);
+        }
+
+        // Use current browser's UA
+        function useMyUA() {
+            document.getElementById('uaInput').value = navigator.userAgent;
+            parseUA();
+        }
+
+        // Load sample
+        function loadSample(type) {
+            document.getElementById('uaInput').value = samples[type];
+            parseUA();
+        }
+
+        // Save to history
+        function saveToHistory(ua) {
+            let history = JSON.parse(localStorage.getItem('uaHistory') || '[]');
+            history = history.filter(h => h.ua !== ua);
+            history.unshift({ ua, time: new Date().toISOString() });
+            history = history.slice(0, 10);
+            localStorage.setItem('uaHistory', JSON.stringify(history));
+            displayHistory();
+        }
+
+        // Display history
+        function displayHistory() {
+            const history = JSON.parse(localStorage.getItem('uaHistory') || '[]');
+            const historyCard = document.getElementById('historyCard');
+            const historyList = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                historyCard.style.display = 'none';
+                return;
+            }
+
+            historyList.innerHTML = history.map(h => `
+                <div class="history-item" onclick="loadFromHistory('${h.ua.replace(/'/g, "\\'")}')">
+                    <span class="ua-text">${h.ua}</span>
+                    <span class="ua-time">${new Date(h.time).toLocaleTimeString()}</span>
+                </div>
+            `).join('');
+
+            historyCard.style.display = 'block';
+        }
+
+        // Load from history
+        function loadFromHistory(ua) {
+            document.getElementById('uaInput').value = ua;
+            parseUA();
+        }
+
+        // Copy as JSON
+        function copyJSON() {
+            const input = document.getElementById('uaInput').value.trim();
+            if (!input) return;
+
+            const result = parseUserAgent(input);
+            const json = JSON.stringify(result, null, 2);
+            navigator.clipboard.writeText(json).then(() => {
+                showToast('JSON copied to clipboard!');
+            });
+        }
+
+        // Show toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Initialize
+        document.getElementById('uaInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') parseUA();
+        });
+
+        displayHistory();
+    </script>
+</body>
+</html>

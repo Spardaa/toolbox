@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UUID Generator | Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #06b6d4;
+            --accent-hover: #22d3ee;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Version Selector */
+        .version-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .version-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .version-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .version-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Options */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .option-group label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .option-group input[type="text"],
+        .option-group input[type="number"],
+        .option-group select {
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .option-group input:focus,
+        .option-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .option-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        /* UUID Output */
+        .uuid-output {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .uuid-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .uuid-item:hover {
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .uuid-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .uuid-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+            word-break: break-all;
+        }
+
+        .uuid-actions {
+            display: flex;
+            gap: 0.3rem;
+            margin-left: 1rem;
+        }
+
+        .uuid-btn {
+            padding: 0.3rem 0.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .uuid-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Namespace Input for v5 */
+        .namespace-section {
+            display: none;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .namespace-section.show {
+            display: block;
+        }
+
+        .namespace-section h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .namespace-presets {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .preset-btn {
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .namespace-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 600px) {
+            .namespace-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-box h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .info-item h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .info-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔑 UUID Generator</h1>
+            <p class="subtitle">Generate UUID v1, v4, v5 with batch generation support</p>
+        </header>
+
+        <!-- Generator Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>⚙️ Configuration</h2>
+            </div>
+
+            <!-- Version Selector -->
+            <div class="version-selector">
+                <button class="version-btn active" data-version="v4" onclick="setVersion('v4')">v4 (Random)</button>
+                <button class="version-btn" data-version="v1" onclick="setVersion('v1')">v1 (Time-based)</button>
+                <button class="version-btn" data-version="v5" onclick="setVersion('v5')">v5 (Namespace)</button>
+            </div>
+
+            <!-- v5 Namespace Section -->
+            <div class="namespace-section" id="namespaceSection">
+                <h4>🌐 Namespace Configuration (v5)</h4>
+                <div class="namespace-presets">
+                    <button class="preset-btn" onclick="setNamespace('dns')">DNS</button>
+                    <button class="preset-btn" onclick="setNamespace('url')">URL</button>
+                    <button class="preset-btn" onclick="setNamespace('oid')">OID</button>
+                    <button class="preset-btn" onclick="setNamespace('x500')">X.500</button>
+                </div>
+                <div class="namespace-inputs">
+                    <div class="option-group">
+                        <label>Namespace UUID</label>
+                        <input type="text" id="namespaceUuid" placeholder="6ba7b810-9dad-11d1-80b4-00c04fd430c8">
+                    </div>
+                    <div class="option-group">
+                        <label>Name</label>
+                        <input type="text" id="namespaceName" placeholder="example.com">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div class="options-grid">
+                <div class="option-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity" value="1" min="1" max="1000">
+                </div>
+                <div class="option-group">
+                    <label>Format</label>
+                    <select id="format">
+                        <option value="standard">Standard (with hyphens)</option>
+                        <option value="nodash">No hyphens</option>
+                        <option value="braces">With braces {}</option>
+                        <option value="uppercase">Uppercase</option>
+                    </select>
+                </div>
+                <div class="option-group checkbox-group">
+                    <input type="checkbox" id="autoCopy">
+                    <label for="autoCopy">Auto-copy first UUID</label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-primary" onclick="generateUuids()">🎲 Generate</button>
+                <button class="btn btn-secondary" onclick="clearOutput()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Generated UUIDs</h2>
+                <div>
+                    <button class="btn btn-secondary btn-small" onclick="copyAll()">Copy All</button>
+                    <button class="btn btn-secondary btn-small" onclick="downloadAll()">Download</button>
+                </div>
+            </div>
+
+            <div class="uuid-output" id="uuidOutput">
+                <div class="empty-state">
+                    Click "Generate" to create UUIDs
+                </div>
+            </div>
+
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat">Generated: <span class="stat-value" id="countStat">0</span></div>
+                <div class="stat">Version: <span class="stat-value" id="versionStat">v4</span></div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h3>ℹ️ About UUID Versions</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>UUID v1 (Time-based)</h4>
+                    <p>Generated using the current timestamp and machine MAC address. Provides uniqueness but reveals creation time and machine identity.</p>
+                </div>
+                <div class="info-item">
+                    <h4>UUID v4 (Random)</h4>
+                    <p>Generated using random numbers. Most common version. Provides 122 bits of randomness with extremely low collision probability.</p>
+                </div>
+                <div class="info-item">
+                    <h4>UUID v5 (Namespace)</h4>
+                    <p>Generated using SHA-1 hash of a namespace and name. Same namespace + name always produces the same UUID. Useful for deterministic IDs.</p>
+                </div>
+                <div class="info-item">
+                    <h4>Common Use Cases</h4>
+                    <p>Database primary keys, session IDs, transaction IDs, distributed systems identifiers, and any scenario requiring unique identifiers.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script>
+        // State
+        let currentVersion = 'v4';
+        let generatedUuids = [];
+
+        // Namespace presets (RFC 4122)
+        const namespacePresets = {
+            dns: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+            url: '6ba7b811-9dad-11d1-80b4-00c04fd430c8',
+            oid: '6ba7b812-9dad-11d1-80b4-00c04fd430c8',
+            x500: '6ba7b814-9dad-11d1-80b4-00c04fd430c8'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Generate on Enter in quantity field
+            document.getElementById('quantity').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') generateUuids();
+            });
+
+            // Generate on Enter in namespace name field
+            document.getElementById('namespaceName').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') generateUuids();
+            });
+        });
+
+        function setVersion(version) {
+            currentVersion = version;
+
+            // Update button states
+            document.querySelectorAll('.version-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.version === version);
+            });
+
+            // Show/hide namespace section
+            document.getElementById('namespaceSection').classList.toggle('show', version === 'v5');
+        }
+
+        function setNamespace(type) {
+            document.getElementById('namespaceUuid').value = namespacePresets[type];
+        }
+
+        function generateUuids() {
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const format = document.getElementById('format').value;
+            const autoCopy = document.getElementById('autoCopy').checked;
+
+            generatedUuids = [];
+
+            for (let i = 0; i < quantity; i++) {
+                let uuid;
+
+                switch (currentVersion) {
+                    case 'v1':
+                        uuid = generateV1();
+                        break;
+                    case 'v4':
+                        uuid = generateV4();
+                        break;
+                    case 'v5':
+                        uuid = generateV5();
+                        break;
+                    default:
+                        uuid = generateV4();
+                }
+
+                uuid = formatUuid(uuid, format);
+                generatedUuids.push(uuid);
+            }
+
+            renderUuids();
+
+            // Update stats
+            document.getElementById('stats').style.display = 'flex';
+            document.getElementById('countStat').textContent = generatedUuids.length;
+            document.getElementById('versionStat').textContent = currentVersion.toUpperCase();
+
+            // Auto-copy first UUID
+            if (autoCopy && generatedUuids.length > 0) {
+                copyUuid(0);
+            }
+        }
+
+        function generateV4() {
+            // Generate random bytes
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+
+            // Set version (4) and variant (10xx)
+            bytes[6] = (bytes[6] & 0x0f) | 0x40;
+            bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+            return bytesToUuid(bytes);
+        }
+
+        function generateV1() {
+            // Simplified v1 implementation
+            const now = Date.now();
+            const time = now + 12219292800000; // Convert to UUID epoch (Oct 15, 1582)
+
+            const timeLow = time & 0xFFFFFFFF;
+            const timeMid = (time >>> 32) & 0xFFFF;
+            const timeHi = ((time >>> 48) & 0x0FFF) | 0x1000; // Version 1
+
+            // Use random clock sequence and node
+            const clockSeq = Math.floor(Math.random() * 16384) | 0x8000;
+            const node = new Uint8Array(6);
+            crypto.getRandomValues(node);
+
+            const bytes = new Uint8Array(16);
+
+            // Time fields (big-endian)
+            bytes[0] = (timeLow >>> 24) & 0xFF;
+            bytes[1] = (timeLow >>> 16) & 0xFF;
+            bytes[2] = (timeLow >>> 8) & 0xFF;
+            bytes[3] = timeLow & 0xFF;
+            bytes[4] = (timeMid >>> 8) & 0xFF;
+            bytes[5] = timeMid & 0xFF;
+            bytes[6] = (timeHi >>> 8) & 0xFF;
+            bytes[7] = timeHi & 0xFF;
+
+            // Clock sequence
+            bytes[8] = (clockSeq >>> 8) & 0xFF;
+            bytes[9] = clockSeq & 0xFF;
+
+            // Node
+            bytes.set(node, 10);
+
+            return bytesToUuid(bytes);
+        }
+
+        async function generateV5() {
+            const namespaceUuid = document.getElementById('namespaceUuid').value.trim();
+            const name = document.getElementById('namespaceName').value.trim();
+
+            if (!namespaceUuid || !name) {
+                showToast('Please provide namespace and name');
+                return generateV4(); // Fallback to v4
+            }
+
+            // Parse namespace UUID to bytes
+            const namespaceBytes = uuidToBytes(namespaceUuid);
+
+            // Encode name as UTF-8
+            const nameBytes = new TextEncoder().encode(name);
+
+            // Concatenate namespace + name
+            const data = new Uint8Array(namespaceBytes.length + nameBytes.length);
+            data.set(namespaceBytes, 0);
+            data.set(nameBytes, namespaceBytes.length);
+
+            // SHA-1 hash (synchronous using SubtleCrypto would be async, using a simple sync approach)
+            // For v5, we need SHA-1
+            const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+            const hashBytes = new Uint8Array(hashBuffer);
+
+            // Set version (5) and variant
+            hashBytes[6] = (hashBytes[6] & 0x0f) | 0x50;
+            hashBytes[8] = (hashBytes[8] & 0x3f) | 0x80;
+
+            // Use first 16 bytes of hash
+            return bytesToUuid(hashBytes.slice(0, 16));
+        }
+
+        function bytesToUuid(bytes) {
+            const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0'));
+            return [
+                hex.slice(0, 4).join(''),
+                hex.slice(4, 6).join(''),
+                hex.slice(6, 8).join(''),
+                hex.slice(8, 10).join(''),
+                hex.slice(10, 16).join('')
+            ].join('-');
+        }
+
+        function uuidToBytes(uuid) {
+            const hex = uuid.replace(/-/g, '');
+            const bytes = new Uint8Array(16);
+            for (let i = 0; i < 16; i++) {
+                bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+            }
+            return bytes;
+        }
+
+        function formatUuid(uuid, format) {
+            switch (format) {
+                case 'nodash':
+                    return uuid.replace(/-/g, '');
+                case 'braces':
+                    return `{${uuid}}`;
+                case 'uppercase':
+                    return uuid.toUpperCase();
+                default:
+                    return uuid;
+            }
+        }
+
+        function renderUuids() {
+            const output = document.getElementById('uuidOutput');
+
+            if (generatedUuids.length === 0) {
+                output.innerHTML = '<div class="empty-state">Click "Generate" to create UUIDs</div>';
+                return;
+            }
+
+            output.innerHTML = generatedUuids.map((uuid, index) => `
+                <div class="uuid-item">
+                    <span class="uuid-value">${uuid}</span>
+                    <div class="uuid-actions">
+                        <button class="uuid-btn" onclick="copyUuid(${index})">Copy</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function copyUuid(index) {
+            const uuid = generatedUuids[index];
+            if (uuid) {
+                navigator.clipboard.writeText(uuid).then(() => showToast('UUID copied!'));
+            }
+        }
+
+        function copyAll() {
+            if (generatedUuids.length === 0) return;
+
+            const text = generatedUuids.join('\n');
+            navigator.clipboard.writeText(text).then(() => showToast('All UUIDs copied!'));
+        }
+
+        function downloadAll() {
+            if (generatedUuids.length === 0) return;
+
+            const text = generatedUuids.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `uuids-${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded!');
+        }
+
+        function clearOutput() {
+            generatedUuids = [];
+            document.getElementById('uuidOutput').innerHTML = '<div class="empty-state">Click "Generate" to create UUIDs</div>';
+            document.getElementById('stats').style.display = 'none';
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

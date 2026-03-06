@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Request Builder - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        .builder { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel { background: #16213e; border-radius: 12px; padding: 20px; }
+        .panel h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1.1rem; }
+        
+        .request-line { display: flex; gap: 10px; margin-bottom: 15px; }
+        select, input, textarea, button { 
+            background: #1a1a2e; border: 1px solid #333; color: #eee; 
+            padding: 10px 12px; border-radius: 6px; font-size: 14px;
+        }
+        select { width: 100px; cursor: pointer; }
+        .url-input { flex: 1; }
+        button { cursor: pointer; transition: all 0.3s; }
+        button:hover { background: #00d4ff; color: #1a1a2e; }
+        .send-btn { background: #00d4ff; color: #1a1a2e; font-weight: bold; padding: 10px 25px; }
+        .send-btn:hover { background: #00b8e6; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab { padding: 8px 16px; background: transparent; border: none; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: #00d4ff; border-bottom-color: #00d4ff; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        textarea { width: 100%; min-height: 200px; resize: vertical; font-family: 'Monaco', 'Menlo', monospace; font-size: 13px; }
+        
+        .headers-list { max-height: 300px; overflow-y: auto; }
+        .header-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .header-row input { flex: 1; }
+        .header-row button { padding: 8px 12px; background: #e74c3c; }
+        .header-row button:hover { background: #c0392b; }
+        .add-header { margin-top: 10px; background: #27ae60; }
+        
+        .response-status { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 6px; }
+        .status-code { font-size: 1.5rem; font-weight: bold; }
+        .status-code.success { color: #27ae60; }
+        .status-code.error { color: #e74c3c; }
+        .status-code.redirect { color: #f39c12; }
+        .status-time { color: #888; }
+        .status-size { color: #888; }
+        
+        .response-headers { background: #1a1a2e; border-radius: 6px; padding: 15px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; }
+        .response-headers h3 { margin-bottom: 10px; color: #888; font-size: 0.9rem; }
+        .header-item { display: flex; gap: 10px; margin-bottom: 5px; }
+        .header-item .key { color: #00d4ff; }
+        
+        .response-body { background: #1a1a2e; border-radius: 6px; padding: 15px; max-height: 400px; overflow-y: auto; }
+        .response-body pre { white-space: pre-wrap; word-break: break-all; font-family: 'Monaco', 'Menlo', monospace; font-size: 12px; }
+        
+        .history { margin-top: 20px; }
+        .history-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #1a1a2e; border-radius: 6px; margin-bottom: 8px; cursor: pointer; }
+        .history-item:hover { background: #2a2a4e; }
+        .history-method { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .history-method.get { background: #27ae60; }
+        .history-method.post { background: #3498db; }
+        .history-method.put { background: #f39c12; }
+        .history-method.delete { background: #e74c3c; }
+        .history-url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #888; }
+        
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .toolbar button { padding: 8px 15px; font-size: 13px; }
+        
+        .auth-section { margin-top: 15px; }
+        .auth-section label { display: block; margin-bottom: 5px; color: #888; }
+        .auth-type { margin-bottom: 10px; }
+        
+        .curl-output { background: #1a1a2e; border-radius: 6px; padding: 15px; margin-top: 15px; }
+        .curl-output pre { white-space: pre-wrap; word-break: break-all; font-family: 'Monaco', 'Menlo', monospace; font-size: 12px; color: #27ae60; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 HTTP Request Builder</h1>
+        
+        <div class="builder">
+            <div class="panel">
+                <h2>Request</h2>
+                
+                <div class="request-line">
+                    <select id="method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="HEAD">HEAD</option>
+                        <option value="OPTIONS">OPTIONS</option>
+                    </select>
+                    <input type="text" id="url" class="url-input" placeholder="https://api.example.com/endpoint">
+                    <button class="send-btn" onclick="sendRequest()">Send</button>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('params')">Params</button>
+                    <button class="tab" onclick="showTab('headers')">Headers</button>
+                    <button class="tab" onclick="showTab('body')">Body</button>
+                    <button class="tab" onclick="showTab('auth')">Auth</button>
+                </div>
+                
+                <div id="params-tab" class="tab-content active">
+                    <div class="headers-list" id="params-list"></div>
+                    <button class="add-header" onclick="addParam()">+ Add Param</button>
+                </div>
+                
+                <div id="headers-tab" class="tab-content">
+                    <div class="headers-list" id="headers-list"></div>
+                    <button class="add-header" onclick="addHeader()">+ Add Header</button>
+                </div>
+                
+                <div id="body-tab" class="tab-content">
+                    <select id="body-type" onchange="updateBodyType()">
+                        <option value="none">None</option>
+                        <option value="json">JSON</option>
+                        <option value="form">Form Data</option>
+                        <option value="raw">Raw</option>
+                    </select>
+                    <textarea id="request-body" placeholder='{"key": "value"}' style="margin-top: 10px;"></textarea>
+                </div>
+                
+                <div id="auth-tab" class="tab-content">
+                    <div class="auth-section">
+                        <label>Auth Type</label>
+                        <select id="auth-type" class="auth-type" onchange="updateAuthType()">
+                            <option value="none">No Auth</option>
+                            <option value="bearer">Bearer Token</option>
+                            <option value="basic">Basic Auth</option>
+                            <option value="api-key">API Key</option>
+                        </select>
+                        
+                        <div id="auth-bearer" style="display:none; margin-top: 10px;">
+                            <label>Token</label>
+                            <input type="text" id="bearer-token" placeholder="Enter bearer token">
+                        </div>
+                        
+                        <div id="auth-basic" style="display:none; margin-top: 10px;">
+                            <label>Username</label>
+                            <input type="text" id="basic-username" placeholder="Username">
+                            <label style="margin-top: 10px;">Password</label>
+                            <input type="password" id="basic-password" placeholder="Password">
+                        </div>
+                        
+                        <div id="auth-api-key" style="display:none; margin-top: 10px;">
+                            <label>Key</label>
+                            <input type="text" id="api-key-name" placeholder="X-API-Key">
+                            <label style="margin-top: 10px;">Value</label>
+                            <input type="text" id="api-key-value" placeholder="your-api-key">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="toolbar">
+                    <button onclick="generateCurl()">Generate cURL</button>
+                    <button onclick="saveRequest()">Save</button>
+                    <button onclick="clearRequest()">Clear</button>
+                </div>
+                
+                <div class="curl-output" id="curl-output" style="display:none;">
+                    <h3 style="color:#888; margin-bottom:10px;">cURL Command</h3>
+                    <pre id="curl-command"></pre>
+                    <button onclick="copyCurl()" style="margin-top:10px;">Copy</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Response</h2>
+                
+                <div class="response-status" id="response-status" style="display:none;">
+                    <span class="status-code" id="status-code">200</span>
+                    <span id="status-text">OK</span>
+                    <span class="status-time" id="response-time">0ms</span>
+                    <span class="status-size" id="response-size">0 B</span>
+                </div>
+                
+                <div class="response-headers" id="response-headers-section" style="display:none;">
+                    <h3>Response Headers</h3>
+                    <div id="response-headers"></div>
+                </div>
+                
+                <div class="response-body">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showResponseTab('body')">Body</button>
+                        <button class="tab" onclick="showResponseTab('headers')">Headers</button>
+                    </div>
+                    <div id="response-body-tab" class="tab-content active">
+                        <pre id="response-content">Send a request to see the response</pre>
+                    </div>
+                    <div id="response-headers-tab" class="tab-content">
+                        <pre id="response-headers-content"></pre>
+                    </div>
+                </div>
+                
+                <div class="history">
+                    <h2 style="margin-bottom: 10px;">History</h2>
+                    <div id="history-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let params = [];
+        let headers = [];
+        let history = JSON.parse(localStorage.getItem('httpHistory') || '[]');
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tabs .tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showResponseTab(tabName) {
+            document.querySelectorAll('.response-body .tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.response-body .tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('response-' + tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function addParam() {
+            const id = Date.now();
+            params.push({ id, key: '', value: '' });
+            renderParams();
+        }
+        
+        function addHeader() {
+            const id = Date.now();
+            headers.push({ id, key: '', value: '' });
+            renderHeaders();
+        }
+        
+        function removeParam(id) {
+            params = params.filter(p => p.id !== id);
+            renderParams();
+            updateUrl();
+        }
+        
+        function removeHeader(id) {
+            headers = headers.filter(h => h.id !== id);
+            renderHeaders();
+        }
+        
+        function renderParams() {
+            const list = document.getElementById('params-list');
+            list.innerHTML = params.map(p => `
+                <div class="header-row">
+                    <input type="text" value="${p.key}" placeholder="Key" onchange="updateParam(${p.id}, 'key', this.value)">
+                    <input type="text" value="${p.value}" placeholder="Value" onchange="updateParam(${p.id}, 'value', this.value)">
+                    <button onclick="removeParam(${p.id})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function renderHeaders() {
+            const list = document.getElementById('headers-list');
+            list.innerHTML = headers.map(h => `
+                <div class="header-row">
+                    <input type="text" value="${h.key}" placeholder="Header name" onchange="updateHeader(${h.id}, 'key', this.value)">
+                    <input type="text" value="${h.value}" placeholder="Header value" onchange="updateHeader(${h.id}, 'value', this.value)">
+                    <button onclick="removeHeader(${h.id})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function updateParam(id, field, value) {
+            const param = params.find(p => p.id === id);
+            if (param) {
+                param[field] = value;
+                updateUrl();
+            }
+        }
+        
+        function updateHeader(id, field, value) {
+            const header = headers.find(h => h.id === id);
+            if (header) header[field] = value;
+        }
+        
+        function updateUrl() {
+            const urlInput = document.getElementById('url');
+            let url = urlInput.value.split('?')[0];
+            const validParams = params.filter(p => p.key);
+            if (validParams.length > 0) {
+                url += '?' + validParams.map(p => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`).join('&');
+            }
+            urlInput.value = url;
+        }
+        
+        function updateBodyType() {
+            const type = document.getElementById('body-type').value;
+            const textarea = document.getElementById('request-body');
+            
+            if (type === 'json') {
+                textarea.placeholder = '{\n  "key": "value"\n}';
+            } else if (type === 'form') {
+                textarea.placeholder = 'key1=value1&key2=value2';
+            } else {
+                textarea.placeholder = 'Raw request body';
+            }
+        }
+        
+        function updateAuthType() {
+            const type = document.getElementById('auth-type').value;
+            document.getElementById('auth-bearer').style.display = type === 'bearer' ? 'block' : 'none';
+            document.getElementById('auth-basic').style.display = type === 'basic' ? 'block' : 'none';
+            document.getElementById('auth-api-key').style.display = type === 'api-key' ? 'block' : 'none';
+        }
+        
+        async function sendRequest() {
+            const method = document.getElementById('method').value;
+            let url = document.getElementById('url').value;
+            
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+            
+            const requestHeaders = {};
+            headers.filter(h => h.key).forEach(h => {
+                requestHeaders[h.key] = h.value;
+            });
+            
+            // Add auth headers
+            const authType = document.getElementById('auth-type').value;
+            if (authType === 'bearer') {
+                const token = document.getElementById('bearer-token').value;
+                if (token) requestHeaders['Authorization'] = `Bearer ${token}`;
+            } else if (authType === 'basic') {
+                const username = document.getElementById('basic-username').value;
+                const password = document.getElementById('basic-password').value;
+                if (username) requestHeaders['Authorization'] = `Basic ${btoa(username + ':' + password)}`;
+            } else if (authType === 'api-key') {
+                const keyName = document.getElementById('api-key-name').value;
+                const keyValue = document.getElementById('api-key-value').value;
+                if (keyName && keyValue) requestHeaders[keyName] = keyValue;
+            }
+            
+            const bodyType = document.getElementById('body-type').value;
+            const body = document.getElementById('request-body').value;
+            
+            const options = {
+                method,
+                headers: requestHeaders
+            };
+            
+            if (bodyType !== 'none' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+                options.body = body;
+                if (bodyType === 'json' && !requestHeaders['Content-Type']) {
+                    options.headers['Content-Type'] = 'application/json';
+                }
+            }
+            
+            const startTime = performance.now();
+            
+            try {
+                document.getElementById('response-content').textContent = 'Loading...';
+                
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+                
+                let responseBody;
+                const contentType = response.headers.get('content-type') || '';
+                
+                if (contentType.includes('application/json')) {
+                    responseBody = await response.json();
+                    responseBody = JSON.stringify(responseBody, null, 2);
+                } else {
+                    responseBody = await response.text();
+                }
+                
+                // Display status
+                const statusEl = document.getElementById('response-status');
+                statusEl.style.display = 'flex';
+                
+                const codeEl = document.getElementById('status-code');
+                codeEl.textContent = response.status;
+                codeEl.className = 'status-code ' + getStatusClass(response.status);
+                
+                document.getElementById('status-text').textContent = response.statusText;
+                document.getElementById('response-time').textContent = responseTime + 'ms';
+                document.getElementById('response-size').textContent = formatBytes(responseBody.length);
+                
+                // Display response
+                document.getElementById('response-content').textContent = responseBody;
+                
+                // Display headers
+                let headersText = '';
+                response.headers.forEach((value, key) => {
+                    headersText += `${key}: ${value}\n`;
+                });
+                document.getElementById('response-headers-content').textContent = headersText;
+                
+                // Add to history
+                addToHistory(method, url, response.status, responseTime);
+                
+            } catch (error) {
+                document.getElementById('response-content').textContent = 'Error: ' + error.message;
+                document.getElementById('status-code').textContent = 'Error';
+                document.getElementById('status-code').className = 'status-code error';
+            }
+        }
+        
+        function getStatusClass(status) {
+            if (status >= 200 && status < 300) return 'success';
+            if (status >= 300 && status < 400) return 'redirect';
+            return 'error';
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function addToHistory(method, url, status, time) {
+            const item = {
+                method,
+                url,
+                status,
+                time,
+                timestamp: Date.now()
+            };
+            
+            history.unshift(item);
+            if (history.length > 20) history.pop();
+            localStorage.setItem('httpHistory', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.map(h => `
+                <div class="history-item" onclick="loadFromHistory('${h.method}', '${h.url}')">
+                    <span class="history-method ${h.method.toLowerCase()}">${h.method}</span>
+                    <span class="history-url">${h.url}</span>
+                    <span class="status-code ${getStatusClass(h.status)}">${h.status}</span>
+                </div>
+            `).join('');
+        }
+        
+        function loadFromHistory(method, url) {
+            document.getElementById('method').value = method;
+            document.getElementById('url').value = url;
+        }
+        
+        function generateCurl() {
+            const method = document.getElementById('method').value;
+            const url = document.getElementById('url').value;
+            const bodyType = document.getElementById('body-type').value;
+            const body = document.getElementById('request-body').value;
+            
+            let curl = `curl -X ${method} '${url}'`;
+            
+            headers.filter(h => h.key).forEach(h => {
+                curl += ` \\\n  -H '${h.key}: ${h.value}'`;
+            });
+            
+            const authType = document.getElementById('auth-type').value;
+            if (authType === 'bearer') {
+                const token = document.getElementById('bearer-token').value;
+                if (token) curl += ` \\\n  -H 'Authorization: Bearer ${token}'`;
+            } else if (authType === 'basic') {
+                const username = document.getElementById('basic-username').value;
+                const password = document.getElementById('basic-password').value;
+                if (username) curl += ` \\\n  -u '${username}:${password}'`;
+            }
+            
+            if (bodyType !== 'none' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+                curl += ` \\\n  -d '${body}'`;
+            }
+            
+            document.getElementById('curl-command').textContent = curl;
+            document.getElementById('curl-output').style.display = 'block';
+        }
+        
+        function copyCurl() {
+            navigator.clipboard.writeText(document.getElementById('curl-command').textContent);
+            alert('Copied!');
+        }
+        
+        function saveRequest() {
+            const request = {
+                method: document.getElementById('method').value,
+                url: document.getElementById('url').value,
+                headers: headers,
+                params: params,
+                body: document.getElementById('request-body').value,
+                bodyType: document.getElementById('body-type').value,
+                authType: document.getElementById('auth-type').value
+            };
+            
+            const saved = JSON.parse(localStorage.getItem('savedRequests') || '[]');
+            saved.push(request);
+            localStorage.setItem('savedRequests', JSON.stringify(saved));
+            alert('Request saved!');
+        }
+        
+        function clearRequest() {
+            document.getElementById('url').value = '';
+            document.getElementById('request-body').value = '';
+            headers = [];
+            params = [];
+            renderHeaders();
+            renderParams();
+            document.getElementById('curl-output').style.display = 'none';
+        }
+        
+        // Initialize
+        addHeader();
+        addParam();
+        renderHistory();
+    </script>
+</body>
+</html>

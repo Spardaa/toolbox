@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Beautifier & Minifier - Format JS/CSS/HTML</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #2a2a4a;
+            color: #e0e0e0;
+            border: 1px solid #3a3a5a;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a5a;
+        }
+
+        .language-select {
+            display: flex;
+            gap: 5px;
+            background: #2a2a4a;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .language-select button {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .language-select button.active {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: white;
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .option input, .option select {
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            color: #e0e0e0;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .option input[type="number"] {
+            width: 60px;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 900px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: #1e1e3a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #3a3a5a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #2a2a4a;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            min-height: 400px;
+            background: transparent;
+            border: none;
+            padding: 15px;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        textarea::placeholder {
+            color: #555;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 15px;
+            background: #2a2a4a;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .status-bar .savings {
+            color: #4ecdc4;
+        }
+
+        .status-bar .growth {
+            color: #ff6b6b;
+        }
+
+        .examples {
+            margin: 30px 0;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #888;
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .example-btn {
+            padding: 15px;
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            color: #e0e0e0;
+        }
+
+        .example-btn:hover {
+            background: #3a3a5a;
+            border-color: #00d4ff;
+        }
+
+        .example-btn strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .example-btn span {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e3a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a6a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-magic"></i> Code Beautifier & Minifier</h1>
+            <p class="subtitle">Format and compress JavaScript, CSS, and HTML code</p>
+        </header>
+
+        <div class="controls">
+            <div class="language-select">
+                <button id="jsBtn" class="active" onclick="setLanguage('js')">
+                    <i class="fab fa-js"></i> JavaScript
+                </button>
+                <button id="cssBtn" onclick="setLanguage('css')">
+                    <i class="fab fa-css3"></i> CSS
+                </button>
+                <button id="htmlBtn" onclick="setLanguage('html')">
+                    <i class="fab fa-html5"></i> HTML
+                </button>
+            </div>
+        </div>
+
+        <div class="options">
+            <div class="option">
+                <label>Indent Size:</label>
+                <select id="indentSize">
+                    <option value="2">2 spaces</option>
+                    <option value="4" selected>4 spaces</option>
+                    <option value="tab">Tab</option>
+                </select>
+            </div>
+            <label class="option">
+                <input type="checkbox" id="preserveNewlines">
+                Preserve newlines
+            </label>
+            <label class="option">
+                <input type="checkbox" id="removeComments" checked>
+                Remove comments (minify)
+            </label>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="beautify()">
+                <i class="fas fa-wand-magic-sparkles"></i> Beautify
+            </button>
+            <button class="btn btn-primary" onclick="minify()">
+                <i class="fas fa-compress"></i> Minify
+            </button>
+            <button class="btn btn-secondary" onclick="copyOutput()">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+            <button class="btn btn-secondary" onclick="downloadOutput()">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="btn btn-secondary" onclick="clearAll()">
+                <i class="fas fa-trash"></i> Clear
+            </button>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="editor-container">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-code"></i>
+                        <span>Input Code</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="icon-btn" onclick="loadFile()" title="Load File">
+                            <i class="fas fa-folder-open"></i>
+                        </button>
+                        <button class="icon-btn" onclick="pasteFromClipboard()" title="Paste">
+                            <i class="fas fa-paste"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="inputCode" placeholder="Paste your code here..."></textarea>
+                <div class="status-bar">
+                    <span id="inputStats"><i class="fas fa-file-code"></i> 0 characters</span>
+                    <span id="inputLines"><i class="fas fa-align-left"></i> 0 lines</span>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-file-export"></i>
+                        <span>Output</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="icon-btn" onclick="swapToInput()" title="Use as Input">
+                            <i class="fas fa-exchange-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="outputCode" placeholder="Formatted code will appear here..." readonly></textarea>
+                <div class="status-bar">
+                    <span id="outputStats"><i class="fas fa-file-code"></i> 0 characters</span>
+                    <span id="outputDiff"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3><i class="fas fa-lightbulb"></i> Try Examples</h3>
+            <div class="example-grid">
+                <button class="example-btn" onclick="loadExample('js-minify')">
+                    <strong><i class="fab fa-js"></i> Minified JS</strong>
+                    <span>Beautify minified JavaScript</span>
+                </button>
+                <button class="example-btn" onclick="loadExample('css-minify')">
+                    <strong><i class="fab fa-css3"></i> Minified CSS</strong>
+                    <span>Beautify minified CSS</span>
+                </button>
+                <button class="example-btn" onclick="loadExample('html-ugly')">
+                    <strong><i class="fab fa-html5"></i> Ugly HTML</strong>
+                    <span>Format unstructured HTML</span>
+                </button>
+                <button class="example-btn" onclick="loadExample('js-complex')">
+                    <strong><i class="fas fa-code"></i> Complex JS</strong>
+                    <span>Format complex JavaScript</span>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Code Beautifier & Minifier - Format and compress your code</p>
+        </footer>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none" accept=".js,.css,.html,.htm">
+
+    <script>
+        let currentLanguage = 'js';
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('inputCode').value = e.target.result;
+                    updateInputStats();
+                };
+                reader.readAsText(file);
+            }
+            this.value = '';
+        });
+
+        function loadFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('inputCode').value = text;
+                updateInputStats();
+            } catch (err) {
+                alert('Unable to paste from clipboard');
+            }
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('.language-select button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(lang + 'Btn').classList.add('active');
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('visible');
+            setTimeout(() => errorEl.classList.remove('visible'), 5000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('visible');
+        }
+
+        function getIndent() {
+            const indentSize = document.getElementById('indentSize').value;
+            return indentSize === 'tab' ? '\t' : ' '.repeat(parseInt(indentSize));
+        }
+
+        // JavaScript Beautifier
+        function beautifyJS(code) {
+            const indent = getIndent();
+            const preserveNewlines = document.getElementById('preserveNewlines').checked;
+            let result = '';
+            let indentLevel = 0;
+            let inString = false;
+            let stringChar = '';
+            let inComment = false;
+            let inMultiComment = false;
+            let i = 0;
+
+            const isAlpha = c => /[a-zA-Z0-9_$]/.test(c);
+
+            while (i < code.length) {
+                const char = code[i];
+                const nextChar = code[i + 1] || '';
+                const prevChar = code[i - 1] || '';
+
+                // Handle strings
+                if (!inComment && !inMultiComment && (char === '"' || char === "'" || char === '`')) {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar && prevChar !== '\\') {
+                        inString = false;
+                    }
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inString) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // Handle comments
+                if (char === '/' && nextChar === '/') {
+                    inComment = true;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (char === '/' && nextChar === '*') {
+                    inMultiComment = true;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inComment && char === '\n') {
+                    inComment = false;
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inMultiComment && char === '*' && nextChar === '/') {
+                    inMultiComment = false;
+                    result += '*/';
+                    i += 2;
+                    continue;
+                }
+
+                if (inComment || inMultiComment) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // Handle opening braces
+                if (char === '{') {
+                    result = result.trimEnd() + ' {\n' + indent.repeat(++indentLevel);
+                    i++;
+                    continue;
+                }
+
+                // Handle closing braces
+                if (char === '}') {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                    result = result.trimEnd() + '\n' + indent.repeat(indentLevel) + '}\n';
+                    if (indentLevel > 0) result += indent.repeat(indentLevel);
+                    i++;
+                    continue;
+                }
+
+                // Handle semicolons
+                if (char === ';') {
+                    result = result.trimEnd() + ';\n';
+                    if (indentLevel > 0) result += indent.repeat(indentLevel);
+                    i++;
+                    continue;
+                }
+
+                // Handle newlines and whitespace
+                if (char === '\n' || char === '\r') {
+                    if (preserveNewlines && result.trim() && !result.endsWith('\n')) {
+                        result += '\n' + indent.repeat(indentLevel);
+                    }
+                    i++;
+                    continue;
+                }
+
+                if (char === ' ' || char === '\t') {
+                    if (result.length > 0 && !result.endsWith(' ') && !result.endsWith('\n') && !result.endsWith('\t')) {
+                        result += ' ';
+                    }
+                    i++;
+                    continue;
+                }
+
+                // Handle colons in objects
+                if (char === ':' && isAlpha(prevChar)) {
+                    result = result.trimEnd() + ': ';
+                    i++;
+                    continue;
+                }
+
+                // Handle commas
+                if (char === ',') {
+                    result = result.trimEnd() + ', ';
+                    i++;
+                    continue;
+                }
+
+                // Handle operators
+                if ('+-*/%=<>!&|?:'.includes(char)) {
+                    if (prevChar === ' ' || prevChar === '\n' || prevChar === '(' || prevChar === '[') {
+                        result += char;
+                    } else {
+                        result = result.trimEnd() + ' ' + char;
+                    }
+                    if (nextChar !== '=' && nextChar !== ' ' && nextChar !== '\n' && !'+-*/%=<>!&|'.includes(nextChar)) {
+                        result += ' ';
+                    }
+                    i++;
+                    continue;
+                }
+
+                // Handle parentheses and brackets
+                if (char === '(' || char === '[') {
+                    result = result.trimEnd() + char;
+                    i++;
+                    continue;
+                }
+
+                if (char === ')' || char === ']') {
+                    result = result.trimEnd() + char;
+                    i++;
+                    continue;
+                }
+
+                result += char;
+                i++;
+            }
+
+            return result.trim();
+        }
+
+        // CSS Beautifier
+        function beautifyCSS(code) {
+            const indent = getIndent();
+            let result = '';
+            let indentLevel = 0;
+            let inString = false;
+            let stringChar = '';
+            let i = 0;
+
+            // Remove extra whitespace first
+            code = code.replace(/\s+/g, ' ').trim();
+
+            while (i < code.length) {
+                const char = code[i];
+
+                // Handle strings
+                if (char === '"' || char === "'") {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar) {
+                        inString = false;
+                    }
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inString) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // Handle opening brace
+                if (char === '{') {
+                    result = result.trimEnd() + ' {\n';
+                    indentLevel++;
+                    result += indent.repeat(indentLevel);
+                    i++;
+                    continue;
+                }
+
+                // Handle closing brace
+                if (char === '}') {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                    result = result.trimEnd() + ';\n' + indent.repeat(indentLevel) + '}\n';
+                    i++;
+                    continue;
+                }
+
+                // Handle semicolons
+                if (char === ';') {
+                    result = result.trimEnd() + ';\n' + indent.repeat(indentLevel);
+                    i++;
+                    continue;
+                }
+
+                // Handle whitespace
+                if (char === ' ') {
+                    if (result.length > 0 && !result.endsWith(' ') && !result.endsWith('\n')) {
+                        result += ' ';
+                    }
+                    i++;
+                    continue;
+                }
+
+                result += char;
+                i++;
+            }
+
+            return result.trim();
+        }
+
+        // HTML Beautifier
+        function beautifyHTML(code) {
+            const indent = getIndent();
+            const selfClosing = ['br', 'hr', 'img', 'input', 'meta', 'link', 'area', 'base', 'col', 'embed', 'param', 'source', 'track', 'wbr'];
+            let result = '';
+            let indentLevel = 0;
+            let i = 0;
+
+            // Remove extra whitespace
+            code = code.replace(/>\s+</g, '><').trim();
+
+            while (i < code.length) {
+                if (code[i] === '<') {
+                    // Find the end of the tag
+                    let tagEnd = code.indexOf('>', i);
+                    if (tagEnd === -1) tagEnd = code.length;
+
+                    const tagContent = code.substring(i + 1, tagEnd);
+                    const isClosing = tagContent.startsWith('/');
+                    const tagName = tagContent.replace(/^\//, '').split(/[\s>]/)[0].toLowerCase();
+
+                    if (isClosing) {
+                        indentLevel = Math.max(0, indentLevel - 1);
+                        result += indent.repeat(indentLevel) + code.substring(i, tagEnd + 1) + '\n';
+                    } else if (selfClosing.includes(tagName) || tagContent.endsWith('/')) {
+                        result += indent.repeat(indentLevel) + code.substring(i, tagEnd + 1) + '\n';
+                    } else {
+                        result += indent.repeat(indentLevel) + code.substring(i, tagEnd + 1) + '\n';
+                        indentLevel++;
+                    }
+
+                    i = tagEnd + 1;
+                    continue;
+                }
+
+                // Handle text content
+                let textEnd = code.indexOf('<', i);
+                if (textEnd === -1) textEnd = code.length;
+
+                const text = code.substring(i, textEnd).trim();
+                if (text) {
+                    result += indent.repeat(indentLevel) + text + '\n';
+                }
+
+                i = textEnd;
+            }
+
+            return result.trim();
+        }
+
+        // Minifiers
+        function minifyJS(code) {
+            const removeComments = document.getElementById('removeComments').checked;
+            let result = '';
+            let inString = false;
+            let stringChar = '';
+            let inComment = false;
+            let inMultiComment = false;
+            let i = 0;
+
+            while (i < code.length) {
+                const char = code[i];
+                const nextChar = code[i + 1] || '';
+                const prevChar = code[i - 1] || '';
+
+                // Handle strings
+                if (!inComment && !inMultiComment && (char === '"' || char === "'" || char === '`')) {
+                    if (!inString) {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === stringChar && prevChar !== '\\') {
+                        inString = false;
+                    }
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                if (inString) {
+                    result += char;
+                    i++;
+                    continue;
+                }
+
+                // Handle comments
+                if (removeComments && char === '/' && nextChar === '/') {
+                    inComment = true;
+                    i++;
+                    continue;
+                }
+
+                if (removeComments && char === '/' && nextChar === '*') {
+                    inMultiComment = true;
+                    i += 2;
+                    continue;
+                }
+
+                if (inComment && char === '\n') {
+                    inComment = false;
+                    i++;
+                    continue;
+                }
+
+                if (inMultiComment && char === '*' && nextChar === '/') {
+                    inMultiComment = false;
+                    i += 2;
+                    continue;
+                }
+
+                if (inComment || inMultiComment) {
+                    i++;
+                    continue;
+                }
+
+                // Remove unnecessary whitespace
+                if (char === ' ' || char === '\n' || char === '\r' || char === '\t') {
+                    const lastChar = result[result.length - 1] || '';
+                    const nextNonSpace = code.substring(i).trim()[0] || '';
+
+                    // Keep space if needed
+                    if (/[a-zA-Z0-9_$]/.test(lastChar) && /[a-zA-Z0-9_$]/.test(nextNonSpace)) {
+                        result += ' ';
+                    }
+                    i++;
+                    continue;
+                }
+
+                result += char;
+                i++;
+            }
+
+            return result;
+        }
+
+        function minifyCSS(code) {
+            const removeComments = document.getElementById('removeComments').checked;
+            let result = code;
+
+            if (removeComments) {
+                result = result.replace(/\/\*[\s\S]*?\*\//g, '');
+            }
+
+            result = result
+                .replace(/\s+/g, ' ')
+                .replace(/\s*([{}:;,>+~])\s*/g, '$1')
+                .replace(/;}/g, '}')
+                .replace(/\s*!important/g, '!important')
+                .trim();
+
+            return result;
+        }
+
+        function minifyHTML(code) {
+            const removeComments = document.getElementById('removeComments').checked;
+            let result = code;
+
+            if (removeComments) {
+                result = result.replace(/<!--[\s\S]*?-->/g, '');
+            }
+
+            result = result
+                .replace(/\s+/g, ' ')
+                .replace(/>\s+</g, '><')
+                .trim();
+
+            return result;
+        }
+
+        function beautify() {
+            hideError();
+            const input = document.getElementById('inputCode').value;
+            if (!input.trim()) {
+                showError('Please enter some code to beautify');
+                return;
+            }
+
+            let output;
+            try {
+                switch (currentLanguage) {
+                    case 'js':
+                        output = beautifyJS(input);
+                        break;
+                    case 'css':
+                        output = beautifyCSS(input);
+                        break;
+                    case 'html':
+                        output = beautifyHTML(input);
+                        break;
+                }
+                document.getElementById('outputCode').value = output;
+                updateOutputStats();
+            } catch (err) {
+                showError('Error beautifying code: ' + err.message);
+            }
+        }
+
+        function minify() {
+            hideError();
+            const input = document.getElementById('inputCode').value;
+            if (!input.trim()) {
+                showError('Please enter some code to minify');
+                return;
+            }
+
+            let output;
+            try {
+                switch (currentLanguage) {
+                    case 'js':
+                        output = minifyJS(input);
+                        break;
+                    case 'css':
+                        output = minifyCSS(input);
+                        break;
+                    case 'html':
+                        output = minifyHTML(input);
+                        break;
+                }
+                document.getElementById('outputCode').value = output;
+                updateOutputStats();
+            } catch (err) {
+                showError('Error minifying code: ' + err.message);
+            }
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('outputCode').value;
+            if (!output) {
+                showError('No output to copy');
+                return;
+            }
+            navigator.clipboard.writeText(output).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        function downloadOutput() {
+            const output = document.getElementById('outputCode').value;
+            if (!output) {
+                showError('No output to download');
+                return;
+            }
+
+            const extensions = { js: 'js', css: 'css', html: 'html' };
+            const blob = new Blob([output], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `formatted.${extensions[currentLanguage]}`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function swapToInput() {
+            const output = document.getElementById('outputCode').value;
+            if (output) {
+                document.getElementById('inputCode').value = output;
+                document.getElementById('outputCode').value = '';
+                updateInputStats();
+                updateOutputStats();
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('inputCode').value = '';
+            document.getElementById('outputCode').value = '';
+            hideError();
+            updateInputStats();
+            updateOutputStats();
+        }
+
+        function updateInputStats() {
+            const input = document.getElementById('inputCode').value;
+            const chars = input.length;
+            const lines = input ? input.split('\n').length : 0;
+            document.getElementById('inputStats').innerHTML = `<i class="fas fa-file-code"></i> ${chars} characters`;
+            document.getElementById('inputLines').innerHTML = `<i class="fas fa-align-left"></i> ${lines} lines`;
+        }
+
+        function updateOutputStats() {
+            const input = document.getElementById('inputCode').value;
+            const output = document.getElementById('outputCode').value;
+            const inputChars = input.length;
+            const outputChars = output.length;
+
+            document.getElementById('outputStats').innerHTML = `<i class="fas fa-file-code"></i> ${outputChars} characters`;
+
+            if (inputChars > 0) {
+                const diff = outputChars - inputChars;
+                const percent = ((diff / inputChars) * 100).toFixed(1);
+                const diffEl = document.getElementById('outputDiff');
+
+                if (diff < 0) {
+                    diffEl.innerHTML = `<span class="savings"><i class="fas fa-arrow-down"></i> ${Math.abs(diff)} chars saved (${Math.abs(percent)}%)</span>`;
+                } else if (diff > 0) {
+                    diffEl.innerHTML = `<span class="growth"><i class="fas fa-arrow-up"></i> +${diff} chars (+${percent}%)</span>`;
+                } else {
+                    diffEl.innerHTML = `<span>No change</span>`;
+                }
+            } else {
+                document.getElementById('outputDiff').innerHTML = '';
+            }
+        }
+
+        function loadExample(type) {
+            const examples = {
+                'js-minify': {
+                    code: 'function calculateTotal(a,b,c){let d=a+b;return d*c;}const result=calculateTotal(10,20,2);console.log(result);',
+                    lang: 'js'
+                },
+                'css-minify': {
+                    code: '.container{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:#1e1e3a;border-radius:12px}.title{font-size:24px;color:#fff;margin-bottom:10px}',
+                    lang: 'css'
+                },
+                'html-ugly': {
+                    code: '<!DOCTYPE html><html><head><title>Test</title></head><body><div class="container"><h1>Hello World</h1><p>This is a paragraph.</p><ul><li>Item 1</li><li>Item 2</li></ul></div></body></html>',
+                    lang: 'html'
+                },
+                'js-complex': {
+                    code: `const fetchData=async(url,options={})=>{try{const response=await fetch(url,options);if(!response.ok){throw new Error('Network error');}const data=await response.json();return{success:true,data};}catch(error){console.error(error);return{success:false,error:error.message};}};`,
+                    lang: 'js'
+                }
+            };
+
+            const example = examples[type];
+            document.getElementById('inputCode').value = example.code;
+            setLanguage(example.lang);
+            updateInputStats();
+        }
+
+        // Auto-update stats
+        document.getElementById('inputCode').addEventListener('input', updateInputStats);
+
+        // Load saved data
+        const saved = localStorage.getItem('code-beautifier-data');
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                document.getElementById('inputCode').value = data.input || '';
+                setLanguage(data.language || 'js');
+                updateInputStats();
+            } catch (e) {}
+        }
+
+        // Save data
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('code-beautifier-data', JSON.stringify({
+                input: document.getElementById('inputCode').value,
+                language: currentLanguage
+            }));
+        });
+    </script>
+</body>
+</html>

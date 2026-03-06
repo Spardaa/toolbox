@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Path Editor - Toolbox</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --fg: #ffffff;
+            --fg-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --border: #333;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --grid: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h1 .icon {
+            font-size: 1.8rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--fg);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+
+        .canvas-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .canvas-header h3 {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .zoom-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--fg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: var(--border);
+        }
+
+        .zoom-value {
+            font-size: 0.75rem;
+            color: var(--fg-secondary);
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            height: 500px;
+            overflow: auto;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 1000px;
+            height: 1000px;
+            background-image:
+                linear-gradient(var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: var(--bg);
+        }
+
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            border-radius: 12px 12px 0 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-content {
+            padding: 16px;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .tool-btn {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--fg-secondary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 0.625rem;
+            transition: all 0.2s;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--accent);
+            color: var(--fg);
+        }
+
+        .tool-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .tool-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .path-input-section {
+            margin-top: 16px;
+        }
+
+        .path-input-section label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--fg-secondary);
+            margin-bottom: 8px;
+        }
+
+        .path-textarea {
+            width: 100%;
+            height: 120px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--fg);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            resize: vertical;
+        }
+
+        .path-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .path-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .path-actions .btn {
+            flex: 1;
+            font-size: 0.75rem;
+            padding: 6px 12px;
+        }
+
+        .settings-group {
+            margin-bottom: 16px;
+        }
+
+        .settings-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-label {
+            font-size: 0.75rem;
+            color: var(--fg-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .settings-input {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: var(--fg);
+            font-size: 0.75rem;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-input {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .settings-input-small {
+            width: 60px;
+        }
+
+        .commands-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .command-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        .command-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .command-item .cmd-type {
+            color: var(--accent);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+
+        .command-item .cmd-params {
+            color: var(--fg-secondary);
+            flex: 1;
+        }
+
+        .command-item .cmd-delete {
+            background: none;
+            border: none;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .command-item .cmd-delete:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .output-section {
+            margin-top: 16px;
+        }
+
+        .output-section label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--fg-secondary);
+            margin-bottom: 8px;
+        }
+
+        .output-code {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--fg);
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.625rem;
+            color: var(--fg-secondary);
+            margin-top: 4px;
+        }
+
+        .templates-section {
+            margin-top: 16px;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .template-btn {
+            padding: 8px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--fg);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            border-color: var(--accent);
+            background: var(--bg-tertiary);
+        }
+
+        .saved-paths {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .saved-path-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            margin-bottom: 4px;
+        }
+
+        .saved-path-name {
+            font-size: 0.75rem;
+            color: var(--fg);
+        }
+
+        .saved-path-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .saved-path-btn {
+            background: none;
+            border: none;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .saved-path-btn:hover {
+            color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .saved-path-btn.delete:hover {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* SVG Control Points */
+        .control-point {
+            cursor: move;
+        }
+
+        .control-point:hover circle {
+            fill: var(--accent);
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .tools-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="icon">✏️</span>
+                SVG Path Editor
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportSVG()">
+                    <span>📄</span> Export SVG
+                </button>
+                <button class="btn btn-secondary" onclick="copyPath()">
+                    <span>📋</span> Copy Path
+                </button>
+                <button class="btn btn-danger" onclick="clearCanvas()">
+                    <span>🗑️</span> Clear
+                </button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="canvas-section">
+                <div class="canvas-header">
+                    <h3>Canvas</h3>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="zoomOut()">−</button>
+                        <span class="zoom-value" id="zoom-value">100%</span>
+                        <button class="zoom-btn" onclick="zoomIn()">+</button>
+                        <button class="zoom-btn" onclick="resetZoom()">⟲</button>
+                    </div>
+                </div>
+                <div class="canvas-wrapper" id="canvas-wrapper">
+                    <div class="canvas-container" id="canvas-container">
+                        <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                                </marker>
+                            </defs>
+                            <g id="main-path-group"></g>
+                            <g id="control-points-group"></g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <!-- Tools Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>🛠️</span> Drawing Tools
+                    </div>
+                    <div class="panel-content">
+                        <div class="tools-grid">
+                            <button class="tool-btn active" data-tool="select" title="Select & Move">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                                </svg>
+                                Select
+                            </button>
+                            <button class="tool-btn" data-tool="pen" title="Pen Tool (M/L)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                                </svg>
+                                Pen
+                            </button>
+                            <button class="tool-btn" data-tool="line" title="Line (L)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="5" y1="19" x2="19" y2="5"/>
+                                </svg>
+                                Line
+                            </button>
+                            <button class="tool-btn" data-tool="curve" title="Curve (C)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 17c3-6 9-6 18 0"/>
+                                </svg>
+                                Curve
+                            </button>
+                            <button class="tool-btn" data-tool="quad" title="Quadratic (Q)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 17q9-12 18 0"/>
+                                </svg>
+                                Quad
+                            </button>
+                            <button class="tool-btn" data-tool="arc" title="Arc (A)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 19a14 14 0 0 1 14-14"/>
+                                </svg>
+                                Arc
+                            </button>
+                            <button class="tool-btn" data-tool="rect" title="Rectangle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                </svg>
+                                Rect
+                            </button>
+                            <button class="tool-btn" data-tool="circle" title="Circle">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="9"/>
+                                </svg>
+                                Circle
+                            </button>
+                        </div>
+
+                        <div class="templates-section">
+                            <label class="settings-label">Quick Templates</label>
+                            <div class="templates-grid">
+                                <button class="template-btn" onclick="loadTemplate('heart')">❤️ Heart</button>
+                                <button class="template-btn" onclick="loadTemplate('star')">⭐ Star</button>
+                                <button class="template-btn" onclick="loadTemplate('arrow')">➡️ Arrow</button>
+                                <button class="template-btn" onclick="loadTemplate('check')">✓ Check</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Path Data Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>📝</span> Path Data
+                    </div>
+                    <div class="panel-content">
+                        <div class="path-input-section">
+                            <label>Path d Attribute</label>
+                            <textarea class="path-textarea" id="path-input" placeholder="M 100 100 L 200 100 L 200 200 Z"></textarea>
+                            <div class="path-actions">
+                                <button class="btn btn-primary" onclick="applyPath()">Apply</button>
+                                <button class="btn btn-secondary" onclick="formatPath()">Format</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-group" style="margin-top: 16px;">
+                            <label class="settings-label">Path Commands</label>
+                            <div class="commands-list" id="commands-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>⚙️</span> Settings
+                    </div>
+                    <div class="panel-content">
+                        <div class="settings-group">
+                            <label class="settings-label">Stroke</label>
+                            <div class="settings-row">
+                                <div class="color-input-wrapper">
+                                    <input type="color" class="color-input" id="stroke-color" value="#6366f1">
+                                    <input type="text" class="settings-input" id="stroke-color-text" value="#6366f1">
+                                </div>
+                                <input type="number" class="settings-input settings-input-small" id="stroke-width" value="2" min="0" max="50">
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label class="settings-label">Fill</label>
+                            <div class="settings-row">
+                                <div class="color-input-wrapper">
+                                    <input type="color" class="color-input" id="fill-color" value="#000000">
+                                    <input type="text" class="settings-input" id="fill-color-text" value="none">
+                                </div>
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem;">
+                                    <input type="checkbox" id="fill-none" checked> None
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label class="settings-label">Stroke Linecap</label>
+                            <select class="settings-input" id="stroke-linecap">
+                                <option value="butt">Butt</option>
+                                <option value="round" selected>Round</option>
+                                <option value="square">Square</option>
+                            </select>
+                        </div>
+
+                        <div class="settings-group">
+                            <label class="settings-label">Stroke Linejoin</label>
+                            <select class="settings-input" id="stroke-linejoin">
+                                <option value="miter">Miter</option>
+                                <option value="round" selected>Round</option>
+                                <option value="bevel">Bevel</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>📊</span> Output & Stats
+                    </div>
+                    <div class="panel-content">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-commands">0</div>
+                                <div class="stat-label">Commands</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-points">0</div>
+                                <div class="stat-label">Points</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-length">0</div>
+                                <div class="stat-label">Length</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-bbox">-</div>
+                                <div class="stat-label">Bounding Box</div>
+                            </div>
+                        </div>
+
+                        <div class="output-section">
+                            <label>SVG Code</label>
+                            <div class="output-code" id="output-code"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Paths Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>💾</span> Saved Paths
+                    </div>
+                    <div class="panel-content">
+                        <div class="path-actions" style="margin-bottom: 12px;">
+                            <button class="btn btn-primary" onclick="savePath()" style="flex: 1;">Save Current</button>
+                        </div>
+                        <div class="saved-paths" id="saved-paths"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentTool = 'select';
+        let pathCommands = [];
+        let selectedPointIndex = -1;
+        let isDrawing = false;
+        let startPoint = null;
+        let zoom = 1;
+        let savedPaths = [];
+
+        // DOM Elements
+        const canvas = document.getElementById('svg-canvas');
+        const pathGroup = document.getElementById('main-path-group');
+        const controlGroup = document.getElementById('control-points-group');
+        const pathInput = document.getElementById('path-input');
+        const commandsList = document.getElementById('commands-list');
+        const outputCode = document.getElementById('output-code');
+        const canvasContainer = document.getElementById('canvas-container');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedPaths();
+            setupEventListeners();
+            updateOutput();
+        });
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Tool buttons
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTool = btn.dataset.tool;
+                });
+            });
+
+            // Canvas events
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('mouseleave', handleMouseUp);
+
+            // Settings events
+            document.getElementById('stroke-color').addEventListener('input', updatePathStyle);
+            document.getElementById('stroke-color-text').addEventListener('input', (e) => {
+                document.getElementById('stroke-color').value = e.target.value;
+                updatePathStyle();
+            });
+            document.getElementById('stroke-width').addEventListener('input', updatePathStyle);
+            document.getElementById('fill-color').addEventListener('input', updatePathStyle);
+            document.getElementById('fill-none').addEventListener('change', updatePathStyle);
+            document.getElementById('stroke-linecap').addEventListener('change', updatePathStyle);
+            document.getElementById('stroke-linejoin').addEventListener('change', updatePathStyle);
+
+            // Path input
+            pathInput.addEventListener('input', () => {
+                // Debounced apply
+                clearTimeout(pathInput.timeout);
+                pathInput.timeout = setTimeout(applyPath, 500);
+            });
+        }
+
+        // Mouse handlers
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / zoom;
+            const y = (e.clientY - rect.top) / zoom;
+
+            if (currentTool === 'select') {
+                // Check if clicking on control point
+                const points = controlGroup.querySelectorAll('.control-point');
+                points.forEach((point, index) => {
+                    const circle = point.querySelector('circle');
+                    const px = parseFloat(point.dataset.x);
+                    const py = parseFloat(point.dataset.y);
+                    if (Math.abs(x - px) < 10 && Math.abs(y - py) < 10) {
+                        selectedPointIndex = index;
+                        isDrawing = true;
+                    }
+                });
+            } else if (currentTool === 'pen') {
+                if (!isDrawing) {
+                    // Start new path
+                    pathCommands = [{ type: 'M', params: [x, y] }];
+                    isDrawing = true;
+                    startPoint = { x, y };
+                } else {
+                    // Add line to
+                    pathCommands.push({ type: 'L', params: [x, y] });
+                }
+                renderPath();
+            } else if (currentTool === 'line') {
+                if (!isDrawing) {
+                    pathCommands = [{ type: 'M', params: [x, y] }];
+                    isDrawing = true;
+                    startPoint = { x, y };
+                }
+            } else if (currentTool === 'curve') {
+                if (!isDrawing) {
+                    pathCommands = [{ type: 'M', params: [x, y] }];
+                    isDrawing = true;
+                    startPoint = { x, y };
+                }
+            } else if (currentTool === 'rect') {
+                if (!isDrawing) {
+                    pathCommands = [{ type: 'M', params: [x, y] }];
+                    isDrawing = true;
+                    startPoint = { x, y };
+                }
+            } else if (currentTool === 'circle') {
+                if (!isDrawing) {
+                    pathCommands = [{ type: 'M', params: [x, y] }];
+                    isDrawing = true;
+                    startPoint = { x, y };
+                }
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / zoom;
+            const y = (e.clientY - rect.top) / zoom;
+
+            if (currentTool === 'select' && selectedPointIndex >= 0) {
+                // Move control point
+                updateControlPoint(selectedPointIndex, x, y);
+            } else if (currentTool === 'line' && startPoint) {
+                // Preview line
+                pathCommands = [
+                    { type: 'M', params: [startPoint.x, startPoint.y] },
+                    { type: 'L', params: [x, y] }
+                ];
+                renderPath();
+            } else if (currentTool === 'curve' && startPoint) {
+                // Preview curve with control points
+                const dx = x - startPoint.x;
+                const dy = y - startPoint.y;
+                pathCommands = [
+                    { type: 'M', params: [startPoint.x, startPoint.y] },
+                    { type: 'C', params: [
+                        startPoint.x + dx * 0.3, startPoint.y,
+                        x - dx * 0.3, y,
+                        x, y
+                    ]}
+                ];
+                renderPath();
+            } else if (currentTool === 'rect' && startPoint) {
+                // Preview rectangle
+                const w = x - startPoint.x;
+                const h = y - startPoint.y;
+                pathCommands = [
+                    { type: 'M', params: [startPoint.x, startPoint.y] },
+                    { type: 'L', params: [startPoint.x + w, startPoint.y] },
+                    { type: 'L', params: [startPoint.x + w, startPoint.y + h] },
+                    { type: 'L', params: [startPoint.x, startPoint.y + h] },
+                    { type: 'Z', params: [] }
+                ];
+                renderPath();
+            } else if (currentTool === 'circle' && startPoint) {
+                // Preview circle (as arc)
+                const r = Math.sqrt(Math.pow(x - startPoint.x, 2) + Math.pow(y - startPoint.y, 2));
+                pathCommands = [
+                    { type: 'M', params: [startPoint.x + r, startPoint.y] },
+                    { type: 'A', params: [r, r, 0, 1, 1, startPoint.x + r, startPoint.y] },
+                    { type: 'Z', params: [] }
+                ];
+                renderPath();
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (currentTool === 'select') {
+                selectedPointIndex = -1;
+            }
+            isDrawing = false;
+        }
+
+        // Path rendering
+        function renderPath() {
+            const pathData = commandsToPath(pathCommands);
+
+            // Clear existing path
+            pathGroup.innerHTML = '';
+
+            if (pathData) {
+                // Create main path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('id', 'main-path');
+                applyPathAttributes(path);
+                pathGroup.appendChild(path);
+
+                // Update input
+                pathInput.value = pathData;
+
+                // Render control points
+                renderControlPoints();
+
+                // Update output
+                updateOutput();
+            }
+        }
+
+        function applyPathAttributes(path) {
+            const strokeColor = document.getElementById('stroke-color').value;
+            const strokeWidth = document.getElementById('stroke-width').value;
+            const fillNone = document.getElementById('fill-none').checked;
+            const fillColor = document.getElementById('fill-color').value;
+            const linecap = document.getElementById('stroke-linecap').value;
+            const linejoin = document.getElementById('stroke-linejoin').value;
+
+            path.setAttribute('stroke', strokeColor);
+            path.setAttribute('stroke-width', strokeWidth);
+            path.setAttribute('fill', fillNone ? 'none' : fillColor);
+            path.setAttribute('stroke-linecap', linecap);
+            path.setAttribute('stroke-linejoin', linejoin);
+        }
+
+        function updatePathStyle() {
+            const mainPath = document.getElementById('main-path');
+            if (mainPath) {
+                applyPathAttributes(mainPath);
+            }
+            updateOutput();
+        }
+
+        function renderControlPoints() {
+            controlGroup.innerHTML = '';
+            let pointIndex = 0;
+
+            pathCommands.forEach((cmd, cmdIndex) => {
+                if (cmd.type === 'M' || cmd.type === 'L') {
+                    createControlPoint(cmd.params[0], cmd.params[1], pointIndex++, cmdIndex);
+                } else if (cmd.type === 'C') {
+                    // Start point
+                    if (cmdIndex === 0 || (pathCommands[cmdIndex - 1].type !== 'M' && pathCommands[cmdIndex - 1].type !== 'L')) {
+                        // Need to get start point from previous command
+                    }
+                    // Control point 1
+                    createControlPoint(cmd.params[0], cmd.params[1], pointIndex++, cmdIndex, true);
+                    // Control point 2
+                    createControlPoint(cmd.params[2], cmd.params[3], pointIndex++, cmdIndex, true);
+                    // End point
+                    createControlPoint(cmd.params[4], cmd.params[5], pointIndex++, cmdIndex);
+                } else if (cmd.type === 'Q') {
+                    createControlPoint(cmd.params[0], cmd.params[1], pointIndex++, cmdIndex, true);
+                    createControlPoint(cmd.params[2], cmd.params[3], pointIndex++, cmdIndex);
+                } else if (cmd.type === 'A') {
+                    createControlPoint(cmd.params[5], cmd.params[6], pointIndex++, cmdIndex);
+                }
+            });
+
+            updateCommandsList();
+        }
+
+        function createControlPoint(x, y, pointIndex, cmdIndex, isControl = false) {
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.classList.add('control-point');
+            g.dataset.x = x;
+            g.dataset.y = y;
+            g.dataset.pointIndex = pointIndex;
+            g.dataset.cmdIndex = cmdIndex;
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', x);
+            circle.setAttribute('cy', y);
+            circle.setAttribute('r', isControl ? 4 : 6);
+            circle.setAttribute('fill', isControl ? '#f59e0b' : '#6366f1');
+            circle.setAttribute('stroke', '#fff');
+            circle.setAttribute('stroke-width', '1');
+            circle.style.cursor = 'move';
+
+            g.appendChild(circle);
+            controlGroup.appendChild(g);
+        }
+
+        function updateControlPoint(pointIndex, x, y) {
+            let currentIndex = 0;
+
+            for (let i = 0; i < pathCommands.length; i++) {
+                const cmd = pathCommands[i];
+
+                if (cmd.type === 'M' || cmd.type === 'L') {
+                    if (currentIndex === pointIndex) {
+                        cmd.params[0] = x;
+                        cmd.params[1] = y;
+                        renderPath();
+                        return;
+                    }
+                    currentIndex++;
+                } else if (cmd.type === 'C') {
+                    for (let j = 0; j < 6; j += 2) {
+                        if (currentIndex === pointIndex) {
+                            cmd.params[j] = x;
+                            cmd.params[j + 1] = y;
+                            renderPath();
+                            return;
+                        }
+                        currentIndex++;
+                    }
+                } else if (cmd.type === 'Q') {
+                    for (let j = 0; j < 4; j += 2) {
+                        if (currentIndex === pointIndex) {
+                            cmd.params[j] = x;
+                            cmd.params[j + 1] = y;
+                            renderPath();
+                            return;
+                        }
+                        currentIndex++;
+                    }
+                } else if (cmd.type === 'A') {
+                    if (currentIndex === pointIndex) {
+                        cmd.params[5] = x;
+                        cmd.params[6] = y;
+                        renderPath();
+                        return;
+                    }
+                    currentIndex++;
+                }
+            }
+        }
+
+        // Path parsing
+        function commandsToPath(commands) {
+            return commands.map(cmd => {
+                if (cmd.type === 'Z') return 'Z';
+                return cmd.type + ' ' + cmd.params.map(p => p.toFixed(2)).join(' ');
+            }).join(' ');
+        }
+
+        function parsePath(pathString) {
+            const commands = [];
+            const regex = /([MLHVCSQTAZmlhvcsqtaz])([^MLHVCSQTAZmlhvcsqtaz]*)/g;
+            let match;
+
+            while ((match = regex.exec(pathString)) !== null) {
+                const type = match[1];
+                const paramsStr = match[2].trim();
+
+                if (type === 'Z' || type === 'z') {
+                    commands.push({ type: 'Z', params: [] });
+                } else {
+                    const params = paramsStr.split(/[\s,]+/).filter(p => p).map(parseFloat);
+                    commands.push({ type: type.toUpperCase(), params });
+                }
+            }
+
+            return commands;
+        }
+
+        // Apply path from input
+        function applyPath() {
+            const pathString = pathInput.value.trim();
+            if (!pathString) return;
+
+            pathCommands = parsePath(pathString);
+            renderPath();
+        }
+
+        // Format path
+        function formatPath() {
+            pathInput.value = commandsToPath(pathCommands);
+        }
+
+        // Commands list
+        function updateCommandsList() {
+            commandsList.innerHTML = '';
+
+            pathCommands.forEach((cmd, index) => {
+                const item = document.createElement('div');
+                item.className = 'command-item';
+
+                const paramsStr = cmd.params.length > 0
+                    ? cmd.params.map(p => p.toFixed(1)).join(', ')
+                    : '';
+
+                item.innerHTML = `
+                    <span>
+                        <span class="cmd-type">${cmd.type}</span>
+                        <span class="cmd-params">${paramsStr}</span>
+                    </span>
+                    <button class="cmd-delete" onclick="deleteCommand(${index})">×</button>
+                `;
+
+                commandsList.appendChild(item);
+            });
+        }
+
+        function deleteCommand(index) {
+            pathCommands.splice(index, 1);
+            renderPath();
+        }
+
+        // Output
+        function updateOutput() {
+            const pathData = commandsToPath(pathCommands);
+            const strokeColor = document.getElementById('stroke-color').value;
+            const strokeWidth = document.getElementById('stroke-width').value;
+            const fillNone = document.getElementById('fill-none').checked;
+            const fillColor = document.getElementById('fill-color').value;
+            const linecap = document.getElementById('stroke-linecap').value;
+            const linejoin = document.getElementById('stroke-linejoin').value;
+
+            const svgCode = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <path d="${pathData}"
+        stroke="${strokeColor}"
+        stroke-width="${strokeWidth}"
+        fill="${fillNone ? 'none' : fillColor}"
+        stroke-linecap="${linecap}"
+        stroke-linejoin="${linejoin}"/>
+</svg>`;
+
+            outputCode.textContent = svgCode;
+
+            // Update stats
+            document.getElementById('stat-commands').textContent = pathCommands.length;
+
+            let pointCount = 0;
+            pathCommands.forEach(cmd => {
+                if (cmd.type === 'M' || cmd.type === 'L') pointCount += 1;
+                else if (cmd.type === 'C') pointCount += 3;
+                else if (cmd.type === 'Q') pointCount += 2;
+                else if (cmd.type === 'A') pointCount += 1;
+            });
+            document.getElementById('stat-points').textContent = pointCount;
+            document.getElementById('stat-length').textContent = pathData.length;
+
+            // Calculate bounding box
+            const mainPath = document.getElementById('main-path');
+            if (mainPath) {
+                try {
+                    const bbox = mainPath.getBBox();
+                    document.getElementById('stat-bbox').textContent =
+                        `${Math.round(bbox.width)}×${Math.round(bbox.height)}`;
+                } catch (e) {
+                    document.getElementById('stat-bbox').textContent = '-';
+                }
+            }
+        }
+
+        // Templates
+        function loadTemplate(type) {
+            const templates = {
+                heart: 'M 500 200 C 350 100 200 200 200 350 C 200 500 500 700 500 700 C 500 700 800 500 800 350 C 800 200 650 100 500 200 Z',
+                star: 'M 500 150 L 620 400 L 880 400 L 680 580 L 750 850 L 500 700 L 250 850 L 320 580 L 120 400 L 380 400 Z',
+                arrow: 'M 200 450 L 700 450 L 700 350 L 850 500 L 700 650 L 700 550 L 200 550 Z',
+                check: 'M 200 500 L 400 700 L 800 300'
+            };
+
+            pathInput.value = templates[type];
+            applyPath();
+        }
+
+        // Zoom
+        function zoomIn() {
+            zoom = Math.min(zoom + 0.25, 3);
+            updateZoom();
+        }
+
+        function zoomOut() {
+            zoom = Math.max(zoom - 0.25, 0.25);
+            updateZoom();
+        }
+
+        function resetZoom() {
+            zoom = 1;
+            updateZoom();
+        }
+
+        function updateZoom() {
+            canvasContainer.style.transform = `scale(${zoom})`;
+            canvasContainer.style.transformOrigin = 'top left';
+            document.getElementById('zoom-value').textContent = `${Math.round(zoom * 100)}%`;
+        }
+
+        // Export
+        function exportSVG() {
+            const svgCode = outputCode.textContent;
+            const blob = new Blob([svgCode], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'path.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('SVG exported!', 'success');
+        }
+
+        function copyPath() {
+            const pathData = pathInput.value;
+            navigator.clipboard.writeText(pathData);
+            showToast('Path copied to clipboard!', 'success');
+        }
+
+        function clearCanvas() {
+            pathCommands = [];
+            pathGroup.innerHTML = '';
+            controlGroup.innerHTML = '';
+            pathInput.value = '';
+            updateOutput();
+            updateCommandsList();
+        }
+
+        // Save/Load paths
+        function savePath() {
+            const name = prompt('Enter a name for this path:');
+            if (!name) return;
+
+            const pathData = {
+                name,
+                path: pathInput.value,
+                stroke: document.getElementById('stroke-color').value,
+                strokeWidth: document.getElementById('stroke-width').value,
+                fill: document.getElementById('fill-none').checked ? 'none' : document.getElementById('fill-color').value,
+                timestamp: Date.now()
+            };
+
+            savedPaths.push(pathData);
+            localStorage.setItem('svgSavedPaths', JSON.stringify(savedPaths));
+            renderSavedPaths();
+            showToast('Path saved!', 'success');
+        }
+
+        function loadSavedPaths() {
+            const saved = localStorage.getItem('svgSavedPaths');
+            if (saved) {
+                savedPaths = JSON.parse(saved);
+                renderSavedPaths();
+            }
+        }
+
+        function renderSavedPaths() {
+            const container = document.getElementById('saved-paths');
+            container.innerHTML = '';
+
+            savedPaths.forEach((path, index) => {
+                const item = document.createElement('div');
+                item.className = 'saved-path-item';
+                item.innerHTML = `
+                    <span class="saved-path-name">${path.name}</span>
+                    <div class="saved-path-actions">
+                        <button class="saved-path-btn" onclick="loadSavedPath(${index})">Load</button>
+                        <button class="saved-path-btn delete" onclick="deleteSavedPath(${index})">Delete</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function loadSavedPath(index) {
+            const path = savedPaths[index];
+            pathInput.value = path.path;
+            document.getElementById('stroke-color').value = path.stroke;
+            document.getElementById('stroke-color-text').value = path.stroke;
+            document.getElementById('stroke-width').value = path.strokeWidth;
+            if (path.fill === 'none') {
+                document.getElementById('fill-none').checked = true;
+            } else {
+                document.getElementById('fill-none').checked = false;
+                document.getElementById('fill-color').value = path.fill;
+                document.getElementById('fill-color-text').value = path.fill;
+            }
+            applyPath();
+            showToast('Path loaded!', 'success');
+        }
+
+        function deleteSavedPath(index) {
+            savedPaths.splice(index, 1);
+            localStorage.setItem('svgSavedPaths', JSON.stringify(savedPaths));
+            renderSavedPaths();
+            showToast('Path deleted!', 'success');
+        }
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

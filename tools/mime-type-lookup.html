@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIME Type Lookup - Dev Toolbox</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .search-hint {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 8px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .result-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s;
+        }
+        .result-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .extension-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        .mime-type {
+            font-family: monospace;
+            color: var(--text-primary);
+            font-size: 14px;
+            background: var(--secondary-bg);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .category-tag {
+            display: inline-block;
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .category-section {
+            margin-bottom: 30px;
+        }
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .quick-reference {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .quick-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--secondary-bg);
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .quick-item code {
+            color: var(--primary-color);
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <header class="tool-header">
+            <h1>📁 MIME Type Lookup</h1>
+            <p class="tool-description">Search MIME types by file extension or find extensions by MIME type</p>
+        </header>
+
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by extension (e.g., .jpg, pdf) or MIME type (e.g., image/, application/json)...">
+            <div class="search-hint">💡 Try searching for "image", "video", "json", or any file extension</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('search')">🔍 Search Results</button>
+            <button class="tab-btn" onclick="showTab('browse')">📂 Browse by Category</button>
+            <button class="tab-btn" onclick="showTab('popular')">⭐ Popular Types</button>
+        </div>
+
+        <div id="searchTab" class="tab-content">
+            <div id="searchResults" class="results-grid"></div>
+        </div>
+
+        <div id="browseTab" class="tab-content" style="display: none;">
+            <div id="browseContent"></div>
+        </div>
+
+        <div id="popularTab" class="tab-content" style="display: none;">
+            <div class="quick-reference">
+                <h3>Most Common MIME Types</h3>
+                <div class="quick-grid" id="popularList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mimeTypes = {
+            // Images
+            '.jpg': { mime: 'image/jpeg', category: 'Image', desc: 'JPEG Image' },
+            '.jpeg': { mime: 'image/jpeg', category: 'Image', desc: 'JPEG Image' },
+            '.png': { mime: 'image/png', category: 'Image', desc: 'PNG Image' },
+            '.gif': { mime: 'image/gif', category: 'Image', desc: 'GIF Image' },
+            '.svg': { mime: 'image/svg+xml', category: 'Image', desc: 'SVG Vector Image' },
+            '.webp': { mime: 'image/webp', category: 'Image', desc: 'WebP Image' },
+            '.ico': { mime: 'image/x-icon', category: 'Image', desc: 'Icon File' },
+            '.bmp': { mime: 'image/bmp', category: 'Image', desc: 'Bitmap Image' },
+            '.tiff': { mime: 'image/tiff', category: 'Image', desc: 'TIFF Image' },
+            '.avif': { mime: 'image/avif', category: 'Image', desc: 'AVIF Image' },
+
+            // Videos
+            '.mp4': { mime: 'video/mp4', category: 'Video', desc: 'MP4 Video' },
+            '.webm': { mime: 'video/webm', category: 'Video', desc: 'WebM Video' },
+            '.avi': { mime: 'video/x-msvideo', category: 'Video', desc: 'AVI Video' },
+            '.mov': { mime: 'video/quicktime', category: 'Video', desc: 'QuickTime Video' },
+            '.wmv': { mime: 'video/x-ms-wmv', category: 'Video', desc: 'Windows Media Video' },
+            '.flv': { mime: 'video/x-flv', category: 'Video', desc: 'Flash Video' },
+            '.mkv': { mime: 'video/x-matroska', category: 'Video', desc: 'Matroska Video' },
+            '.m4v': { mime: 'video/x-m4v', category: 'Video', desc: 'M4V Video' },
+
+            // Audio
+            '.mp3': { mime: 'audio/mpeg', category: 'Audio', desc: 'MP3 Audio' },
+            '.wav': { mime: 'audio/wav', category: 'Audio', desc: 'WAV Audio' },
+            '.ogg': { mime: 'audio/ogg', category: 'Audio', desc: 'OGG Audio' },
+            '.m4a': { mime: 'audio/mp4', category: 'Audio', desc: 'M4A Audio' },
+            '.flac': { mime: 'audio/flac', category: 'Audio', desc: 'FLAC Audio' },
+            '.aac': { mime: 'audio/aac', category: 'Audio', desc: 'AAC Audio' },
+            '.wma': { mime: 'audio/x-ms-wma', category: 'Audio', desc: 'Windows Media Audio' },
+
+            // Documents
+            '.pdf': { mime: 'application/pdf', category: 'Document', desc: 'PDF Document' },
+            '.doc': { mime: 'application/msword', category: 'Document', desc: 'Word Document' },
+            '.docx': { mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Document', desc: 'Word Document (OOXML)' },
+            '.xls': { mime: 'application/vnd.ms-excel', category: 'Document', desc: 'Excel Spreadsheet' },
+            '.xlsx': { mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'Document', desc: 'Excel Spreadsheet (OOXML)' },
+            '.ppt': { mime: 'application/vnd.ms-powerpoint', category: 'Document', desc: 'PowerPoint Presentation' },
+            '.pptx': { mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', category: 'Document', desc: 'PowerPoint (OOXML)' },
+            '.odt': { mime: 'application/vnd.oasis.opendocument.text', category: 'Document', desc: 'OpenDocument Text' },
+            '.ods': { mime: 'application/vnd.oasis.opendocument.spreadsheet', category: 'Document', desc: 'OpenDocument Spreadsheet' },
+
+            // Archives
+            '.zip': { mime: 'application/zip', category: 'Archive', desc: 'ZIP Archive' },
+            '.rar': { mime: 'application/vnd.rar', category: 'Archive', desc: 'RAR Archive' },
+            '.7z': { mime: 'application/x-7z-compressed', category: 'Archive', desc: '7-Zip Archive' },
+            '.tar': { mime: 'application/x-tar', category: 'Archive', desc: 'TAR Archive' },
+            '.gz': { mime: 'application/gzip', category: 'Archive', desc: 'GZIP Archive' },
+            '.bz2': { mime: 'application/x-bzip2', category: 'Archive', desc: 'BZIP2 Archive' },
+
+            // Code/Dev
+            '.html': { mime: 'text/html', category: 'Code', desc: 'HTML Document' },
+            '.htm': { mime: 'text/html', category: 'Code', desc: 'HTML Document' },
+            '.css': { mime: 'text/css', category: 'Code', desc: 'CSS Stylesheet' },
+            '.js': { mime: 'text/javascript', category: 'Code', desc: 'JavaScript File' },
+            '.mjs': { mime: 'text/javascript', category: 'Code', desc: 'ES Module' },
+            '.json': { mime: 'application/json', category: 'Code', desc: 'JSON Data' },
+            '.xml': { mime: 'application/xml', category: 'Code', desc: 'XML Document' },
+            '.yaml': { mime: 'text/yaml', category: 'Code', desc: 'YAML Document' },
+            '.yml': { mime: 'text/yaml', category: 'Code', desc: 'YAML Document' },
+            '.ts': { mime: 'text/typescript', category: 'Code', desc: 'TypeScript File' },
+            '.tsx': { mime: 'text/typescript-jsx', category: 'Code', desc: 'TypeScript JSX' },
+            '.jsx': { mime: 'text/jsx', category: 'Code', desc: 'React JSX' },
+            '.vue': { mime: 'text/x-vue', category: 'Code', desc: 'Vue Component' },
+            '.svelte': { mime: 'text/x-svelte', category: 'Code', desc: 'Svelte Component' },
+            '.py': { mime: 'text/x-python', category: 'Code', desc: 'Python Script' },
+            '.java': { mime: 'text/x-java-source', category: 'Code', desc: 'Java Source' },
+            '.c': { mime: 'text/x-c', category: 'Code', desc: 'C Source' },
+            '.cpp': { mime: 'text/x-c++', category: 'Code', desc: 'C++ Source' },
+            '.h': { mime: 'text/x-c', category: 'Code', desc: 'C/C++ Header' },
+            '.rs': { mime: 'text/x-rust', category: 'Code', desc: 'Rust Source' },
+            '.go': { mime: 'text/x-go', category: 'Code', desc: 'Go Source' },
+            '.rb': { mime: 'text/x-ruby', category: 'Code', desc: 'Ruby Script' },
+            '.php': { mime: 'text/x-php', category: 'Code', desc: 'PHP Script' },
+            '.sql': { mime: 'application/sql', category: 'Code', desc: 'SQL Script' },
+            '.sh': { mime: 'application/x-sh', category: 'Code', desc: 'Shell Script' },
+            '.bash': { mime: 'application/x-sh', category: 'Code', desc: 'Bash Script' },
+
+            // Fonts
+            '.woff': { mime: 'font/woff', category: 'Font', desc: 'Web Open Font Format' },
+            '.woff2': { mime: 'font/woff2', category: 'Font', desc: 'WOFF 2.0' },
+            '.ttf': { mime: 'font/ttf', category: 'Font', desc: 'TrueType Font' },
+            '.otf': { mime: 'font/otf', category: 'Font', desc: 'OpenType Font' },
+            '.eot': { mime: 'application/vnd.ms-fontobject', category: 'Font', desc: 'Embedded OpenType' },
+
+            // Text
+            '.txt': { mime: 'text/plain', category: 'Text', desc: 'Plain Text' },
+            '.csv': { mime: 'text/csv', category: 'Text', desc: 'CSV Data' },
+            '.md': { mime: 'text/markdown', category: 'Text', desc: 'Markdown' },
+            '.rtf': { mime: 'application/rtf', category: 'Text', desc: 'Rich Text Format' },
+
+            // Application
+            '.exe': { mime: 'application/vnd.microsoft.portable-executable', category: 'Application', desc: 'Windows Executable' },
+            '.dmg': { mime: 'application/x-apple-diskimage', category: 'Application', desc: 'macOS Disk Image' },
+            '.apk': { mime: 'application/vnd.android.package-archive', category: 'Application', desc: 'Android Package' },
+            '.iso': { mime: 'application/x-iso9660-image', category: 'Application', desc: 'ISO Disk Image' },
+
+            // Binary/Data
+            '.bin': { mime: 'application/octet-stream', category: 'Binary', desc: 'Binary File' },
+            '.dat': { mime: 'application/octet-stream', category: 'Binary', desc: 'Data File' },
+            '.db': { mime: 'application/x-sqlite3', category: 'Binary', desc: 'Database File' },
+            '.sqlite': { mime: 'application/x-sqlite3', category: 'Binary', desc: 'SQLite Database' }
+        };
+
+        const popularTypes = [
+            '.html', '.css', '.js', '.json', '.png', '.jpg', '.gif', '.svg',
+            '.mp4', '.mp3', '.pdf', '.zip', '.txt', '.csv', '.xml', '.md'
+        ];
+
+        // Initialize
+        function init() {
+            renderPopularList();
+            renderBrowseContent();
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+            // Show initial results
+            handleSearch();
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (!query) {
+                // Show all types
+                const allEntries = Object.entries(mimeTypes).slice(0, 20);
+                resultsContainer.innerHTML = allEntries.map(([ext, data]) => createResultCard(ext, data)).join('');
+                return;
+            }
+
+            const results = Object.entries(mimeTypes).filter(([ext, data]) => {
+                return ext.includes(query) ||
+                       data.mime.toLowerCase().includes(query) ||
+                       data.category.toLowerCase().includes(query) ||
+                       data.desc.toLowerCase().includes(query);
+            });
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No MIME types found for "' + escapeHtml(query) + '"</div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map(([ext, data]) => createResultCard(ext, data)).join('');
+        }
+
+        function createResultCard(ext, data) {
+            return `
+                <div class="result-card">
+                    <div>
+                        <span class="extension-badge">${ext}</span>
+                        <span class="category-tag">${data.category}</span>
+                    </div>
+                    <div class="mime-type">${data.mime}</div>
+                    <div style="color: var(--text-secondary); font-size: 13px; margin-top: 8px;">${data.desc}</div>
+                </div>
+            `;
+        }
+
+        function renderPopularList() {
+            const container = document.getElementById('popularList');
+            container.innerHTML = popularTypes.map(ext => {
+                const data = mimeTypes[ext];
+                if (!data) return '';
+                return `
+                    <div class="quick-item">
+                        <code>${ext}</code>
+                        <span style="color: var(--text-secondary);">${data.mime}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderBrowseContent() {
+            const categories = {};
+            Object.entries(mimeTypes).forEach(([ext, data]) => {
+                if (!categories[data.category]) {
+                    categories[data.category] = [];
+                }
+                categories[data.category].push({ ext, ...data });
+            });
+
+            const container = document.getElementById('browseContent');
+            container.innerHTML = Object.entries(categories).map(([category, types]) => `
+                <div class="category-section">
+                    <h3 class="category-title">${category}</h3>
+                    <div class="results-grid">
+                        ${types.map(t => createResultCard(t.ext, t)).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        init();
+    </script>
+</body>
+</html>

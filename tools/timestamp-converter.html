@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timestamp Converter | Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent: #14b8a6;
+            --accent-hover: #2dd4bf;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Current Time */
+        .current-time {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(20, 184, 166, 0.05));
+            border: 1px solid rgba(20, 184, 166, 0.3);
+        }
+
+        .time-display {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .time-big {
+            font-size: 2.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .time-item {
+            text-align: center;
+        }
+
+        .time-item .value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .time-item .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Converter */
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 700px) {
+            .converter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .converter-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .converter-section label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .converter-section input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 1rem;
+        }
+
+        .converter-section input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            min-height: 100px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: var(--accent);
+            cursor: pointer;
+        }
+
+        .result-value:hover {
+            text-decoration: underline;
+        }
+
+        /* Date Picker */
+        .date-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .date-picker-grid select,
+        .date-picker-grid input {
+            padding: 0.6rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .quick-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        /* Relative Time */
+        .relative-time {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-top: 0.5rem;
+        }
+
+        .relative-time strong {
+            color: var(--accent);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--success);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Error */
+        .error-text {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🕐 Timestamp Converter</h1>
+            <p class="subtitle">Convert between Unix timestamps and human-readable dates</p>
+        </header>
+
+        <!-- Current Time -->
+        <div class="card current-time">
+            <div class="time-display">
+                <div class="time-big" id="currentTimestamp">-</div>
+                <div class="time-label">Current Unix Timestamp (seconds)</div>
+                <div class="time-row">
+                    <div class="time-item">
+                        <div class="value" id="currentISO">-</div>
+                        <div class="label">ISO 8601</div>
+                    </div>
+                    <div class="time-item">
+                        <div class="value" id="currentUTC">-</div>
+                        <div class="label">UTC</div>
+                    </div>
+                    <div class="time-item">
+                        <div class="value" id="currentLocal">-</div>
+                        <div class="label">Local</div>
+                    </div>
+                </div>
+            </div>
+            <div class="actions" style="justify-content: center;">
+                <button class="btn btn-primary" onclick="copyCurrentTimestamp()">Copy Timestamp</button>
+                <button class="btn btn-secondary" onclick="setCurrentAsInput()">Use as Input</button>
+            </div>
+        </div>
+
+        <!-- Converter -->
+        <div class="card">
+            <div class="card-header">
+                <h2>🔄 Converter</h2>
+            </div>
+            <div class="converter-grid">
+                <!-- Unix to Date -->
+                <div class="converter-section">
+                    <label>Unix Timestamp (seconds)</label>
+                    <input type="text" id="unixInput" placeholder="e.g., 1709510400" oninput="unixToDate()">
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="setUnixOffset(-86400)">-1 day</button>
+                        <button class="quick-btn" onclick="setUnixOffset(-3600)">-1 hour</button>
+                        <button class="quick-btn" onclick="setUnixNow()">Now</button>
+                        <button class="quick-btn" onclick="setUnixOffset(3600)">+1 hour</button>
+                        <button class="quick-btn" onclick="setUnixOffset(86400)">+1 day</button>
+                    </div>
+                    <div class="result-box" id="unixResult">
+                        <p style="color: var(--text-secondary); text-align: center;">Enter a Unix timestamp</p>
+                    </div>
+                </div>
+
+                <!-- Date to Unix -->
+                <div class="converter-section">
+                    <label>Date & Time</label>
+                    <input type="datetime-local" id="dateInput" onchange="dateToUnix()" style="width: 100%;">
+                    <div class="date-picker-grid">
+                        <select id="presetDate" onchange="applyDatePreset()">
+                            <option value="">Quick select...</option>
+                            <option value="today">Today</option>
+                            <option value="tomorrow">Tomorrow</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">Next week</option>
+                            <option value="month">Next month</option>
+                            <option value="year">Next year</option>
+                        </select>
+                    </div>
+                    <div class="result-box" id="dateResult">
+                        <p style="color: var(--text-secondary); text-align: center;">Select a date and time</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formats Reference -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Common Timestamps</h2>
+            </div>
+            <div id="commonTimestamps"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        let currentTimestampInterval;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startClock();
+            loadCommonTimestamps();
+
+            // Load from URL
+            const params = new URLSearchParams(window.location.search);
+            const ts = params.get('ts');
+            if (ts) {
+                document.getElementById('unixInput').value = ts;
+                unixToDate();
+            }
+        });
+
+        function startClock() {
+            updateTime();
+            currentTimestampInterval = setInterval(updateTime, 1000);
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const unix = Math.floor(now.getTime() / 1000);
+
+            document.getElementById('currentTimestamp').textContent = unix;
+            document.getElementById('currentISO').textContent = now.toISOString();
+            document.getElementById('currentUTC').textContent = now.toUTCString().slice(0, -4);
+            document.getElementById('currentLocal').textContent = now.toLocaleString();
+        }
+
+        function unixToDate() {
+            const input = document.getElementById('unixInput').value.trim();
+            const resultBox = document.getElementById('unixResult');
+
+            if (!input) {
+                resultBox.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Enter a Unix timestamp</p>';
+                return;
+            }
+
+            let timestamp = parseInt(input);
+            if (isNaN(timestamp)) {
+                resultBox.innerHTML = '<p class="error-text">Invalid timestamp</p>';
+                return;
+            }
+
+            // Auto-detect milliseconds
+            if (timestamp > 9999999999) {
+                timestamp = Math.floor(timestamp / 1000);
+            }
+
+            const date = new Date(timestamp * 1000);
+            const now = new Date();
+            const diff = date - now;
+
+            resultBox.innerHTML = `
+                <div class="result-row">
+                    <span class="result-label">ISO 8601</span>
+                    <span class="result-value" onclick="copyValue('${date.toISOString()}')">${date.toISOString()}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">UTC</span>
+                    <span class="result-value" onclick="copyValue('${date.toUTCString()}')">${date.toUTCString()}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Local</span>
+                    <span class="result-value" onclick="copyValue('${date.toLocaleString()}')">${date.toLocaleString()}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">RFC 2822</span>
+                    <span class="result-value" onclick="copyValue('${date.toDateString()}')">${date.toDateString()}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Milliseconds</span>
+                    <span class="result-value" onclick="copyValue('${timestamp * 1000}')">${timestamp * 1000}</span>
+                </div>
+                <div class="relative-time">
+                    ${formatRelativeTime(diff)}
+                </div>
+            `;
+
+            // Update date input
+            const localISO = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('dateInput').value = localISO;
+        }
+
+        function dateToUnix() {
+            const input = document.getElementById('dateInput').value;
+            const resultBox = document.getElementById('dateResult');
+
+            if (!input) {
+                resultBox.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Select a date and time</p>';
+                return;
+            }
+
+            const date = new Date(input);
+            if (isNaN(date.getTime())) {
+                resultBox.innerHTML = '<p class="error-text">Invalid date</p>';
+                return;
+            }
+
+            const unix = Math.floor(date.getTime() / 1000);
+            const now = new Date();
+            const diff = date - now;
+
+            resultBox.innerHTML = `
+                <div class="result-row">
+                    <span class="result-label">Unix (seconds)</span>
+                    <span class="result-value" onclick="copyValue('${unix}')">${unix}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Unix (milliseconds)</span>
+                    <span class="result-value" onclick="copyValue('${unix * 1000}')">${unix * 1000}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">ISO 8601</span>
+                    <span class="result-value" onclick="copyValue('${date.toISOString()}')">${date.toISOString()}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">UTC</span>
+                    <span class="result-value" onclick="copyValue('${date.toUTCString()}')">${date.toUTCString()}</span>
+                </div>
+                <div class="relative-time">
+                    ${formatRelativeTime(diff)}
+                </div>
+            `;
+
+            // Update unix input
+            document.getElementById('unixInput').value = unix;
+        }
+
+        function formatRelativeTime(diff) {
+            const seconds = Math.floor(Math.abs(diff) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            const months = Math.floor(days / 30);
+            const years = Math.floor(days / 365);
+
+            let timeStr;
+            if (years > 0) timeStr = `${years} year${years > 1 ? 's' : ''}`;
+            else if (months > 0) timeStr = `${months} month${months > 1 ? 's' : ''}`;
+            else if (days > 0) timeStr = `${days} day${days > 1 ? 's' : ''}`;
+            else if (hours > 0) timeStr = `${hours} hour${hours > 1 ? 's' : ''}`;
+            else if (minutes > 0) timeStr = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+            else timeStr = `${seconds} second${seconds > 1 ? 's' : ''}`;
+
+            if (diff < 0) {
+                return `<strong>${timeStr} ago</strong>`;
+            } else if (diff > 0) {
+                return `<strong>in ${timeStr}</strong>`;
+            } else {
+                return `<strong>now</strong>`;
+            }
+        }
+
+        function setUnixNow() {
+            document.getElementById('unixInput').value = Math.floor(Date.now() / 1000);
+            unixToDate();
+        }
+
+        function setUnixOffset(offset) {
+            let current = parseInt(document.getElementById('unixInput').value) || Math.floor(Date.now() / 1000);
+            document.getElementById('unixInput').value = current + offset;
+            unixToDate();
+        }
+
+        function applyDatePreset() {
+            const preset = document.getElementById('presetDate').value;
+            if (!preset) return;
+
+            const now = new Date();
+            let date;
+
+            switch (preset) {
+                case 'today':
+                    date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+                    break;
+                case 'tomorrow':
+                    date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
+                    break;
+                case 'yesterday':
+                    date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0, 0);
+                    break;
+                case 'week':
+                    date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 12, 0, 0);
+                    break;
+                case 'month':
+                    date = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate(), 12, 0, 0);
+                    break;
+                case 'year':
+                    date = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate(), 12, 0, 0);
+                    break;
+            }
+
+            const localISO = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('dateInput').value = localISO;
+            dateToUnix();
+            document.getElementById('presetDate').value = '';
+        }
+
+        function copyCurrentTimestamp() {
+            const ts = document.getElementById('currentTimestamp').textContent;
+            navigator.clipboard.writeText(ts).then(() => showToast('Timestamp copied!'));
+        }
+
+        function setCurrentAsInput() {
+            document.getElementById('unixInput').value = Math.floor(Date.now() / 1000);
+            unixToDate();
+        }
+
+        function copyValue(value) {
+            navigator.clipboard.writeText(value).then(() => showToast('Copied!'));
+        }
+
+        function loadCommonTimestamps() {
+            const now = new Date();
+            const timestamps = [
+                { label: 'Unix Epoch', date: new Date(0) },
+                { label: 'Y2K', date: new Date(2000, 0, 1) },
+                { label: 'Unix 1 billion', date: new Date(1000000000 * 1000) },
+                { label: 'Unix 1.5 billion', date: new Date(1500000000 * 1000) },
+                { label: 'Unix 2 billion', date: new Date(2000000000 * 1000) },
+            ];
+
+            const container = document.getElementById('commonTimestamps');
+            container.innerHTML = timestamps.map(t => `
+                <div class="result-row">
+                    <span class="result-label">${t.label}</span>
+                    <span class="result-value" onclick="copyValue('${Math.floor(t.date.getTime() / 1000)}')">${Math.floor(t.date.getTime() / 1000)}</span>
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 1rem;">${t.date.toISOString()}</span>
+                </div>
+            `).join('');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

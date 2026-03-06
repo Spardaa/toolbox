@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to TypeScript - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        
+        .converter { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel { background: #16213e; border-radius: 12px; padding: 20px; }
+        .panel h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1.1rem; }
+        
+        textarea { 
+            width: 100%; min-height: 400px; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 15px; border-radius: 8px; font-family: 'Monaco', 'Menlo', monospace; 
+            font-size: 13px; resize: vertical;
+        }
+        
+        .options { margin-bottom: 15px; display: flex; gap: 20px; flex-wrap: wrap; }
+        .option { display: flex; align-items: center; gap: 8px; }
+        .option input[type="checkbox"] { width: 16px; height: 16px; }
+        .option label { color: #888; font-size: 14px; cursor: pointer; }
+        
+        .toolbar { display: flex; gap: 10px; margin-top: 15px; }
+        button { 
+            padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
+            font-weight: bold; transition: all 0.3s;
+        }
+        .convert-btn { background: #00d4ff; color: #1a1a2e; }
+        .copy-btn { background: #27ae60; color: white; }
+        .clear-btn { background: #e74c3c; color: white; }
+        button:hover { opacity: 0.9; }
+        
+        .interface-name { margin-bottom: 15px; }
+        .interface-name label { display: block; margin-bottom: 5px; color: #888; }
+        .interface-name input { 
+            width: 100%; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 10px; border-radius: 6px;
+        }
+        
+        .error { color: #e74c3c; margin-top: 10px; font-size: 14px; }
+        .success { color: #27ae60; margin-top: 10px; font-size: 14px; }
+        
+        .example-btns { margin-bottom: 15px; }
+        .example-btns button { 
+            padding: 6px 12px; background: #333; color: #888; font-size: 12px; margin-right: 8px;
+        }
+        .example-btns button:hover { background: #444; color: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔷 JSON to TypeScript</h1>
+        
+        <div class="converter">
+            <div class="panel">
+                <h2>JSON Input</h2>
+                
+                <div class="example-btns">
+                    <button onclick="loadExample('simple')">Simple</button>
+                    <button onclick="loadExample('nested')">Nested</button>
+                    <button onclick="loadExample('array')">Array</button>
+                    <button onclick="loadExample('complex')">Complex</button>
+                </div>
+                
+                <textarea id="json-input" placeholder='{"name": "John", "age": 30}'></textarea>
+                
+                <div class="toolbar">
+                    <button class="convert-btn" onclick="convert()">⚡ Convert</button>
+                    <button class="clear-btn" onclick="clearAll()">🗑️ Clear</button>
+                </div>
+                <div id="input-status"></div>
+            </div>
+            
+            <div class="panel">
+                <h2>TypeScript Output</h2>
+                
+                <div class="interface-name">
+                    <label>Interface Name</label>
+                    <input type="text" id="interface-name" value="RootObject">
+                </div>
+                
+                <div class="options">
+                    <div class="option">
+                        <input type="checkbox" id="use-interface" checked>
+                        <label for="use-interface">Use interface</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="optional-fields">
+                        <label for="optional-fields">Optional fields (?)</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="prefix-interfaces">
+                        <label for="prefix-interfaces">Prefix nested interfaces</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" id="export-interfaces" checked>
+                        <label for="export-interfaces">Export interfaces</label>
+                    </div>
+                </div>
+                
+                <textarea id="ts-output" readonly></textarea>
+                
+                <div class="toolbar">
+                    <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+                    <button onclick="downloadOutput()">💾 Download .d.ts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const examples = {
+            simple: {
+                name: "John Doe",
+                age: 30,
+                email: "john@example.com",
+                isActive: true
+            },
+            nested: {
+                user: {
+                    id: 1,
+                    profile: {
+                        name: "John",
+                        avatar: "https://example.com/avatar.png"
+                    }
+                },
+                settings: {
+                    theme: "dark",
+                    notifications: true
+                }
+            },
+            array: {
+                users: [
+                    { id: 1, name: "John" },
+                    { id: 2, name: "Jane" }
+                ],
+                tags: ["typescript", "javascript", "json"]
+            },
+            complex: {
+                id: 1,
+                name: "Product",
+                price: 99.99,
+                inStock: true,
+                categories: ["electronics", "gadgets"],
+                metadata: {
+                    createdAt: "2024-01-01",
+                    updatedAt: null,
+                    tags: [{ name: "featured", priority: 1 }]
+                },
+                variants: [
+                    { color: "black", size: "M", stock: 10 }
+                ]
+            }
+        };
+        
+        function loadExample(name) {
+            document.getElementById('json-input').value = JSON.stringify(examples[name], null, 2);
+            convert();
+        }
+        
+        function getType(value, key = '', parentName = 'Root') {
+            if (value === null) return 'null';
+            if (Array.isArray(value)) {
+                if (value.length === 0) return 'any[]';
+                const itemTypes = new Set(value.map(item => getType(item, '', parentName)));
+                if (itemTypes.size === 1) {
+                    const type = itemTypes.values().next().value;
+                    return `${type}[]`;
+                }
+                return '(' + Array.from(itemTypes).join(' | ') + ')[]';
+            }
+            if (typeof value === 'object') {
+                return 'object';
+            }
+            if (typeof value === 'string') return 'string';
+            if (typeof value === 'number') return 'number';
+            if (typeof value === 'boolean') return 'boolean';
+            return 'any';
+        }
+        
+        function toPascalCase(str) {
+            return str
+                .replace(/[^a-zA-Z0-9]/g, ' ')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join('');
+        }
+        
+        function generateInterface(obj, name, interfaces, prefix = '', depth = 0) {
+            const useInterface = document.getElementById('use-interface').checked;
+            const optionalFields = document.getElementById('optional-fields').checked;
+            const prefixInterfaces = document.getElementById('prefix-interfaces').checked;
+            const exportInterfaces = document.getElementById('export-interfaces').checked;
+            
+            let result = '';
+            const fields = [];
+            
+            for (const [key, value] of Object.entries(obj)) {
+                let fieldType;
+                let fieldName = key;
+                
+                if (optionalFields) {
+                    fieldName += '?';
+                }
+                
+                if (value === null) {
+                    fieldType = 'null';
+                } else if (Array.isArray(value)) {
+                    if (value.length === 0) {
+                        fieldType = 'any[]';
+                    } else if (typeof value[0] === 'object' && value[0] !== null) {
+                        const itemInterfaceName = prefixInterfaces 
+                            ? `${name}${toPascalCase(key)}Item`
+                            : toPascalCase(key) + 'Item';
+                        fieldType = `${itemInterfaceName}[]`;
+                        generateInterface(value[0], itemInterfaceName, interfaces, prefix, depth + 1);
+                    } else {
+                        fieldType = getType(value);
+                    }
+                } else if (typeof value === 'object') {
+                    const nestedName = prefixInterfaces 
+                        ? `${name}${toPascalCase(key)}`
+                        : toPascalCase(key);
+                    fieldType = nestedName;
+                    generateInterface(value, nestedName, interfaces, prefix, depth + 1);
+                } else {
+                    fieldType = getType(value);
+                }
+                
+                fields.push(`  ${fieldName}: ${fieldType};`);
+            }
+            
+            const keyword = useInterface ? 'interface' : 'type';
+            const exportKeyword = exportInterfaces ? 'export ' : '';
+            
+            if (keyword === 'interface') {
+                result = `${exportKeyword}${keyword} ${name} {\n${fields.join('\n')}\n}`;
+            } else {
+                result = `${exportKeyword}${keyword} ${name} = {\n${fields.join('\n')}\n};`;
+            }
+            
+            interfaces.unshift(result);
+            
+            return interfaces;
+        }
+        
+        function convert() {
+            const input = document.getElementById('json-input').value.trim();
+            const interfaceName = document.getElementById('interface-name').value || 'RootObject';
+            const statusEl = document.getElementById('input-status');
+            
+            if (!input) {
+                statusEl.innerHTML = '<div class="error">Please enter JSON</div>';
+                return;
+            }
+            
+            try {
+                const obj = JSON.parse(input);
+                const interfaces = [];
+                
+                if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+                    generateInterface(obj, interfaceName, interfaces, '');
+                    document.getElementById('ts-output').value = interfaces.join('\n\n');
+                } else if (Array.isArray(obj)) {
+                    if (obj.length > 0 && typeof obj[0] === 'object') {
+                        const itemInterfaceName = interfaceName + 'Item';
+                        generateInterface(obj[0], itemInterfaceName, interfaces, '');
+                        const useInterface = document.getElementById('use-interface').checked;
+                        const exportKeyword = document.getElementById('export-interfaces').checked ? 'export ' : '';
+                        const keyword = useInterface ? 'interface' : 'type';
+                        
+                        if (keyword === 'interface') {
+                            interfaces.push(`${exportKeyword}${keyword} ${interfaceName} ${itemInterfaceName}[]`);
+                        } else {
+                            interfaces.push(`${exportKeyword}${keyword} ${interfaceName} = ${itemInterfaceName}[];`);
+                        }
+                        document.getElementById('ts-output').value = interfaces.join('\n\n');
+                    } else {
+                        const type = getType(obj);
+                        const exportKeyword = document.getElementById('export-interfaces').checked ? 'export ' : '';
+                        document.getElementById('ts-output').value = `${exportKeyword}type ${interfaceName} = ${type};`;
+                    }
+                } else {
+                    const type = getType(obj);
+                    const exportKeyword = document.getElementById('export-interfaces').checked ? 'export ' : '';
+                    document.getElementById('ts-output').value = `${exportKeyword}type ${interfaceName} = ${type};`;
+                }
+                
+                statusEl.innerHTML = '<div class="success">✓ Conversion successful</div>';
+            } catch (e) {
+                statusEl.innerHTML = `<div class="error">Invalid JSON: ${e.message}</div>`;
+                document.getElementById('ts-output').value = '';
+            }
+        }
+        
+        function copyOutput() {
+            navigator.clipboard.writeText(document.getElementById('ts-output').value);
+            alert('Copied!');
+        }
+        
+        function downloadOutput() {
+            const content = document.getElementById('ts-output').value;
+            const blob = new Blob([content], { type: 'text/typescript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'types.d.ts';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function clearAll() {
+            document.getElementById('json-input').value = '';
+            document.getElementById('ts-output').value = '';
+            document.getElementById('input-status').innerHTML = '';
+        }
+        
+        // Auto-convert on input change
+        document.getElementById('json-input').addEventListener('input', () => {
+            try {
+                convert();
+            } catch (e) {}
+        });
+    </script>
+</body>
+</html>

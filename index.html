@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具箱 - 一人公司必备工具集</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">🧰 工具箱</a>
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="搜索工具...">
+        <div id="search-results" class="search-results"></div>
+      </div>
+      <select id="lang-switcher" class="lang-switcher">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <section class="categories">
+        <div class="category-card" data-category="api-mock">
+          <div class="category-icon">🔌</div>
+          <div class="category-name" data-i18n="category-api-mock">API Mock</div>
+        </div>
+        <div class="category-card" data-category="data">
+          <div class="category-icon">📊</div>
+          <div class="category-name" data-i18n="category-data">数据转换</div>
+        </div>
+        <div class="category-card" data-category="dev-tools">
+          <div class="category-icon">🛠️</div>
+          <div class="category-name" data-i18n="category-dev-tools">开发工具</div>
+        </div>
+        <div class="category-card" data-category="image">
+          <div class="category-icon">🖼️</div>
+          <div class="category-name" data-i18n="category-image">图片处理</div>
+        </div>
+        <div class="category-card" data-category="calculator">
+          <div class="category-icon">💰</div>
+          <div class="category-name" data-i18n="category-calculator">计算工具</div>
+        </div>
+        <div class="category-card" data-category="generator">
+          <div class="category-icon">✨</div>
+          <div class="category-name" data-i18n="category-generator">生成工具</div>
+        </div>
+        <div class="category-card" data-category="analyzer">
+          <div class="category-icon">🔍</div>
+          <div class="category-name" data-i18n="category-analyzer">分析工具</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">🔥 热门工具</h2>
+        <div id="popular-tools" class="tools-grid"></div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">✨ 最新工具</h2>
+        <div id="latest-tools" class="tools-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 工具箱</p>
+    </div>
+  </footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

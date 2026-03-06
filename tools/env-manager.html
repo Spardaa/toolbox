@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variable Manager - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        
+        .layout { display: grid; grid-template-columns: 250px 1fr; gap: 20px; }
+        
+        .sidebar { background: #16213e; border-radius: 12px; padding: 15px; }
+        .sidebar h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1rem; }
+        .env-list { max-height: 500px; overflow-y: auto; }
+        .env-item { 
+            padding: 10px; margin-bottom: 5px; background: #1a1a2e; 
+            border-radius: 6px; cursor: pointer; display: flex; 
+            justify-content: space-between; align-items: center;
+        }
+        .env-item:hover { background: #2a2a4e; }
+        .env-item.active { border-left: 3px solid #00d4ff; }
+        .env-item .name { font-weight: bold; }
+        .env-item .count { color: #888; font-size: 12px; }
+        
+        .add-env-btn { 
+            width: 100%; padding: 10px; margin-top: 10px; background: #27ae60; 
+            color: white; border: none; border-radius: 6px; cursor: pointer;
+        }
+        
+        .main-panel { background: #16213e; border-radius: 12px; padding: 20px; }
+        .main-panel h2 { margin-bottom: 15px; color: #00d4ff; }
+        
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .toolbar button { 
+            padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer;
+        }
+        .import-btn { background: #3498db; color: white; }
+        .export-btn { background: #27ae60; color: white; }
+        .delete-btn { background: #e74c3c; color: white; }
+        
+        .variables { margin-top: 20px; }
+        .var-row { 
+            display: grid; grid-template-columns: 1fr 1fr 80px 50px; 
+            gap: 10px; margin-bottom: 10px; align-items: center;
+        }
+        .var-row input { 
+            background: #1a1a2e; border: 1px solid #333; color: #eee; 
+            padding: 10px; border-radius: 6px;
+        }
+        .var-row .secret-toggle { 
+            background: #333; border: none; color: #888; padding: 10px; 
+            border-radius: 6px; cursor: pointer;
+        }
+        .var-row .delete-var { 
+            background: #e74c3c; border: none; color: white; padding: 10px; 
+            border-radius: 6px; cursor: pointer;
+        }
+        
+        .add-var-btn { 
+            width: 100%; padding: 10px; background: #27ae60; color: white; 
+            border: none; border-radius: 6px; cursor: pointer; margin-top: 10px;
+        }
+        
+        .export-options { 
+            display: flex; gap: 10px; margin-top: 20px; padding-top: 20px; 
+            border-top: 1px solid #333;
+        }
+        .export-options button { 
+            flex: 1; padding: 12px; border: none; border-radius: 6px; 
+            cursor: pointer; font-weight: bold;
+        }
+        .env-btn { background: #27ae60; color: white; }
+        .json-btn { background: #3498db; color: white; }
+        .yaml-btn { background: #9b59b6; color: white; }
+        .docker-btn { background: #00d4ff; color: #1a1a2e; }
+        
+        .empty-state { 
+            text-align: center; padding: 50px; color: #888;
+        }
+        
+        .import-area { 
+            display: none; margin-bottom: 15px; 
+        }
+        .import-area.active { display: block; }
+        .import-area textarea { 
+            width: 100%; min-height: 150px; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 10px; border-radius: 6px; font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Environment Variable Manager</h1>
+        
+        <div class="layout">
+            <div class="sidebar">
+                <h2>Environments</h2>
+                <div class="env-list" id="env-list"></div>
+                <button class="add-env-btn" onclick="addEnvironment()">+ New Environment</button>
+            </div>
+            
+            <div class="main-panel">
+                <div id="empty-state" class="empty-state">
+                    <p>Select or create an environment to get started</p>
+                </div>
+                
+                <div id="env-editor" style="display: none;">
+                    <div class="toolbar">
+                        <button class="import-btn" onclick="toggleImport()">📥 Import</button>
+                        <button class="export-btn" onclick="copyEnv()">📋 Copy .env</button>
+                        <button class="delete-btn" onclick="deleteEnvironment()">🗑️ Delete</button>
+                    </div>
+                    
+                    <div class="import-area" id="import-area">
+                        <textarea id="import-text" placeholder="Paste your .env content here..."></textarea>
+                        <button onclick="importEnv()" style="margin-top: 10px; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 6px; width: 100%;">Import</button>
+                    </div>
+                    
+                    <h2 id="env-name-display">Variables</h2>
+                    <div class="variables" id="variables"></div>
+                    <button class="add-var-btn" onclick="addVariable()">+ Add Variable</button>
+                    
+                    <div class="export-options">
+                        <button class="env-btn" onclick="download('env')">.env</button>
+                        <button class="json-btn" onclick="download('json')">JSON</button>
+                        <button class="yaml-btn" onclick="download('yaml')">YAML</button>
+                        <button class="docker-btn" onclick="download('docker')">Docker Compose</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let environments = JSON.parse(localStorage.getItem('envManager') || '{}');
+        let currentEnv = null;
+        
+        function saveData() {
+            localStorage.setItem('envManager', JSON.stringify(environments));
+        }
+        
+        function renderEnvironments() {
+            const list = document.getElementById('env-list');
+            const envNames = Object.keys(environments);
+            
+            if (envNames.length === 0) {
+                list.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No environments</p>';
+                return;
+            }
+            
+            list.innerHTML = envNames.map(name => `
+                <div class="env-item ${currentEnv === name ? 'active' : ''}" onclick="selectEnvironment('${name}')">
+                    <span class="name">${name}</span>
+                    <span class="count">${environments[name].length} vars</span>
+                </div>
+            `).join('');
+        }
+        
+        function addEnvironment() {
+            const name = prompt('Environment name:', 'development');
+            if (!name || environments[name]) {
+                if (environments[name]) alert('Environment already exists');
+                return;
+            }
+            
+            environments[name] = [];
+            saveData();
+            renderEnvironments();
+            selectEnvironment(name);
+        }
+        
+        function selectEnvironment(name) {
+            currentEnv = name;
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('env-editor').style.display = 'block';
+            document.getElementById('env-name-display').textContent = name + ' Variables';
+            renderVariables();
+            renderEnvironments();
+        }
+        
+        function deleteEnvironment() {
+            if (!currentEnv) return;
+            if (!confirm(`Delete environment "${currentEnv}"?`)) return;
+            
+            delete environments[currentEnv];
+            currentEnv = null;
+            saveData();
+            renderEnvironments();
+            document.getElementById('empty-state').style.display = 'block';
+            document.getElementById('env-editor').style.display = 'none';
+        }
+        
+        function renderVariables() {
+            if (!currentEnv) return;
+            
+            const vars = environments[currentEnv];
+            const container = document.getElementById('variables');
+            
+            if (vars.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No variables yet</p>';
+                return;
+            }
+            
+            container.innerHTML = vars.map((v, i) => `
+                <div class="var-row">
+                    <input type="text" value="${v.key}" placeholder="KEY" onchange="updateVar(${i}, 'key', this.value)">
+                    <input type="${v.secret ? 'password' : 'text'}" value="${v.value}" placeholder="value" onchange="updateVar(${i}, 'value', this.value)" id="value-${i}">
+                    <button class="secret-toggle" onclick="toggleSecret(${i})">${v.secret ? '🔒' : '👁️'}</button>
+                    <button class="delete-var" onclick="deleteVariable(${i})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function addVariable() {
+            if (!currentEnv) return;
+            environments[currentEnv].push({ key: '', value: '', secret: false });
+            saveData();
+            renderVariables();
+        }
+        
+        function updateVar(index, field, value) {
+            if (!currentEnv) return;
+            environments[currentEnv][index][field] = value;
+            saveData();
+        }
+        
+        function toggleSecret(index) {
+            if (!currentEnv) return;
+            environments[currentEnv][index].secret = !environments[currentEnv][index].secret;
+            saveData();
+            renderVariables();
+        }
+        
+        function deleteVariable(index) {
+            if (!currentEnv) return;
+            environments[currentEnv].splice(index, 1);
+            saveData();
+            renderVariables();
+        }
+        
+        function toggleImport() {
+            const area = document.getElementById('import-area');
+            area.classList.toggle('active');
+        }
+        
+        function importEnv() {
+            if (!currentEnv) return;
+            const text = document.getElementById('import-text').value;
+            const lines = text.split('\n');
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.startsWith('#')) return;
+                
+                const [key, ...valueParts] = line.split('=');
+                const value = valueParts.join('=').replace(/^["']|["']$/g, '');
+                
+                if (key && value !== undefined) {
+                    environments[currentEnv].push({ 
+                        key: key.trim(), 
+                        value: value.trim(),
+                        secret: key.toLowerCase().includes('secret') || 
+                               key.toLowerCase().includes('key') || 
+                               key.toLowerCase().includes('password')
+                    });
+                }
+            });
+            
+            saveData();
+            renderVariables();
+            toggleImport();
+            document.getElementById('import-text').value = '';
+        }
+        
+        function generateEnvContent() {
+            if (!currentEnv) return '';
+            return environments[currentEnv]
+                .map(v => `${v.key}=${v.value}`)
+                .join('\n');
+        }
+        
+        function copyEnv() {
+            navigator.clipboard.writeText(generateEnvContent());
+            alert('Copied to clipboard!');
+        }
+        
+        function download(format) {
+            if (!currentEnv) return;
+            const vars = environments[currentEnv];
+            let content, filename, type;
+            
+            switch (format) {
+                case 'env':
+                    content = vars.map(v => `${v.key}=${v.value}`).join('\n');
+                    filename = '.env';
+                    type = 'text/plain';
+                    break;
+                case 'json':
+                    const obj = {};
+                    vars.forEach(v => obj[v.key] = v.value);
+                    content = JSON.stringify(obj, null, 2);
+                    filename = 'env.json';
+                    type = 'application/json';
+                    break;
+                case 'yaml':
+                    content = vars.map(v => `${v.key}: "${v.value}"`).join('\n');
+                    filename = 'env.yaml';
+                    type = 'text/yaml';
+                    break;
+                case 'docker':
+                    content = 'environment:\n' + vars.map(v => `  - ${v.key}=${v.value}`).join('\n');
+                    filename = 'docker-compose.env.yml';
+                    type = 'text/yaml';
+                    break;
+            }
+            
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Initialize
+        renderEnvironments();
+    </script>
+</body>
+</html>

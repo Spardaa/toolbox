@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Metrics Calculator - Dev Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            color: #00d9ff;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .metric-value.positive {
+            color: #00ff88;
+        }
+
+        .metric-value.negative {
+            color: #ff4757;
+        }
+
+        .metric-value.neutral {
+            color: #00d9ff;
+        }
+
+        .metric-value.warning {
+            color: #ffc107;
+        }
+
+        .health-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .health-indicator.good {
+            background: rgba(0,255,136,0.2);
+            color: #00ff88;
+        }
+
+        .health-indicator.warning {
+            background: rgba(255,193,7,0.2);
+            color: #ffc107;
+        }
+
+        .health-indicator.bad {
+            background: rgba(255,71,87,0.2);
+            color: #ff4757;
+        }
+
+        .presets {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(0,217,255,0.2);
+            border-color: #00d9ff;
+        }
+
+        .preset-btn.active {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-color: transparent;
+            color: #1a1a2e;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-color: transparent;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 20px 0;
+        }
+
+        .formula-hint {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-tooltip {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 16px;
+            font-size: 0.7rem;
+            cursor: help;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SaaS Metrics Calculator</h1>
+            <p class="subtitle">Calculate key SaaS metrics for your startup - MRR, LTV, CAC, Churn, and more</p>
+        </header>
+
+        <div class="presets">
+            <button class="preset-btn" data-preset="early">Early Stage</button>
+            <button class="preset-btn" data-preset="growth">Growth Stage</button>
+            <button class="preset-btn" data-preset="mature">Mature SaaS</button>
+            <button class="preset-btn" data-preset="enterprise">Enterprise</button>
+            <button class="preset-btn" data-preset="custom">Custom</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2>Revenue Inputs</h2>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Monthly Recurring Revenue (MRR)</label>
+                        <input type="number" id="mrr" value="50000" min="0">
+                        <div class="formula-hint">Total monthly subscription revenue</div>
+                    </div>
+                    <div class="input-group">
+                        <label>Annual Recurring Revenue (ARR)</label>
+                        <input type="number" id="arr" value="600000" min="0" readonly>
+                        <div class="formula-hint">MRR × 12</div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>One-time Revenue (Monthly)</label>
+                        <input type="number" id="oneTimeRevenue" value="5000" min="0">
+                        <div class="formula-hint">Setup fees, consulting, etc.</div>
+                    </div>
+                    <div class="input-group">
+                        <label>Expansion Revenue (Monthly)</label>
+                        <input type="number" id="expansionRevenue" value="3000" min="0">
+                        <div class="formula-hint">Upsells, add-ons</div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+                <h2>Customer Metrics</h2>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Total Customers</label>
+                        <input type="number" id="totalCustomers" value="500" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>New Customers (Monthly)</label>
+                        <input type="number" id="newCustomers" value="30" min="0">
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Churned Customers (Monthly)</label>
+                        <input type="number" id="churnedCustomers" value="10" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Customer Acquisition Cost (CAC)</label>
+                        <input type="number" id="cac" value="500" min="0">
+                        <div class="formula-hint">Sales & marketing cost per customer</div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Average Customer Lifetime (months)</label>
+                        <input type="number" id="customerLifetime" value="24" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Gross Margin (%)</label>
+                        <input type="number" id="grossMargin" value="80" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Financial Metrics</h2>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Monthly Burn Rate ($)</label>
+                        <input type="number" id="burnRate" value="40000" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Cash on Hand ($)</label>
+                        <input type="number" id="cashOnHand" value="500000" min="0">
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+                <h2>Calculated Metrics</h2>
+
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <span class="metric-label">ARPU (Average Revenue Per User)</span>
+                        <span class="metric-value neutral" id="arpu">$100</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Customer Churn Rate</span>
+                        <span class="metric-value" id="churnRate">2.0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Revenue Churn Rate</span>
+                        <span class="metric-value" id="revenueChurn">1.4%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">LTV (Lifetime Value)</span>
+                        <span class="metric-value neutral" id="ltv">$2,400</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">LTV:CAC Ratio</span>
+                        <span class="metric-value" id="ltvCacRatio">4.8x</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">CAC Payback Period</span>
+                        <span class="metric-value neutral" id="paybackPeriod">5.0 months</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Net Revenue Retention</span>
+                        <span class="metric-value" id="nrr">101.6%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Rule of 40 Score</span>
+                        <span class="metric-value" id="ruleOf40">42%</span>
+                    </div>
+                    <div class="metric full-width">
+                        <span class="metric-label">Runway (Months of Cash Left)</span>
+                        <span class="metric-value" id="runway">12.5 months</span>
+                    </div>
+                    <div class="metric full-width">
+                        <span class="metric-label">Estimated Valuation (5x ARR)</span>
+                        <span class="metric-value neutral" id="valuation">$3,000,000</span>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+                <h2>Health Check</h2>
+
+                <div class="metric">
+                    <span class="metric-label">LTV:CAC Ratio</span>
+                    <span class="metric-value" id="ltvCacHealth">4.8x <span class="health-indicator good">Healthy</span></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Churn Rate</span>
+                    <span class="metric-value" id="churnHealth">2.0% <span class="health-indicator good">Good</span></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Runway</span>
+                    <span class="metric-value" id="runwayHealth">12.5 months <span class="health-indicator warning">Watch</span></span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Gross Margin</span>
+                    <span class="metric-value" id="marginHealth">80% <span class="health-indicator good">Healthy</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="action-btn" id="resetBtn">Reset</button>
+            <button class="action-btn" id="exportBtn">Export Report</button>
+            <button class="action-btn primary" id="calculateBtn">Recalculate</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const presets = {
+            early: {
+                mrr: 5000,
+                oneTimeRevenue: 2000,
+                expansionRevenue: 500,
+                totalCustomers: 50,
+                newCustomers: 10,
+                churnedCustomers: 2,
+                cac: 200,
+                customerLifetime: 12,
+                grossMargin: 70,
+                burnRate: 15000,
+                cashOnHand: 100000
+            },
+            growth: {
+                mrr: 50000,
+                oneTimeRevenue: 5000,
+                expansionRevenue: 3000,
+                totalCustomers: 500,
+                newCustomers: 30,
+                churnedCustomers: 10,
+                cac: 500,
+                customerLifetime: 24,
+                grossMargin: 80,
+                burnRate: 40000,
+                cashOnHand: 500000
+            },
+            mature: {
+                mrr: 200000,
+                oneTimeRevenue: 10000,
+                expansionRevenue: 15000,
+                totalCustomers: 1500,
+                newCustomers: 80,
+                churnedCustomers: 30,
+                cac: 300,
+                customerLifetime: 36,
+                grossMargin: 85,
+                burnRate: 100000,
+                cashOnHand: 2000000
+            },
+            enterprise: {
+                mrr: 500000,
+                oneTimeRevenue: 50000,
+                expansionRevenue: 40000,
+                totalCustomers: 200,
+                newCustomers: 15,
+                churnedCustomers: 3,
+                cac: 5000,
+                customerLifetime: 60,
+                grossMargin: 90,
+                burnRate: 200000,
+                cashOnHand: 5000000
+            },
+            custom: {}
+        };
+
+        function formatCurrency(value) {
+            if (value >= 1000000) {
+                return '$' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return '$' + (value / 1000).toFixed(0) + 'K';
+            }
+            return '$' + value.toFixed(0);
+        }
+
+        function calculate() {
+            const mrr = parseFloat(document.getElementById('mrr').value) || 0;
+            const oneTimeRevenue = parseFloat(document.getElementById('oneTimeRevenue').value) || 0;
+            const expansionRevenue = parseFloat(document.getElementById('expansionRevenue').value) || 0;
+            const totalCustomers = parseFloat(document.getElementById('totalCustomers').value) || 1;
+            const newCustomers = parseFloat(document.getElementById('newCustomers').value) || 0;
+            const churnedCustomers = parseFloat(document.getElementById('churnedCustomers').value) || 0;
+            const cac = parseFloat(document.getElementById('cac').value) || 0;
+            const customerLifetime = parseFloat(document.getElementById('customerLifetime').value) || 1;
+            const grossMargin = parseFloat(document.getElementById('grossMargin').value) || 0;
+            const burnRate = parseFloat(document.getElementById('burnRate').value) || 0;
+            const cashOnHand = parseFloat(document.getElementById('cashOnHand').value) || 0;
+
+            // ARR
+            const arr = mrr * 12;
+            document.getElementById('arr').value = arr;
+
+            // ARPU
+            const arpu = totalCustomers > 0 ? mrr / totalCustomers : 0;
+            document.getElementById('arpu').textContent = formatCurrency(arpu);
+
+            // Churn Rate
+            const churnRate = totalCustomers > 0 ? (churnedCustomers / totalCustomers) * 100 : 0;
+            const churnEl = document.getElementById('churnRate');
+            churnEl.textContent = churnRate.toFixed(1) + '%';
+            churnEl.className = 'metric-value ' + (churnRate < 3 ? 'positive' : churnRate < 5 ? 'warning' : 'negative');
+
+            // Revenue Churn
+            const revenueChurn = mrr > 0 ? ((churnedCustomers * arpu - expansionRevenue) / mrr) * 100 : 0;
+            const revChurnEl = document.getElementById('revenueChurn');
+            revChurnEl.textContent = Math.max(0, revenueChurn).toFixed(1) + '%';
+            revChurnEl.className = 'metric-value ' + (revenueChurn < 2 ? 'positive' : revenueChurn < 5 ? 'warning' : 'negative');
+
+            // LTV
+            const ltv = arpu * customerLifetime * (grossMargin / 100);
+            document.getElementById('ltv').textContent = formatCurrency(ltv);
+
+            // LTV:CAC Ratio
+            const ltvCacRatio = cac > 0 ? ltv / cac : 0;
+            const ltvCacEl = document.getElementById('ltvCacRatio');
+            ltvCacEl.textContent = ltvCacRatio.toFixed(1) + 'x';
+            ltvCacEl.className = 'metric-value ' + (ltvCacRatio >= 3 ? 'positive' : ltvCacRatio >= 1 ? 'warning' : 'negative');
+
+            // Payback Period
+            const paybackPeriod = (arpu * (grossMargin / 100)) > 0 ? cac / (arpu * (grossMargin / 100)) : 0;
+            const paybackEl = document.getElementById('paybackPeriod');
+            paybackEl.textContent = paybackPeriod.toFixed(1) + ' months';
+            paybackEl.className = 'metric-value ' + (paybackPeriod <= 12 ? 'positive' : paybackPeriod <= 18 ? 'warning' : 'negative');
+
+            // Net Revenue Retention
+            const nrr = mrr > 0 ? ((mrr - (churnedCustomers * arpu) + expansionRevenue) / mrr) * 100 : 100;
+            const nrrEl = document.getElementById('nrr');
+            nrrEl.textContent = nrr.toFixed(1) + '%';
+            nrrEl.className = 'metric-value ' + (nrr >= 100 ? 'positive' : 'negative');
+
+            // Growth Rate (simplified monthly)
+            const growthRate = totalCustomers > 0 ? (newCustomers / totalCustomers) * 100 : 0;
+
+            // Rule of 40
+            const ruleOf40 = growthRate + (grossMargin - 40);
+            const ruleEl = document.getElementById('ruleOf40');
+            ruleEl.textContent = ruleOf40.toFixed(0) + '%';
+            ruleEl.className = 'metric-value ' + (ruleOf40 >= 40 ? 'positive' : 'warning');
+
+            // Runway
+            const runway = burnRate > 0 ? cashOnHand / burnRate : 999;
+            const runwayEl = document.getElementById('runway');
+            runwayEl.textContent = runway > 99 ? '99+ months' : runway.toFixed(1) + ' months';
+            runwayEl.className = 'metric-value ' + (runway >= 18 ? 'positive' : runway >= 12 ? 'warning' : 'negative');
+
+            // Valuation (conservative 5x ARR)
+            const valuation = arr * 5;
+            document.getElementById('valuation').textContent = formatCurrency(valuation);
+
+            // Health checks
+            updateHealthCheck('ltvCacHealth', ltvCacRatio + 'x',
+                ltvCacRatio >= 3 ? 'good' : ltvCacRatio >= 1 ? 'warning' : 'bad',
+                ltvCacRatio >= 3 ? 'Healthy' : ltvCacRatio >= 1 ? 'Watch' : 'Critical');
+
+            updateHealthCheck('churnHealth', churnRate.toFixed(1) + '%',
+                churnRate < 3 ? 'good' : churnRate < 5 ? 'warning' : 'bad',
+                churnRate < 3 ? 'Good' : churnRate < 5 ? 'Acceptable' : 'High');
+
+            updateHealthCheck('runwayHealth', runway > 99 ? '99+' : runway.toFixed(1) + ' months',
+                runway >= 18 ? 'good' : runway >= 12 ? 'warning' : 'bad',
+                runway >= 18 ? 'Healthy' : runway >= 12 ? 'Watch' : 'Critical');
+
+            updateHealthCheck('marginHealth', grossMargin + '%',
+                grossMargin >= 80 ? 'good' : grossMargin >= 60 ? 'warning' : 'bad',
+                grossMargin >= 80 ? 'Healthy' : grossMargin >= 60 ? 'Acceptable' : 'Low');
+
+            // Save to localStorage
+            saveToStorage();
+        }
+
+        function updateHealthCheck(id, value, status, text) {
+            const el = document.getElementById(id);
+            el.innerHTML = value + ' <span class="health-indicator ' + status + '">' + text + '</span>';
+        }
+
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+
+            // Update active button
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === presetName);
+            });
+
+            if (presetName === 'custom') return;
+
+            // Apply values
+            Object.entries(preset).forEach(([key, value]) => {
+                const el = document.getElementById(key);
+                if (el) el.value = value;
+            });
+
+            calculate();
+        }
+
+        function saveToStorage() {
+            const data = {};
+            ['mrr', 'oneTimeRevenue', 'expansionRevenue', 'totalCustomers', 'newCustomers',
+             'churnedCustomers', 'cac', 'customerLifetime', 'grossMargin', 'burnRate', 'cashOnHand']
+            .forEach(key => {
+                data[key] = document.getElementById(key).value;
+            });
+            localStorage.setItem('saas-metrics-calculator', JSON.stringify(data));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('saas-metrics-calculator');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    Object.entries(data).forEach(([key, value]) => {
+                        const el = document.getElementById(key);
+                        if (el) el.value = value;
+                    });
+                } catch (e) {}
+            }
+        }
+
+        function exportReport() {
+            const report = `
+SaaS Metrics Report
+Generated: ${new Date().toLocaleDateString()}
+================================
+
+REVENUE METRICS
+- MRR: ${formatCurrency(parseFloat(document.getElementById('mrr').value))}
+- ARR: ${formatCurrency(parseFloat(document.getElementById('arr').value))}
+- ARPU: ${document.getElementById('arpu').textContent}
+
+CUSTOMER METRICS
+- Total Customers: ${document.getElementById('totalCustomers').value}
+- New Customers (Monthly): ${document.getElementById('newCustomers').value}
+- Churned Customers (Monthly): ${document.getElementById('churnedCustomers').value}
+- Customer Lifetime: ${document.getElementById('customerLifetime').value} months
+
+UNIT ECONOMICS
+- CAC: ${formatCurrency(parseFloat(document.getElementById('cac').value))}
+- LTV: ${document.getElementById('ltv').textContent}
+- LTV:CAC Ratio: ${document.getElementById('ltvCacRatio').textContent}
+- Payback Period: ${document.getElementById('paybackPeriod').textContent}
+
+HEALTH METRICS
+- Customer Churn: ${document.getElementById('churnRate').textContent}
+- Revenue Churn: ${document.getElementById('revenueChurn').textContent}
+- Net Revenue Retention: ${document.getElementById('nrr').textContent}
+- Gross Margin: ${document.getElementById('grossMargin').value}%
+- Rule of 40 Score: ${document.getElementById('ruleOf40').textContent}
+
+FINANCIAL HEALTH
+- Monthly Burn: ${formatCurrency(parseFloat(document.getElementById('burnRate').value))}
+- Cash on Hand: ${formatCurrency(parseFloat(document.getElementById('cashOnHand').value))}
+- Runway: ${document.getElementById('runway').textContent}
+- Est. Valuation: ${document.getElementById('valuation').textContent}
+            `.trim();
+
+            navigator.clipboard.writeText(report).then(() => {
+                showToast('Report copied to clipboard!');
+            });
+        }
+
+        function showToast(message = 'Copied to clipboard!') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function reset() {
+            applyPreset('growth');
+        }
+
+        // Event listeners
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+        });
+
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        document.getElementById('calculateBtn').addEventListener('click', calculate);
+        document.getElementById('exportBtn').addEventListener('click', exportReport);
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        // Initialize
+        loadFromStorage();
+        calculate();
+    </script>
+</body>
+</html>

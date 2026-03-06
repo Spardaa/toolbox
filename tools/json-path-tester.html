@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONPath Tester - Developer Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #06b6d4;
+            --accent-hover: #0891b2;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #475569;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 300px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .path-section {
+            margin-bottom: 20px;
+        }
+
+        .path-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .path-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+        }
+
+        .path-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .examples {
+            margin-top: 15px;
+        }
+
+        .examples h4 {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .example-btn {
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .example-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-count {
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .result-count.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .result-count.error {
+            background: var(--error);
+            color: white;
+        }
+
+        .result-output {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .result-output.error {
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .result-path {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 13px;
+        }
+
+        .result-value.string {
+            color: #22c55e;
+        }
+
+        .result-value.number {
+            color: #f59e0b;
+        }
+
+        .result-value.boolean {
+            color: #8b5cf6;
+        }
+
+        .result-value.null {
+            color: var(--text-secondary);
+        }
+
+        .cheatsheet {
+            margin-top: 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .cheatsheet h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .cheatsheet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 10px;
+        }
+
+        .cheatsheet-item {
+            display: flex;
+            gap: 10px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .cheatsheet-syntax {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            color: var(--accent);
+            min-width: 120px;
+        }
+
+        .cheatsheet-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>JSONPath</span> Tester</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="loadSample()">Load Sample</button>
+                <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">JSON Input</span>
+                    <button class="btn btn-secondary btn-sm" onclick="formatJson()">Format</button>
+                </div>
+                <textarea id="jsonInput" placeholder='{"store": {"book": [{"title": "Book 1"}, {"title": "Book 2"}]}}'></textarea>
+
+                <div class="path-section">
+                    <div class="panel-header">
+                        <span class="panel-title">JSONPath Expression</span>
+                    </div>
+                    <div class="path-input-wrapper">
+                        <input type="text" class="path-input" id="pathInput" placeholder="$.store.book[*].title" oninput="evaluatePath()">
+                        <button class="btn btn-primary" onclick="evaluatePath()">Evaluate</button>
+                    </div>
+
+                    <div class="examples">
+                        <h4>Quick Examples</h4>
+                        <div class="example-list" id="exampleList">
+                            <button class="example-btn" onclick="setPath('$')">Root $</button>
+                            <button class="example-btn" onclick="setPath('$.store')">Dot notation</button>
+                            <button class="example-btn" onclick="setPath('$[\'store\']')">Bracket notation</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[*]')">All items</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[0]')">First item</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[-1:]')">Last item</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[0:2]')">Slice</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[*].title')">All titles</button>
+                            <button class="example-btn" onclick="setPath('$..author')">Recursive descent</button>
+                            <button class="example-btn" onclick="setPath('$.store.book[?(@.price<10)]')">Filter</button>
+                            <button class="example-btn" onclick="setPath('$.store.book.length')">Length</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="result-header">
+                    <span class="panel-title">Results</span>
+                    <span class="result-count" id="resultCount">0 matches</span>
+                </div>
+                <div class="result-output" id="resultOutput">
+                    Enter a JSONPath expression to see results...
+                </div>
+            </div>
+        </div>
+
+        <div class="cheatsheet">
+            <h3>JSONPath Syntax Reference</h3>
+            <div class="cheatsheet-grid">
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">$</span>
+                    <span class="cheatsheet-desc">Root object/element</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">@</span>
+                    <span class="cheatsheet-desc">Current object/element</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">.</span>
+                    <span class="cheatsheet-desc">Child member</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">..</span>
+                    <span class="cheatsheet-desc">Recursive descent</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">*</span>
+                    <span class="cheatsheet-desc">Wildcard - all objects/elements</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">[start:end]</span>
+                    <span class="cheatsheet-desc">Array slice</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">[n]</span>
+                    <span class="cheatsheet-desc">Array index (0-based)</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">[n,m,...]</span>
+                    <span class="cheatsheet-desc">Multiple array indices</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">[?(expr)]</span>
+                    <span class="cheatsheet-desc">Filter expression</span>
+                </div>
+                <div class="cheatsheet-item">
+                    <span class="cheatsheet-syntax">[\'name\']</span>
+                    <span class="cheatsheet-desc">Bracket notation for key</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // JSONPath implementation
+        class JSONPath {
+            static evaluate(obj, path) {
+                if (!path || path === '$') {
+                    return [{ path: '$', value: obj }];
+                }
+
+                try {
+                    return this._traverse(obj, path, '$');
+                } catch (e) {
+                    throw new Error(`Invalid path: ${e.message}`);
+                }
+            }
+
+            static _traverse(obj, path, currentPath) {
+                if (!path || path.length === 0) {
+                    return [{ path: currentPath, value: obj }];
+                }
+
+                // Parse the next token
+                const match = path.match(/^(\$|@|\.|\.\.|\[|\*|[^.\[\*]+)/);
+                if (!match) {
+                    return [{ path: currentPath, value: obj }];
+                }
+
+                const token = match[0];
+                let remaining = path.slice(token.length);
+
+                // Handle recursive descent
+                if (token === '..') {
+                    return this._recursiveDescent(obj, remaining, currentPath);
+                }
+
+                // Handle dot notation
+                if (token === '.') {
+                    const keyMatch = remaining.match(/^([^\.\[\*\?]+)/);
+                    if (keyMatch) {
+                        const key = keyMatch[1];
+                        remaining = remaining.slice(key.length);
+                        if (obj && typeof obj === 'object' && key in obj) {
+                            return this._traverse(obj[key], remaining, `${currentPath}.${key}`);
+                        }
+                        return [];
+                    }
+                    return [];
+                }
+
+                // Handle bracket notation
+                if (token === '[') {
+                    const bracketContent = this._parseBracket(remaining);
+                    if (!bracketContent) {
+                        throw new Error('Unclosed bracket');
+                    }
+                    const { content, remaining: newRemaining } = bracketContent;
+                    remaining = newRemaining;
+
+                    return this._handleBracket(obj, content, remaining, currentPath);
+                }
+
+                // Handle wildcard
+                if (token === '*') {
+                    return this._handleWildcard(obj, remaining, currentPath);
+                }
+
+                // Handle root
+                if (token === '$') {
+                    return this._traverse(obj, remaining, currentPath);
+                }
+
+                return [{ path: currentPath, value: obj }];
+            }
+
+            static _parseBracket(path) {
+                let depth = 1;
+                let i = 0;
+                let inString = false;
+                let stringChar = '';
+
+                while (i < path.length && depth > 0) {
+                    const char = path[i];
+                    if (inString) {
+                        if (char === stringChar && path[i-1] !== '\\') {
+                            inString = false;
+                        }
+                    } else if (char === '"' || char === "'") {
+                        inString = true;
+                        stringChar = char;
+                    } else if (char === '[') {
+                        depth++;
+                    } else if (char === ']') {
+                        depth--;
+                    }
+                    i++;
+                }
+
+                if (depth !== 0) {
+                    return null;
+                }
+
+                return {
+                    content: path.slice(0, i - 1),
+                    remaining: path.slice(i)
+                };
+            }
+
+            static _handleBracket(obj, content, remaining, currentPath) {
+                // Handle wildcard
+                if (content === '*') {
+                    return this._handleWildcard(obj, remaining, currentPath);
+                }
+
+                // Handle slice [start:end] or [start:end:step]
+                if (content.includes(':')) {
+                    return this._handleSlice(obj, content, remaining, currentPath);
+                }
+
+                // Handle filter [?(expr)]
+                if (content.startsWith('?')) {
+                    return this._handleFilter(obj, content, remaining, currentPath);
+                }
+
+                // Handle string key
+                const stringMatch = content.match(/^["'](.+)["']$/);
+                if (stringMatch) {
+                    const key = stringMatch[1];
+                    if (obj && typeof obj === 'object' && key in obj) {
+                        return this._traverse(obj[key], remaining, `${currentPath}['${key}']`);
+                    }
+                    return [];
+                }
+
+                // Handle numeric index or comma-separated indices
+                if (content.includes(',')) {
+                    const indices = content.split(',').map(s => s.trim());
+                    const results = [];
+                    indices.forEach(idx => {
+                        const numIdx = parseInt(idx);
+                        if (!isNaN(numIdx) && Array.isArray(obj) && numIdx >= 0 && numIdx < obj.length) {
+                            const subResults = this._traverse(obj[numIdx], remaining, `${currentPath}[${numIdx}]`);
+                            results.push(...subResults);
+                        }
+                    });
+                    return results;
+                }
+
+                // Handle single numeric index
+                const numIdx = parseInt(content);
+                if (!isNaN(numIdx)) {
+                    if (Array.isArray(obj) && numIdx >= 0 && numIdx < obj.length) {
+                        return this._traverse(obj[numIdx], remaining, `${currentPath}[${numIdx}]`);
+                    }
+                    // Handle negative index
+                    if (numIdx < 0 && Array.isArray(obj)) {
+                        const actualIdx = obj.length + numIdx;
+                        if (actualIdx >= 0) {
+                            return this._traverse(obj[actualIdx], remaining, `${currentPath}[${actualIdx}]`);
+                        }
+                    }
+                    return [];
+                }
+
+                // Handle property access
+                if (obj && typeof obj === 'object' && content in obj) {
+                    return this._traverse(obj[content], remaining, `${currentPath}['${content}']`);
+                }
+
+                return [];
+            }
+
+            static _handleSlice(obj, content, remaining, currentPath) {
+                if (!Array.isArray(obj)) return [];
+
+                const parts = content.split(':').map(s => s.trim() === '' ? null : parseInt(s));
+                const [start, end, step] = parts;
+
+                const results = [];
+                const sliceStart = start ?? 0;
+                const sliceEnd = end ?? obj.length;
+                const sliceStep = step ?? 1;
+
+                for (let i = sliceStart; i < sliceEnd && i < obj.length; i += sliceStep) {
+                    if (i >= 0) {
+                        const subResults = this._traverse(obj[i], remaining, `${currentPath}[${i}]`);
+                        results.push(...subResults);
+                    }
+                }
+
+                return results;
+            }
+
+            static _handleFilter(obj, content, remaining, currentPath) {
+                if (!Array.isArray(obj)) return [];
+
+                // Extract expression from [?(expr)]
+                const exprMatch = content.match(/^\?\((.+)\)$/);
+                if (!exprMatch) return [];
+
+                const expr = exprMatch[1];
+                const results = [];
+
+                obj.forEach((item, idx) => {
+                    try {
+                        if (this._evalFilterExpr(item, expr)) {
+                            const subResults = this._traverse(item, remaining, `${currentPath}[${idx}]`);
+                            results.push(...subResults);
+                        }
+                    } catch (e) {
+                        // Skip items that don't match
+                    }
+                });
+
+                return results;
+            }
+
+            static _evalFilterExpr(obj, expr) {
+                // Simple filter expression evaluator
+                // Supports: @.property, comparison operators, logical operators
+
+                // Replace @ with actual object reference
+                const evalExpr = expr.replace(/@\.(\w+)/g, (match, prop) => {
+                    const val = obj[prop];
+                    if (typeof val === 'string') return `"${val}"`;
+                    if (typeof val === 'number') return val;
+                    return 'null';
+                });
+
+                try {
+                    return Function(`"use strict"; return (${evalExpr})`)();
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            static _handleWildcard(obj, remaining, currentPath) {
+                if (!obj || typeof obj !== 'object') {
+                    return [];
+                }
+
+                const results = [];
+                const items = Array.isArray(obj) ? obj : Object.values(obj);
+
+                items.forEach((item, idx) => {
+                    const newPath = Array.isArray(obj)
+                        ? `${currentPath}[${idx}]`
+                        : `${currentPath}['${Object.keys(obj)[idx]}']`;
+                    const subResults = this._traverse(item, remaining, newPath);
+                    results.push(...subResults);
+                });
+
+                return results;
+            }
+
+            static _recursiveDescent(obj, remaining, currentPath) {
+                const results = [];
+
+                // First, try to match at current level
+                const directResults = this._traverse(obj, remaining, currentPath);
+                results.push(...directResults);
+
+                // Then recurse into children
+                if (obj && typeof obj === 'object') {
+                    const items = Array.isArray(obj) ? obj : Object.entries(obj);
+                    items.forEach((item, idx) => {
+                        const value = Array.isArray(obj) ? item : item[1];
+                        const key = Array.isArray(obj) ? idx : item[0];
+                        const newPath = Array.isArray(obj)
+                            ? `${currentPath}[${idx}]`
+                            : `${currentPath}['${key}']`;
+
+                        if (value && typeof value === 'object') {
+                            const subResults = this._recursiveDescent(value, remaining, newPath);
+                            results.push(...subResults);
+                        }
+                    });
+                }
+
+                return results;
+            }
+        }
+
+        // UI Functions
+        function loadSample() {
+            const sample = {
+                "store": {
+                    "book": [
+                        {
+                            "category": "reference",
+                            "author": "Nigel Rees",
+                            "title": "Sayings of the Century",
+                            "price": 8.95
+                        },
+                        {
+                            "category": "fiction",
+                            "author": "Evelyn Waugh",
+                            "title": "Sword of Honour",
+                            "price": 12.99
+                        },
+                        {
+                            "category": "fiction",
+                            "author": "Herman Melville",
+                            "title": "Moby Dick",
+                            "isbn": "0-553-21311-3",
+                            "price": 8.99
+                        },
+                        {
+                            "category": "fiction",
+                            "author": "J. R. R. Tolkien",
+                            "title": "The Lord of the Rings",
+                            "isbn": "0-395-19395-8",
+                            "price": 22.99
+                        }
+                    ],
+                    "bicycle": {
+                        "color": "red",
+                        "price": 19.95
+                    }
+                },
+                "expensive": 10
+            };
+
+            document.getElementById('jsonInput').value = JSON.stringify(sample, null, 2);
+            showToast('Sample data loaded');
+        }
+
+        function formatJson() {
+            const input = document.getElementById('jsonInput').value;
+            try {
+                const parsed = JSON.parse(input);
+                document.getElementById('jsonInput').value = JSON.stringify(parsed, null, 2);
+                showToast('JSON formatted');
+            } catch (e) {
+                showToast('Invalid JSON: ' + e.message);
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('pathInput').value = '';
+            document.getElementById('resultOutput').textContent = 'Enter a JSONPath expression to see results...';
+            document.getElementById('resultCount').textContent = '0 matches';
+            document.getElementById('resultCount').className = 'result-count';
+        }
+
+        function setPath(path) {
+            document.getElementById('pathInput').value = path;
+            evaluatePath();
+        }
+
+        function evaluatePath() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            const path = document.getElementById('pathInput').value;
+            const outputEl = document.getElementById('resultOutput');
+            const countEl = document.getElementById('resultCount');
+
+            if (!jsonInput.trim()) {
+                outputEl.textContent = 'Enter JSON data to evaluate...';
+                countEl.textContent = '0 matches';
+                countEl.className = 'result-count';
+                return;
+            }
+
+            if (!path.trim()) {
+                outputEl.textContent = 'Enter a JSONPath expression...';
+                countEl.textContent = '0 matches';
+                countEl.className = 'result-count';
+                return;
+            }
+
+            let parsedJson;
+            try {
+                parsedJson = JSON.parse(jsonInput);
+            } catch (e) {
+                outputEl.innerHTML = `<span style="color: var(--error);">Invalid JSON: ${escapeHtml(e.message)}</span>`;
+                outputEl.className = 'result-output error';
+                countEl.textContent = 'Error';
+                countEl.className = 'result-count error';
+                return;
+            }
+
+            try {
+                const results = JSONPath.evaluate(parsedJson, path);
+
+                if (results.length === 0) {
+                    outputEl.innerHTML = '<span style="color: var(--text-secondary);">No matches found</span>';
+                    countEl.textContent = '0 matches';
+                    countEl.className = 'result-count';
+                    outputEl.className = 'result-output';
+                    return;
+                }
+
+                let html = '';
+                results.forEach((result, idx) => {
+                    const typeClass = getTypeClass(result.value);
+                    const formattedValue = typeof result.value === 'object'
+                        ? JSON.stringify(result.value, null, 2)
+                        : String(result.value);
+
+                    html += `
+                        <div class="result-item">
+                            <div class="result-path">${escapeHtml(result.path)}</div>
+                            <div class="result-value ${typeClass}">${escapeHtml(formattedValue)}</div>
+                        </div>
+                    `;
+                });
+
+                outputEl.innerHTML = html;
+                outputEl.className = 'result-output';
+                countEl.textContent = `${results.length} match${results.length === 1 ? '' : 'es'}`;
+                countEl.className = 'result-count success';
+            } catch (e) {
+                outputEl.innerHTML = `<span style="color: var(--error);">Error: ${escapeHtml(e.message)}</span>`;
+                outputEl.className = 'result-output error';
+                countEl.textContent = 'Error';
+                countEl.className = 'result-count error';
+            }
+        }
+
+        function getTypeClass(value) {
+            if (typeof value === 'string') return 'string';
+            if (typeof value === 'number') return 'number';
+            if (typeof value === 'boolean') return 'boolean';
+            if (value === null) return 'null';
+            return '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Auto-evaluate on JSON input change with debounce
+        let debounceTimer;
+        document.getElementById('jsonInput').addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(evaluatePath, 300);
+        });
+
+        // Load sample on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSample();
+            document.getElementById('pathInput').value = '$.store.book[*].title';
+            evaluatePath();
+        });
+    </script>
+</body>
+</html>

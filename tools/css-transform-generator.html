@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Transform Generator - Dev Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            color: #00d9ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .control-group.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 55px;
+            text-align: right;
+            font-size: 0.8rem;
+            color: #00ff88;
+            font-family: monospace;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .input-row input {
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.85rem;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .input-row input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .preview-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h2 {
+            font-size: 1.1rem;
+            color: #00d9ff;
+        }
+
+        .preview-container {
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-box {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+            box-shadow: 0 10px 40px rgba(0, 217, 255, 0.3);
+        }
+
+        .origin-marker {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .code-section {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-header span {
+            color: #00d9ff;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .code-block {
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #e0e0e0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .code-block .property {
+            color: #00d9ff;
+        }
+
+        .code-block .value {
+            color: #00ff88;
+        }
+
+        .presets {
+            margin-top: 15px;
+        }
+
+        .preset-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(0,217,255,0.2);
+            border-color: #00d9ff;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,71,87,0.2);
+            border: 1px solid #ff4757;
+            border-radius: 8px;
+            color: #ff4757;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,71,87,0.3);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .matrix-display {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .matrix-display h4 {
+            color: #00d9ff;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .matrix-values {
+            color: #888;
+            line-height: 1.8;
+        }
+
+        .matrix-values span {
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CSS Transform Generator</h1>
+            <p class="subtitle">Visual CSS transform generator with live preview</p>
+        </header>
+
+        <div class="main-content">
+            <div class="controls">
+                <!-- Translate -->
+                <div class="control-section">
+                    <div class="section-title">
+                        <input type="checkbox" id="enableTranslate" checked>
+                        <span>translate()</span>
+                    </div>
+                    <div class="control-group" id="translateGroup">
+                        <label>Translate X / Y / Z</label>
+                        <div class="input-row">
+                            <input type="number" id="translateX" value="0" step="1">px
+                        </div>
+                        <div class="input-row" style="margin-top: 8px;">
+                            <input type="number" id="translateY" value="0" step="1">px
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rotate -->
+                <div class="control-section">
+                    <div class="section-title">
+                        <input type="checkbox" id="enableRotate" checked>
+                        <span>rotate()</span>
+                    </div>
+                    <div class="control-group" id="rotateGroup">
+                        <label>Rotate</label>
+                        <div class="slider-container">
+                            <input type="range" id="rotate" min="-180" max="180" value="0">
+                            <span class="slider-value" id="rotateValue">0deg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scale -->
+                <div class="control-section">
+                    <div class="section-title">
+                        <input type="checkbox" id="enableScale" checked>
+                        <span>scale()</span>
+                    </div>
+                    <div class="control-group" id="scaleGroup">
+                        <label>Scale X / Y</label>
+                        <div class="slider-container">
+                            <input type="range" id="scaleX" min="0" max="2" value="1" step="0.1">
+                            <span class="slider-value" id="scaleXValue">1</span>
+                        </div>
+                        <div class="slider-container" style="margin-top: 8px;">
+                            <input type="range" id="scaleY" min="0" max="2" value="1" step="0.1">
+                            <span class="slider-value" id="scaleYValue">1</span>
+                        </div>
+                        <label style="margin-top: 8px;">
+                            <input type="checkbox" id="lockScale" checked> Lock X/Y ratio
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Skew -->
+                <div class="control-section">
+                    <div class="section-title">
+                        <input type="checkbox" id="enableSkew">
+                        <span>skew()</span>
+                    </div>
+                    <div class="control-group disabled" id="skewGroup">
+                        <label>Skew X / Y</label>
+                        <div class="slider-container">
+                            <input type="range" id="skewX" min="-45" max="45" value="0">
+                            <span class="slider-value" id="skewXValue">0deg</span>
+                        </div>
+                        <div class="slider-container" style="margin-top: 8px;">
+                            <input type="range" id="skewY" min="-45" max="45" value="0">
+                            <span class="slider-value" id="skewYValue">0deg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transform Origin -->
+                <div class="control-section">
+                    <div class="section-title">
+                        <span>transform-origin</span>
+                    </div>
+                    <div class="control-group">
+                        <label>Origin X / Y</label>
+                        <div class="slider-container">
+                            <input type="range" id="originX" min="0" max="100" value="50">
+                            <span class="slider-value" id="originXValue">50%</span>
+                        </div>
+                        <div class="slider-container" style="margin-top: 8px;">
+                            <input type="range" id="originY" min="0" max="100" value="50">
+                            <span class="slider-value" id="originYValue">50%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Presets -->
+                <div class="presets">
+                    <h3 style="font-size: 0.95rem; color: #00d9ff; margin-bottom: 12px;">Quick Presets</h3>
+                    <div class="preset-btns">
+                        <button class="preset-btn" data-preset="flipH">Flip H</button>
+                        <button class="preset-btn" data-preset="flipV">Flip V</button>
+                        <button class="preset-btn" data-preset="rotate45">Rotate 45°</button>
+                        <button class="preset-btn" data-preset="rotate90">Rotate 90°</button>
+                        <button class="preset-btn" data-preset="scaleUp">Scale 1.5x</button>
+                        <button class="preset-btn" data-preset="scaleDown">Scale 0.5x</button>
+                        <button class="preset-btn" data-preset="skewX">Skew X 20°</button>
+                        <button class="preset-btn" data-preset="perspective">3D Tilt</button>
+                    </div>
+                </div>
+
+                <button class="reset-btn" id="resetBtn">Reset All</button>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-header">
+                    <h2>Preview</h2>
+                </div>
+
+                <div class="preview-container">
+                    <div class="origin-marker" id="originMarker"></div>
+                    <div class="preview-box" id="previewBox">Transform</div>
+                </div>
+
+                <div class="code-section">
+                    <div class="code-header">
+                        <span>CSS Code</span>
+                        <button class="copy-btn" id="copyBtn">Copy</button>
+                    </div>
+                    <div class="code-block" id="codeBlock"></div>
+                </div>
+
+                <div class="matrix-display">
+                    <h4>Transform Matrix</h4>
+                    <div class="matrix-values" id="matrixDisplay">
+                        matrix(<span>1</span>, <span>0</span>, <span>0</span>, <span>1</span>, <span>0</span>, <span>0</span>)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const previewBox = document.getElementById('previewBox');
+        const originMarker = document.getElementById('originMarker');
+        const codeBlock = document.getElementById('codeBlock');
+        const matrixDisplay = document.getElementById('matrixDisplay');
+        const toast = document.getElementById('toast');
+
+        // Get all transform values
+        function getTransformValues() {
+            return {
+                translate: {
+                    enabled: document.getElementById('enableTranslate').checked,
+                    x: parseFloat(document.getElementById('translateX').value) || 0,
+                    y: parseFloat(document.getElementById('translateY').value) || 0
+                },
+                rotate: {
+                    enabled: document.getElementById('enableRotate').checked,
+                    angle: parseFloat(document.getElementById('rotate').value) || 0
+                },
+                scale: {
+                    enabled: document.getElementById('enableScale').checked,
+                    x: parseFloat(document.getElementById('scaleX').value) || 1,
+                    y: parseFloat(document.getElementById('scaleY').value) || 1
+                },
+                skew: {
+                    enabled: document.getElementById('enableSkew').checked,
+                    x: parseFloat(document.getElementById('skewX').value) || 0,
+                    y: parseFloat(document.getElementById('skewY').value) || 0
+                },
+                origin: {
+                    x: parseFloat(document.getElementById('originX').value) || 50,
+                    y: parseFloat(document.getElementById('originY').value) || 50
+                }
+            };
+        }
+
+        // Build transform string
+        function buildTransform(values) {
+            const transforms = [];
+
+            if (values.translate.enabled && (values.translate.x !== 0 || values.translate.y !== 0)) {
+                transforms.push(`translate(${values.translate.x}px, ${values.translate.y}px)`);
+            }
+
+            if (values.rotate.enabled && values.rotate.angle !== 0) {
+                transforms.push(`rotate(${values.rotate.angle}deg)`);
+            }
+
+            if (values.scale.enabled && (values.scale.x !== 1 || values.scale.y !== 1)) {
+                transforms.push(`scale(${values.scale.x}, ${values.scale.y})`);
+            }
+
+            if (values.skew.enabled && (values.skew.x !== 0 || values.skew.y !== 0)) {
+                transforms.push(`skew(${values.skew.x}deg, ${values.skew.y}deg)`);
+            }
+
+            return transforms.length > 0 ? transforms.join(' ') : 'none';
+        }
+
+        // Calculate transform matrix
+        function calculateMatrix(values) {
+            const rad = (deg) => deg * Math.PI / 180;
+
+            // Start with identity matrix
+            let a = 1, b = 0, c = 0, d = 1, e = 0, f = 0;
+
+            // Apply skew
+            if (values.skew.enabled) {
+                const skewX = Math.tan(rad(values.skew.x));
+                const skewY = Math.tan(rad(values.skew.y));
+                const newA = a + c * skewY;
+                const newB = b + d * skewY;
+                c = a * skewX + c;
+                d = b * skewX + d;
+                a = newA;
+                b = newB;
+            }
+
+            // Apply scale
+            if (values.scale.enabled) {
+                a *= values.scale.x;
+                b *= values.scale.x;
+                c *= values.scale.y;
+                d *= values.scale.y;
+            }
+
+            // Apply rotation
+            if (values.rotate.enabled) {
+                const cos = Math.cos(rad(values.rotate.angle));
+                const sin = Math.sin(rad(values.rotate.angle));
+                const newA = a * cos - b * sin;
+                const newB = a * sin + b * cos;
+                const newC = c * cos - d * sin;
+                const newD = c * sin + d * cos;
+                a = newA;
+                b = newB;
+                c = newC;
+                d = newD;
+            }
+
+            // Apply translation
+            if (values.translate.enabled) {
+                e = values.translate.x;
+                f = values.translate.y;
+            }
+
+            return { a, b, c, d, e, f };
+        }
+
+        // Update preview
+        function updatePreview() {
+            const values = getTransformValues();
+            const transform = buildTransform(values);
+            const origin = `${values.origin.x}% ${values.origin.y}%`;
+
+            // Apply to preview box
+            previewBox.style.transform = transform;
+            previewBox.style.transformOrigin = origin;
+
+            // Update origin marker position
+            const container = document.querySelector('.preview-container');
+            const containerRect = container.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+            const offsetX = (values.origin.x - 50) / 100 * 150;
+            const offsetY = (values.origin.y - 50) / 100 * 150;
+            originMarker.style.left = `${centerX + offsetX}px`;
+            originMarker.style.top = `${centerY + offsetY}px`;
+
+            // Update code block
+            updateCodeBlock(values, transform, origin);
+
+            // Update matrix display
+            const matrix = calculateMatrix(values);
+            matrixDisplay.innerHTML = `matrix(<span>${matrix.a.toFixed(3)}</span>, <span>${matrix.b.toFixed(3)}</span>, <span>${matrix.c.toFixed(3)}</span>, <span>${matrix.d.toFixed(3)}</span>, <span>${matrix.e.toFixed(0)}</span>, <span>${matrix.f.toFixed(0)}</span>)`;
+
+            // Save to localStorage
+            saveToStorage();
+        }
+
+        // Update code block
+        function updateCodeBlock(values, transform, origin) {
+            let css = `<span class="property">.element</span> {\n`;
+
+            if (transform !== 'none') {
+                css += `  <span class="property">transform</span>: <span class="value">${transform}</span>;\n`;
+            }
+
+            if (origin !== '50% 50%') {
+                css += `  <span class="property">transform-origin</span>: <span class="value">${origin}</span>;\n`;
+            }
+
+            css += `}`;
+
+            codeBlock.innerHTML = css;
+        }
+
+        // Enable/disable sections
+        function toggleSection(checkboxId, groupId) {
+            const checkbox = document.getElementById(checkboxId);
+            const group = document.getElementById(groupId);
+
+            checkbox.addEventListener('change', () => {
+                group.classList.toggle('disabled', !checkbox.checked);
+                updatePreview();
+            });
+        }
+
+        toggleSection('enableTranslate', 'translateGroup');
+        toggleSection('enableRotate', 'rotateGroup');
+        toggleSection('enableScale', 'scaleGroup');
+        toggleSection('enableSkew', 'skewGroup');
+
+        // Lock scale ratio
+        document.getElementById('lockScale').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.getElementById('scaleY').value = document.getElementById('scaleX').value;
+                document.getElementById('scaleYValue').textContent = document.getElementById('scaleX').value;
+                updatePreview();
+            }
+        });
+
+        // Presets
+        const presets = {
+            flipH: { scale: { x: -1, y: 1 } },
+            flipV: { scale: { x: 1, y: -1 } },
+            rotate45: { rotate: 45 },
+            rotate90: { rotate: 90 },
+            scaleUp: { scale: { x: 1.5, y: 1.5 } },
+            scaleDown: { scale: { x: 0.5, y: 0.5 } },
+            skewX: { skew: { x: 20, y: 0 }, enableSkew: true },
+            perspective: { rotate: { angle: -15 }, scale: { x: 0.9, y: 0.9 }, translate: { x: 20, y: -10 } }
+        };
+
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+
+            resetValues();
+
+            if (preset.translate) {
+                document.getElementById('translateX').value = preset.translate.x || 0;
+                document.getElementById('translateY').value = preset.translate.y || 0;
+            }
+
+            if (preset.rotate) {
+                document.getElementById('rotate').value = preset.rotate.angle || 0;
+                document.getElementById('rotateValue').textContent = `${preset.rotate.angle || 0}deg`;
+            }
+
+            if (preset.scale) {
+                document.getElementById('scaleX').value = preset.scale.x || 1;
+                document.getElementById('scaleY').value = preset.scale.y || 1;
+                document.getElementById('scaleXValue').textContent = preset.scale.x || 1;
+                document.getElementById('scaleYValue').textContent = preset.scale.y || 1;
+            }
+
+            if (preset.skew) {
+                document.getElementById('enableSkew').checked = true;
+                document.getElementById('skewGroup').classList.remove('disabled');
+                document.getElementById('skewX').value = preset.skew.x || 0;
+                document.getElementById('skewY').value = preset.skew.y || 0;
+                document.getElementById('skewXValue').textContent = `${preset.skew.x || 0}deg`;
+                document.getElementById('skewYValue').textContent = `${preset.skew.y || 0}deg`;
+            }
+
+            updatePreview();
+        }
+
+        // Reset values
+        function resetValues() {
+            document.getElementById('translateX').value = 0;
+            document.getElementById('translateY').value = 0;
+            document.getElementById('rotate').value = 0;
+            document.getElementById('rotateValue').textContent = '0deg';
+            document.getElementById('scaleX').value = 1;
+            document.getElementById('scaleY').value = 1;
+            document.getElementById('scaleXValue').textContent = '1';
+            document.getElementById('scaleYValue').textContent = '1';
+            document.getElementById('skewX').value = 0;
+            document.getElementById('skewY').value = 0;
+            document.getElementById('skewXValue').textContent = '0deg';
+            document.getElementById('skewYValue').textContent = '0deg';
+            document.getElementById('originX').value = 50;
+            document.getElementById('originY').value = 50;
+            document.getElementById('originXValue').textContent = '50%';
+            document.getElementById('originYValue').textContent = '50%';
+            document.getElementById('enableSkew').checked = false;
+            document.getElementById('skewGroup').classList.add('disabled');
+        }
+
+        // Copy to clipboard
+        function copyCode() {
+            const values = getTransformValues();
+            const transform = buildTransform(values);
+            const origin = `${values.origin.x}% ${values.origin.y}%`;
+
+            let css = `.element {\n`;
+            if (transform !== 'none') {
+                css += `  transform: ${transform};\n`;
+            }
+            if (origin !== '50% 50%') {
+                css += `  transform-origin: ${origin};\n`;
+            }
+            css += `}`;
+
+            navigator.clipboard.writeText(css).then(() => {
+                showToast();
+            });
+        }
+
+        // Show toast
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            localStorage.setItem('css-transform-generator', JSON.stringify(getTransformValues()));
+        }
+
+        // Load from localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('css-transform-generator');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    document.getElementById('translateX').value = data.translate.x;
+                    document.getElementById('translateY').value = data.translate.y;
+                    document.getElementById('rotate').value = data.rotate.angle;
+                    document.getElementById('rotateValue').textContent = `${data.rotate.angle}deg`;
+                    document.getElementById('scaleX').value = data.scale.x;
+                    document.getElementById('scaleY').value = data.scale.y;
+                    document.getElementById('scaleXValue').textContent = data.scale.x;
+                    document.getElementById('scaleYValue').textContent = data.scale.y;
+                    document.getElementById('skewX').value = data.skew.x;
+                    document.getElementById('skewY').value = data.skew.y;
+                    document.getElementById('skewXValue').textContent = `${data.skew.x}deg`;
+                    document.getElementById('skewYValue').textContent = `${data.skew.y}deg`;
+                    document.getElementById('originX').value = data.origin.x;
+                    document.getElementById('originY').value = data.origin.y;
+                    document.getElementById('originXValue').textContent = `${data.origin.x}%`;
+                    document.getElementById('originYValue').textContent = `${data.origin.y}%`;
+                    updatePreview();
+                } catch (e) {}
+            }
+        }
+
+        // Event listeners
+        const sliderInputs = ['rotate', 'scaleX', 'scaleY', 'skewX', 'skewY', 'originX', 'originY'];
+        sliderInputs.forEach(id => {
+            const input = document.getElementById(id);
+            input.addEventListener('input', () => {
+                const valueEl = document.getElementById(id + 'Value');
+                if (id === 'rotate' || id === 'skewX' || id === 'skewY') {
+                    valueEl.textContent = `${input.value}deg`;
+                } else if (id === 'scaleX' || id === 'scaleY') {
+                    valueEl.textContent = input.value;
+                    if (document.getElementById('lockScale').checked) {
+                        const otherId = id === 'scaleX' ? 'scaleY' : 'scaleX';
+                        document.getElementById(otherId).value = input.value;
+                        document.getElementById(otherId + 'Value').textContent = input.value;
+                    }
+                } else {
+                    valueEl.textContent = `${input.value}%`;
+                }
+                updatePreview();
+            });
+        });
+
+        const numberInputs = ['translateX', 'translateY'];
+        numberInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', copyCode);
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetValues();
+            updatePreview();
+        });
+
+        // Initialize
+        loadFromStorage();
+        updatePreview();
+    </script>
+</body>
+</html>

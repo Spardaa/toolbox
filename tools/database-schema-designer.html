@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Schema Designer - Visual ERD Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .canvas-container {
+            position: relative;
+            min-height: 500px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .canvas {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: auto;
+        }
+
+        .table-node {
+            position: absolute;
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 12px;
+            min-width: 220px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: move;
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+
+        .table-node:hover {
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .table-node.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            padding: 10px 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-name {
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .table-delete {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .table-delete:hover {
+            opacity: 1;
+            color: #e06c75;
+        }
+
+        .table-columns {
+            padding: 10px 0;
+        }
+
+        .column-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .column-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .column-row.primary {
+            color: #ffd700;
+        }
+
+        .column-row.foreign {
+            color: #61afef;
+        }
+
+        .column-key {
+            width: 20px;
+            font-size: 0.75rem;
+        }
+
+        .column-name {
+            flex: 1;
+        }
+
+        .column-type {
+            color: #98c379;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        .column-nullable {
+            color: #888;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+
+        .add-column {
+            padding: 8px 15px;
+            color: #00d4ff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 5px;
+        }
+
+        .add-column:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .properties-panel label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .properties-panel input,
+        .properties-panel select {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .properties-panel input:focus,
+        .properties-panel select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+            margin-bottom: 0;
+        }
+
+        .property-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sql-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .sql-keyword {
+            color: #c678dd;
+        }
+
+        .sql-type {
+            color: #98c379;
+        }
+
+        .sql-string {
+            color: #98c379;
+        }
+
+        .sql-number {
+            color: #d19a66;
+        }
+
+        .templates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .template-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .template-btn i {
+            margin-right: 8px;
+        }
+
+        .no-selection {
+            color: #888;
+            text-align: center;
+            padding: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .connection-line {
+            stroke: #00d4ff;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .relation-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .relation-1-1 { background: #61afef; }
+        .relation-1-n { background: #98c379; }
+        .relation-n-n { background: #d19a66; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-database"></i> Database Schema Designer</h1>
+            <p class="subtitle">Visual ERD builder - design and export database schemas</p>
+        </header>
+
+        <div class="toolbar">
+            <button onclick="addTable()">
+                <i class="fas fa-plus"></i> Add Table
+            </button>
+            <button onclick="addRelation()" class="secondary">
+                <i class="fas fa-link"></i> Add Relation
+            </button>
+            <button onclick="clearAll()" class="secondary">
+                <i class="fas fa-trash"></i> Clear
+            </button>
+            <button onclick="exportSQL()" class="secondary">
+                <i class="fas fa-download"></i> Export SQL
+            </button>
+            <button onclick="exportJSON()" class="secondary">
+                <i class="fas fa-file-code"></i> Export JSON
+            </button>
+            <button onclick="saveToStorage()" class="secondary">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-magic"></i> Templates
+                </div>
+                <div class="templates-list">
+                    <button class="template-btn" onclick="loadTemplate('users')">
+                        <i class="fas fa-user"></i> User System
+                    </button>
+                    <button class="template-btn" onclick="loadTemplate('ecommerce')">
+                        <i class="fas fa-shopping-cart"></i> E-Commerce
+                    </button>
+                    <button class="template-btn" onclick="loadTemplate('blog')">
+                        <i class="fas fa-blog"></i> Blog/CMS
+                    </button>
+                    <button class="template-btn" onclick="loadTemplate('messaging')">
+                        <i class="fas fa-comments"></i> Messaging
+                    </button>
+                </div>
+
+                <div class="panel-title" style="margin-top: 20px;">
+                    <i class="fas fa-info-circle"></i> Legend
+                </div>
+                <div style="font-size: 0.85rem; line-height: 1.8;">
+                    <div><span style="color: #ffd700;">🔑</span> Primary Key</div>
+                    <div><span style="color: #61afef;">🔗</span> Foreign Key</div>
+                    <div><span class="relation-badge relation-1-1">1:1</span> One-to-One</div>
+                    <div><span class="relation-badge relation-1-n">1:N</span> One-to-Many</div>
+                    <div><span class="relation-badge relation-n-n">N:N</span> Many-to-Many</div>
+                </div>
+            </div>
+
+            <div class="panel canvas-container">
+                <div class="canvas" id="canvas">
+                    <svg id="relations" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#00d4ff" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-sliders-h"></i> Properties
+                </div>
+                <div id="propertiesContent" class="properties-panel">
+                    <div class="no-selection">
+                        <i class="fas fa-mouse-pointer" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Select a table or column to edit</p>
+                    </div>
+                </div>
+
+                <div class="panel-title" style="margin-top: 20px;">
+                    <i class="fas fa-code"></i> Generated SQL
+                </div>
+                <div class="sql-output" id="sqlOutput">-- Create tables to generate SQL</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Database Schema Designer - Visual ERD builder</p>
+        </footer>
+    </div>
+
+    <script>
+        let tables = [];
+        let relations = [];
+        let selectedTable = null;
+        let selectedColumn = null;
+        let tableIdCounter = 0;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let draggedTable = null;
+
+        const canvas = document.getElementById('canvas');
+        const propertiesContent = document.getElementById('propertiesContent');
+        const sqlOutput = document.getElementById('sqlOutput');
+
+        const dataTypes = [
+            'INT', 'BIGINT', 'SMALLINT', 'DECIMAL(10,2)', 'FLOAT',
+            'VARCHAR(255)', 'TEXT', 'CHAR(1)',
+            'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP',
+            'JSON', 'BLOB', 'UUID'
+        ];
+
+        function addTable() {
+            const table = {
+                id: `table_${tableIdCounter++}`,
+                name: `table_${tables.length + 1}`,
+                x: 50 + (tables.length % 3) * 250,
+                y: 50 + Math.floor(tables.length / 3) * 200,
+                columns: [
+                    { name: 'id', type: 'INT', primaryKey: true, nullable: false, autoIncrement: true },
+                    { name: 'created_at', type: 'TIMESTAMP', primaryKey: false, nullable: false, defaultValue: 'CURRENT_TIMESTAMP' }
+                ]
+            };
+            tables.push(table);
+            renderTable(table);
+            selectTable(table);
+            generateSQL();
+        }
+
+        function renderTable(table) {
+            const el = document.createElement('div');
+            el.className = 'table-node';
+            el.id = table.id;
+            el.style.left = table.x + 'px';
+            el.style.top = table.y + 'px';
+
+            const columnsHtml = table.columns.map((col, idx) => {
+                let keyIcon = '';
+                let rowClass = '';
+                if (col.primaryKey) {
+                    keyIcon = '🔑';
+                    rowClass = 'primary';
+                } else if (col.foreignKey) {
+                    keyIcon = '🔗';
+                    rowClass = 'foreign';
+                }
+                return `
+                    <div class="column-row ${rowClass}" data-table="${table.id}" data-column="${idx}">
+                        <span class="column-key">${keyIcon}</span>
+                        <span class="column-name">${col.name}</span>
+                        <span class="column-type">${col.type}</span>
+                        <span class="column-nullable">${col.nullable ? 'NULL' : 'NOT NULL'}</span>
+                    </div>
+                `;
+            }).join('');
+
+            el.innerHTML = `
+                <div class="table-header">
+                    <i class="fas fa-table"></i>
+                    <span class="table-name">${table.name}</span>
+                    <span class="table-delete" onclick="deleteTable('${table.id}')">
+                        <i class="fas fa-times"></i>
+                    </span>
+                </div>
+                <div class="table-columns">
+                    ${columnsHtml}
+                </div>
+                <div class="add-column" onclick="addColumn('${table.id}')">
+                    <i class="fas fa-plus"></i> Add Column
+                </div>
+            `;
+
+            el.addEventListener('mousedown', (e) => startDrag(e, table));
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectTable(table);
+            });
+
+            // Column click handlers
+            el.querySelectorAll('.column-row').forEach(row => {
+                row.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const colIdx = parseInt(row.dataset.column);
+                    selectColumn(table, colIdx);
+                });
+            });
+
+            canvas.appendChild(el);
+        }
+
+        function startDrag(e, table) {
+            if (e.target.closest('.table-delete') || e.target.closest('.add-column')) return;
+            isDragging = true;
+            draggedTable = table;
+            const el = document.getElementById(table.id);
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            selectTable(table);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && draggedTable) {
+                const canvasRect = canvas.getBoundingClientRect();
+                draggedTable.x = e.clientX - canvasRect.left - dragOffset.x;
+                draggedTable.y = e.clientY - canvasRect.top - dragOffset.y;
+                const el = document.getElementById(draggedTable.id);
+                el.style.left = draggedTable.x + 'px';
+                el.style.top = draggedTable.y + 'px';
+                renderRelations();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedTable = null;
+        });
+
+        function selectTable(table) {
+            document.querySelectorAll('.table-node').forEach(el => el.classList.remove('selected'));
+            selectedTable = table;
+            selectedColumn = null;
+            document.getElementById(table.id).classList.add('selected');
+            renderTableProperties(table);
+        }
+
+        function selectColumn(table, colIdx) {
+            document.querySelectorAll('.table-node').forEach(el => el.classList.remove('selected'));
+            document.getElementById(table.id).classList.add('selected');
+            selectedTable = table;
+            selectedColumn = colIdx;
+            renderColumnProperties(table, colIdx);
+        }
+
+        function renderTableProperties(table) {
+            propertiesContent.innerHTML = `
+                <div class="property-section">
+                    <label>Table Name</label>
+                    <input type="text" value="${table.name}" onchange="updateTableName('${table.id}', this.value)">
+                </div>
+                <div class="property-section">
+                    <label>Columns (${table.columns.length})</label>
+                    <div style="font-size: 0.85rem; color: #aaa;">
+                        Click on a column to edit its properties
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderColumnProperties(table, colIdx) {
+            const col = table.columns[colIdx];
+            propertiesContent.innerHTML = `
+                <div class="property-section">
+                    <label>Column Name</label>
+                    <input type="text" value="${col.name}" onchange="updateColumn('${table.id}', ${colIdx}, 'name', this.value)">
+                </div>
+                <div class="property-section">
+                    <label>Data Type</label>
+                    <select onchange="updateColumn('${table.id}', ${colIdx}, 'type', this.value)">
+                        ${dataTypes.map(t => `<option ${col.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" ${col.primaryKey ? 'checked' : ''} onchange="updateColumn('${table.id}', ${colIdx}, 'primaryKey', this.checked)">
+                    <label style="margin-bottom: 0;">Primary Key</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" ${col.nullable ? 'checked' : ''} onchange="updateColumn('${table.id}', ${colIdx}, 'nullable', this.checked)">
+                    <label style="margin-bottom: 0;">Nullable</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" ${col.autoIncrement ? 'checked' : ''} onchange="updateColumn('${table.id}', ${colIdx}, 'autoIncrement', this.checked)">
+                    <label style="margin-bottom: 0;">Auto Increment</label>
+                </div>
+                <div class="property-section">
+                    <label>Default Value</label>
+                    <input type="text" value="${col.defaultValue || ''}" placeholder="NULL" onchange="updateColumn('${table.id}', ${colIdx}, 'defaultValue', this.value)">
+                </div>
+                <button class="secondary" onclick="deleteColumn('${table.id}', ${colIdx})" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-trash"></i> Delete Column
+                </button>
+            `;
+        }
+
+        function updateTableName(tableId, name) {
+            const table = tables.find(t => t.id === tableId);
+            if (table) {
+                table.name = name;
+                document.getElementById(tableId).querySelector('.table-name').textContent = name;
+                generateSQL();
+            }
+        }
+
+        function updateColumn(tableId, colIdx, prop, value) {
+            const table = tables.find(t => t.id === tableId);
+            if (table && table.columns[colIdx]) {
+                table.columns[colIdx][prop] = value;
+                rerenderTable(table);
+                generateSQL();
+            }
+        }
+
+        function addColumn(tableId) {
+            const table = tables.find(t => t.id === tableId);
+            if (table) {
+                table.columns.push({
+                    name: `column_${table.columns.length}`,
+                    type: 'VARCHAR(255)',
+                    primaryKey: false,
+                    nullable: true
+                });
+                rerenderTable(table);
+                selectColumn(table, table.columns.length - 1);
+                generateSQL();
+            }
+        }
+
+        function deleteColumn(tableId, colIdx) {
+            const table = tables.find(t => t.id === tableId);
+            if (table && table.columns.length > 1) {
+                table.columns.splice(colIdx, 1);
+                rerenderTable(table);
+                selectedColumn = null;
+                renderTableProperties(table);
+                generateSQL();
+            }
+        }
+
+        function rerenderTable(table) {
+            const oldEl = document.getElementById(table.id);
+            const wasSelected = oldEl.classList.contains('selected');
+            oldEl.remove();
+            renderTable(table);
+            if (wasSelected) {
+                document.getElementById(table.id).classList.add('selected');
+            }
+            renderRelations();
+        }
+
+        function deleteTable(tableId) {
+            tables = tables.filter(t => t.id !== tableId);
+            relations = relations.filter(r => r.fromTable !== tableId && r.toTable !== tableId);
+            document.getElementById(tableId)?.remove();
+            renderRelations();
+            if (selectedTable?.id === tableId) {
+                selectedTable = null;
+                propertiesContent.innerHTML = '<div class="no-selection"><p>Select a table to edit</p></div>';
+            }
+            generateSQL();
+        }
+
+        function addRelation() {
+            if (tables.length < 2) {
+                alert('Need at least 2 tables to create a relation');
+                return;
+            }
+
+            const fromTable = tables[0];
+            const toTable = tables[1];
+
+            const relation = {
+                id: `rel_${Date.now()}`,
+                fromTable: fromTable.id,
+                fromColumn: fromTable.columns[0]?.name || 'id',
+                toTable: toTable.id,
+                toColumn: toTable.columns[0]?.name || 'id',
+                type: '1:N' // 1:1, 1:N, N:N
+            };
+
+            relations.push(relation);
+            renderRelations();
+            generateSQL();
+        }
+
+        function renderRelations() {
+            const svg = document.getElementById('relations');
+            // Keep the defs element
+            const defs = svg.querySelector('defs');
+            svg.innerHTML = '';
+            svg.appendChild(defs);
+
+            relations.forEach(rel => {
+                const fromTable = tables.find(t => t.id === rel.fromTable);
+                const toTable = tables.find(t => t.id === rel.toTable);
+
+                if (fromTable && toTable) {
+                    const fromEl = document.getElementById(rel.fromTable);
+                    const toEl = document.getElementById(rel.toTable);
+
+                    if (fromEl && toEl) {
+                        const fromRect = fromEl.getBoundingClientRect();
+                        const toRect = toEl.getBoundingClientRect();
+                        const canvasRect = canvas.getBoundingClientRect();
+
+                        const x1 = fromRect.right - canvasRect.left;
+                        const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                        const x2 = toRect.left - canvasRect.left;
+                        const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
+
+                        const midX = (x1 + x2) / 2;
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                        path.setAttribute('class', 'connection-line');
+                        svg.appendChild(path);
+                    }
+                }
+            });
+        }
+
+        function generateSQL() {
+            if (tables.length === 0) {
+                sqlOutput.innerHTML = '-- Create tables to generate SQL';
+                return;
+            }
+
+            let sql = '';
+
+            tables.forEach(table => {
+                sql += `<span class="sql-keyword">CREATE TABLE</span> ${table.name} (\n`;
+
+                const columns = table.columns.map(col => {
+                    let line = `  ${col.name} <span class="sql-type">${col.type}</span>`;
+
+                    if (col.primaryKey) line += ' <span class="sql-keyword">PRIMARY KEY</span>';
+                    if (col.autoIncrement) line += ' <span class="sql-keyword">AUTO_INCREMENT</span>';
+                    if (!col.nullable && !col.primaryKey) line += ' <span class="sql-keyword">NOT NULL</span>';
+                    if (col.defaultValue) line += ` <span class="sql-keyword">DEFAULT</span> <span class="sql-string">${col.defaultValue}</span>`;
+
+                    return line;
+                }).join(',\n');
+
+                sql += columns + '\n);\n\n';
+            });
+
+            // Add foreign key constraints
+            relations.forEach(rel => {
+                const fromTable = tables.find(t => t.id === rel.fromTable);
+                const toTable = tables.find(t => t.id === rel.toTable);
+
+                if (fromTable && toTable) {
+                    sql += `<span class="sql-keyword">ALTER TABLE</span> ${fromTable.name}\n`;
+                    sql += `<span class="sql-keyword">ADD CONSTRAINT</span> fk_${fromTable.name}_${rel.fromColumn}\n`;
+                    sql += `<span class="sql-keyword">FOREIGN KEY</span> (${rel.fromColumn})\n`;
+                    sql += `<span class="sql-keyword">REFERENCES</span> ${toTable.name}(${rel.toColumn});\n\n`;
+                }
+            });
+
+            sqlOutput.innerHTML = sql;
+        }
+
+        function exportSQL() {
+            let sql = '';
+
+            tables.forEach(table => {
+                sql += `CREATE TABLE ${table.name} (\n`;
+
+                const columns = table.columns.map(col => {
+                    let line = `  ${col.name} ${col.type}`;
+                    if (col.primaryKey) line += ' PRIMARY KEY';
+                    if (col.autoIncrement) line += ' AUTO_INCREMENT';
+                    if (!col.nullable && !col.primaryKey) line += ' NOT NULL';
+                    if (col.defaultValue) line += ` DEFAULT ${col.defaultValue}`;
+                    return line;
+                }).join(',\n');
+
+                sql += columns + '\n);\n\n';
+            });
+
+            relations.forEach(rel => {
+                const fromTable = tables.find(t => t.id === rel.fromTable);
+                const toTable = tables.find(t => t.id === rel.toTable);
+                if (fromTable && toTable) {
+                    sql += `ALTER TABLE ${fromTable.name} ADD CONSTRAINT fk_${fromTable.name}_${rel.fromColumn} FOREIGN KEY (${rel.fromColumn}) REFERENCES ${toTable.name}(${rel.toColumn});\n\n`;
+                }
+            });
+
+            const blob = new Blob([sql], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'schema.sql';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportJSON() {
+            const data = { tables, relations };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'schema.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('dbSchemaDesigner', JSON.stringify({ tables, relations }));
+            alert('Schema saved to browser storage!');
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('dbSchemaDesigner');
+            if (saved) {
+                const data = JSON.parse(saved);
+                tables = data.tables || [];
+                relations = data.relations || [];
+                tableIdCounter = tables.length;
+                tables.forEach(t => renderTable(t));
+                renderRelations();
+                generateSQL();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear all tables?')) {
+                tables.forEach(t => document.getElementById(t.id)?.remove());
+                tables = [];
+                relations = [];
+                selectedTable = null;
+                selectedColumn = null;
+                renderRelations();
+                propertiesContent.innerHTML = '<div class="no-selection"><p>Select a table to edit</p></div>';
+                generateSQL();
+            }
+        }
+
+        function loadTemplate(name) {
+            clearAll();
+
+            const templates = {
+                users: {
+                    tables: [
+                        {
+                            id: 'table_0', name: 'users', x: 50, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'email', type: 'VARCHAR(255)', nullable: false },
+                                { name: 'password_hash', type: 'VARCHAR(255)', nullable: false },
+                                { name: 'name', type: 'VARCHAR(100)', nullable: false },
+                                { name: 'created_at', type: 'TIMESTAMP', nullable: false, defaultValue: 'CURRENT_TIMESTAMP' }
+                            ]
+                        },
+                        {
+                            id: 'table_1', name: 'roles', x: 350, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'name', type: 'VARCHAR(50)', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_2', name: 'user_roles', x: 200, y: 250,
+                            columns: [
+                                { name: 'user_id', type: 'INT', nullable: false },
+                                { name: 'role_id', type: 'INT', nullable: false }
+                            ]
+                        }
+                    ],
+                    relations: [
+                        { id: 'rel_1', fromTable: 'table_2', fromColumn: 'user_id', toTable: 'table_0', toColumn: 'id', type: '1:N' },
+                        { id: 'rel_2', fromTable: 'table_2', fromColumn: 'role_id', toTable: 'table_1', toColumn: 'id', type: '1:N' }
+                    ]
+                },
+                ecommerce: {
+                    tables: [
+                        {
+                            id: 'table_0', name: 'products', x: 50, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'name', type: 'VARCHAR(255)', nullable: false },
+                                { name: 'price', type: 'DECIMAL(10,2)', nullable: false },
+                                { name: 'stock', type: 'INT', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_1', name: 'orders', x: 350, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'user_id', type: 'INT', nullable: false },
+                                { name: 'total', type: 'DECIMAL(10,2)', nullable: false },
+                                { name: 'status', type: 'VARCHAR(50)', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_2', name: 'order_items', x: 200, y: 250,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'order_id', type: 'INT', nullable: false },
+                                { name: 'product_id', type: 'INT', nullable: false },
+                                { name: 'quantity', type: 'INT', nullable: false }
+                            ]
+                        }
+                    ],
+                    relations: [
+                        { id: 'rel_1', fromTable: 'table_2', fromColumn: 'order_id', toTable: 'table_1', toColumn: 'id', type: '1:N' },
+                        { id: 'rel_2', fromTable: 'table_2', fromColumn: 'product_id', toTable: 'table_0', toColumn: 'id', type: '1:N' }
+                    ]
+                },
+                blog: {
+                    tables: [
+                        {
+                            id: 'table_0', name: 'posts', x: 50, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'title', type: 'VARCHAR(255)', nullable: false },
+                                { name: 'content', type: 'TEXT', nullable: false },
+                                { name: 'author_id', type: 'INT', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_1', name: 'comments', x: 350, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'post_id', type: 'INT', nullable: false },
+                                { name: 'content', type: 'TEXT', nullable: false },
+                                { name: 'created_at', type: 'TIMESTAMP', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_2', name: 'tags', x: 200, y: 250,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'name', type: 'VARCHAR(50)', nullable: false }
+                            ]
+                        }
+                    ],
+                    relations: [
+                        { id: 'rel_1', fromTable: 'table_1', fromColumn: 'post_id', toTable: 'table_0', toColumn: 'id', type: '1:N' }
+                    ]
+                },
+                messaging: {
+                    tables: [
+                        {
+                            id: 'table_0', name: 'conversations', x: 50, y: 100,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'name', type: 'VARCHAR(100)', nullable: true },
+                                { name: 'created_at', type: 'TIMESTAMP', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_1', name: 'messages', x: 350, y: 50,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'conversation_id', type: 'INT', nullable: false },
+                                { name: 'sender_id', type: 'INT', nullable: false },
+                                { name: 'content', type: 'TEXT', nullable: false }
+                            ]
+                        },
+                        {
+                            id: 'table_2', name: 'participants', x: 200, y: 280,
+                            columns: [
+                                { name: 'id', type: 'INT', primaryKey: true, autoIncrement: true, nullable: false },
+                                { name: 'conversation_id', type: 'INT', nullable: false },
+                                { name: 'user_id', type: 'INT', nullable: false }
+                            ]
+                        }
+                    ],
+                    relations: [
+                        { id: 'rel_1', fromTable: 'table_1', fromColumn: 'conversation_id', toTable: 'table_0', toColumn: 'id', type: '1:N' },
+                        { id: 'rel_2', fromTable: 'table_2', fromColumn: 'conversation_id', toTable: 'table_0', toColumn: 'id', type: '1:N' }
+                    ]
+                }
+            };
+
+            const template = templates[name];
+            if (template) {
+                tables = JSON.parse(JSON.stringify(template.tables));
+                relations = JSON.parse(JSON.stringify(template.relations));
+                tableIdCounter = tables.length;
+                tables.forEach(t => renderTable(t));
+                renderRelations();
+                generateSQL();
+            }
+        }
+
+        // Load saved schema on startup
+        loadFromStorage();
+    </script>
+</body>
+</html>

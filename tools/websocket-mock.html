@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Mock - Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.2em;
+            color: #00d4ff;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.connected {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connecting {
+            background: #ffaa00;
+            animation: blink 0.5s infinite;
+        }
+
+        .status-dot.error {
+            background: #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .connection-panel {
+            margin-bottom: 20px;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff6666;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-success {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-connect {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .messages-panel {
+            height: 400px;
+            overflow-y: auto;
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-sent {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid #00d4ff;
+        }
+
+        .message-received {
+            background: rgba(0, 255, 136, 0.1);
+            border-left: 3px solid #00ff88;
+        }
+
+        .message-system {
+            background: rgba(255, 170, 0, 0.1);
+            border-left: 3px solid #ffaa00;
+            color: #ffaa00;
+        }
+
+        .message-error {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #ff4444;
+            color: #ff6666;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .message-content {
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .input-area {
+            margin-top: 15px;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mock-panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .mock-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .mock-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .mock-item-name {
+            font-size: 13px;
+            color: #00d4ff;
+        }
+
+        .mock-item-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mock-item-toggle input {
+            accent-color: #00ff88;
+        }
+
+        .mock-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .settings-section {
+            margin-top: 15px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-value input[type="number"] {
+            width: 60px;
+            padding: 5px 8px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            color: #c9d1d9;
+            font-size: 12px;
+        }
+
+        .setting-value input[type="checkbox"] {
+            accent-color: #00d4ff;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .templates-panel {
+            margin-top: 15px;
+        }
+
+        .template-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .template-card:hover {
+            border-color: #00d4ff;
+            transform: translateX(5px);
+        }
+
+        .template-name {
+            font-size: 13px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .template-desc {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .copy-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #00ff88;
+            color: #000;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #ff4444;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .headers-editor {
+            margin-top: 15px;
+        }
+
+        .headers-editor textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .auto-response-section {
+            margin-top: 15px;
+        }
+
+        .auto-response-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .auto-response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .trigger-input {
+            width: 100%;
+            padding: 8px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            color: #c9d1d9;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WebSocket Mock</h1>
+            <p class="subtitle">Simulate WebSocket connections without a real server</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Mock Responses</span>
+                        <button class="btn btn-secondary" onclick="addMockResponse()" style="padding: 6px 12px; font-size: 12px;">+ Add</button>
+                    </div>
+                    <div id="mockResponses">
+                        <div class="mock-item">
+                            <div class="mock-item-header">
+                                <span class="mock-item-name">Welcome Message</span>
+                                <div class="mock-item-toggle">
+                                    <input type="checkbox" id="mock1Enabled" checked>
+                                    <label for="mock1Enabled" style="font-size: 11px; color: #666;">Auto</label>
+                                </div>
+                            </div>
+                            <textarea class="mock-textarea" id="mock1Data">{"type": "welcome", "message": "Connected to mock server", "timestamp": "${timestamp}"}</textarea>
+                        </div>
+                        <div class="mock-item">
+                            <div class="mock-item-header">
+                                <span class="mock-item-name">Echo Response</span>
+                                <div class="mock-item-toggle">
+                                    <input type="checkbox" id="mock2Enabled" checked>
+                                    <label for="mock2Enabled" style="font-size: 11px; color: #666;">Auto</label>
+                                </div>
+                            </div>
+                            <textarea class="mock-textarea" id="mock2Data">{"type": "echo", "data": ${message}, "timestamp": "${timestamp}"}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Settings</span>
+                    </div>
+                    <div class="settings-section">
+                        <div class="setting-row">
+                            <span class="setting-label">Auto-reply delay</span>
+                            <div class="setting-value">
+                                <input type="number" id="autoDelay" value="500" min="0" max="5000"> ms
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <span class="setting-label">Simulate disconnects</span>
+                            <div class="setting-value">
+                                <input type="checkbox" id="simDisconnect">
+                            </div>
+                        </div>
+                        <div class="setting-row">
+                            <span class="setting-label">Random errors</span>
+                            <div class="setting-value">
+                                <input type="checkbox" id="randomErrors">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-panel">
+                        <div class="stat-item">
+                            <div class="stat-value" id="sentCount">0</div>
+                            <div class="stat-label">Sent</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="receivedCount">0</div>
+                            <div class="stat-label">Received</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Templates</span>
+                    </div>
+                    <div class="templates-panel">
+                        <div class="template-card" onclick="loadTemplate('chat')">
+                            <div class="template-name">💬 Chat Server</div>
+                            <div class="template-desc">Simple chat with messages</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('stocks')">
+                            <div class="template-name">📈 Stock Ticker</div>
+                            <div class="template-desc">Real-time price updates</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('notifications')">
+                            <div class="template-name">🔔 Notifications</div>
+                            <div class="template-desc">Push notification simulation</div>
+                        </div>
+                        <div class="template-card" onclick="loadTemplate('game')">
+                            <div class="template-name">🎮 Game State</div>
+                            <div class="template-desc">Multiplayer game sync</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="panel connection-panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Connection</span>
+                        <div class="status-indicator">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="statusText">Disconnected</span>
+                        </div>
+                    </div>
+                    <div class="url-input-group">
+                        <input type="text" class="url-input" id="wsUrl" placeholder="wss://echo.websocket.org or ws://localhost:8080" value="wss://echo.websocket.org">
+                        <button class="btn btn-primary" id="connectBtn" onclick="toggleConnection()">Connect</button>
+                    </div>
+                    <div class="quick-connect">
+                        <button class="quick-btn" onclick="setUrl('wss://echo.websocket.org')">Echo Server</button>
+                        <button class="quick-btn" onclick="setUrl('wss://stream.binance.com:9443/ws/btcusdt@trade')">Binance BTC</button>
+                        <button class="quick-btn" onclick="setUrl('wss://ws.postman-echo.com/raw')">Postman Echo</button>
+                        <button class="quick-btn" onclick="setUrl('ws://localhost:8080')">Local:8080</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('messages')">Messages</button>
+                        <button class="tab" onclick="switchTab('autoresponse')">Auto Response</button>
+                        <button class="tab" onclick="switchTab('history')">History</button>
+                    </div>
+
+                    <div id="messagesTab" class="tab-content active">
+                        <div class="panel-header">
+                            <span class="panel-title">Messages</span>
+                            <div>
+                                <button class="copy-btn" onclick="clearMessages()">Clear</button>
+                                <button class="copy-btn" onclick="exportMessages()">Export</button>
+                            </div>
+                        </div>
+                        <div class="messages-panel" id="messagesPanel">
+                            <div class="empty-state">
+                                <div class="empty-icon">🔌</div>
+                                <p>Connect to a WebSocket server to see messages</p>
+                            </div>
+                        </div>
+                        <div class="input-area">
+                            <textarea class="message-input" id="messageInput" placeholder='{"type": "message", "content": "Hello!"}'></textarea>
+                            <div class="input-actions">
+                                <button class="btn btn-success" onclick="sendMessage()" id="sendBtn" disabled>Send</button>
+                                <button class="btn btn-secondary" onclick="formatMessage()">Format JSON</button>
+                                <button class="btn btn-secondary" onclick="loadSampleMessage()">Sample</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="autoresponseTab" class="tab-content">
+                        <div class="panel-header">
+                            <span class="panel-title">Auto Response Rules</span>
+                            <button class="btn btn-secondary" onclick="addAutoResponse()" style="padding: 6px 12px; font-size: 12px;">+ Add Rule</button>
+                        </div>
+                        <div id="autoResponses">
+                            <div class="auto-response-item">
+                                <div class="auto-response-header">
+                                    <span style="font-size: 12px; color: #00d4ff;">Rule 1</span>
+                                    <button class="copy-btn" onclick="this.parentElement.parentElement.remove()">Remove</button>
+                                </div>
+                                <input type="text" class="trigger-input" placeholder="Trigger (substring match)" value="ping">
+                                <textarea class="mock-textarea" placeholder="Response (JSON)">{"type": "pong", "timestamp": "${timestamp}"}</textarea>
+                            </div>
+                        </div>
+                        <p class="help-text">Messages containing the trigger will automatically send the response. Use ${timestamp} and ${message} as placeholders.</p>
+                    </div>
+
+                    <div id="historyTab" class="tab-content">
+                        <div class="panel-header">
+                            <span class="panel-title">Connection History</span>
+                            <button class="copy-btn" onclick="clearHistory()">Clear All</button>
+                        </div>
+                        <div id="historyList">
+                            <div class="empty-state">
+                                <div class="empty-icon">📜</div>
+                                <p>No connection history yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // State
+        let ws = null;
+        let isConnected = false;
+        let messages = [];
+        let connectionHistory = [];
+        let sentCount = 0;
+        let receivedCount = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            updateHistoryDisplay();
+        });
+
+        // Storage
+        function saveToStorage() {
+            const data = {
+                url: document.getElementById('wsUrl').value,
+                messages: messages.slice(-100), // Keep last 100
+                connectionHistory: connectionHistory.slice(-20),
+                settings: {
+                    autoDelay: document.getElementById('autoDelay').value,
+                    simDisconnect: document.getElementById('simDisconnect').checked,
+                    randomErrors: document.getElementById('randomErrors').checked
+                }
+            };
+            localStorage.setItem('websocket-mock', JSON.stringify(data));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('websocket-mock');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('wsUrl').value = data.url || 'wss://echo.websocket.org';
+                messages = data.messages || [];
+                connectionHistory = data.connectionHistory || [];
+                if (data.settings) {
+                    document.getElementById('autoDelay').value = data.settings.autoDelay || 500;
+                    document.getElementById('simDisconnect').checked = data.settings.simDisconnect;
+                    document.getElementById('randomErrors').checked = data.settings.randomErrors;
+                }
+                renderMessages();
+            }
+        }
+
+        // Connection
+        function toggleConnection() {
+            if (isConnected) {
+                disconnect();
+            } else {
+                connect();
+            }
+        }
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            if (!url) {
+                showToast('Please enter a WebSocket URL', 'error');
+                return;
+            }
+
+            updateStatus('connecting', 'Connecting...');
+            document.getElementById('connectBtn').disabled = true;
+
+            try {
+                ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    isConnected = true;
+                    updateStatus('connected', 'Connected');
+                    document.getElementById('connectBtn').textContent = 'Disconnect';
+                    document.getElementById('connectBtn').disabled = false;
+                    document.getElementById('connectBtn').classList.remove('btn-primary');
+                    document.getElementById('connectBtn').classList.add('btn-danger');
+                    document.getElementById('sendBtn').disabled = false;
+
+                    addSystemMessage('Connected to ' + url);
+                    addToHistory(url, true);
+
+                    // Send welcome message if mock is enabled
+                    if (document.getElementById('mock1Enabled').checked) {
+                        sendMockResponse('mock1');
+                    }
+                };
+
+                ws.onmessage = (event) => {
+                    receivedCount++;
+                    updateStats();
+                    addMessage('received', event.data);
+
+                    // Check auto response rules
+                    checkAutoResponse(event.data);
+                };
+
+                ws.onerror = (error) => {
+                    addErrorMessage('WebSocket error: ' + (error.message || 'Unknown error'));
+                    updateStatus('error', 'Error');
+                };
+
+                ws.onclose = (event) => {
+                    isConnected = false;
+                    updateStatus('disconnected', 'Disconnected');
+                    document.getElementById('connectBtn').textContent = 'Connect';
+                    document.getElementById('connectBtn').classList.remove('btn-danger');
+                    document.getElementById('connectBtn').classList.add('btn-primary');
+                    document.getElementById('sendBtn').disabled = true;
+
+                    let reason = 'Connection closed';
+                    if (event.code) {
+                        reason += ` (code: ${event.code})`;
+                    }
+                    addSystemMessage(reason);
+                };
+
+            } catch (error) {
+                showToast('Failed to connect: ' + error.message, 'error');
+                updateStatus('error', 'Error');
+                document.getElementById('connectBtn').disabled = false;
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function updateStatus(status, text) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            dot.className = 'status-dot';
+            if (status === 'connected') dot.classList.add('connected');
+            else if (status === 'connecting') dot.classList.add('connecting');
+            else if (status === 'error') dot.classList.add('error');
+
+            statusText.textContent = text;
+        }
+
+        // Messages
+        function addMessage(type, content) {
+            const timestamp = new Date().toLocaleTimeString();
+            messages.push({ type, content, timestamp });
+            renderMessages();
+            saveToStorage();
+        }
+
+        function addSystemMessage(content) {
+            addMessage('system', content);
+        }
+
+        function addErrorMessage(content) {
+            addMessage('error', content);
+        }
+
+        function renderMessages() {
+            const panel = document.getElementById('messagesPanel');
+
+            if (messages.length === 0) {
+                panel.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔌</div>
+                        <p>Connect to a WebSocket server to see messages</p>
+                    </div>
+                `;
+                return;
+            }
+
+            panel.innerHTML = messages.map(msg => {
+                let className = '';
+                let label = '';
+                switch (msg.type) {
+                    case 'sent': className = 'message-sent'; label = '↑ Sent'; break;
+                    case 'received': className = 'message-received'; label = '↓ Received'; break;
+                    case 'system': className = 'message-system'; label = 'ℹ System'; break;
+                    case 'error': className = 'message-error'; label = '✗ Error'; break;
+                }
+
+                return `
+                    <div class="message ${className}">
+                        <div class="message-header">
+                            <span>${label}</span>
+                            <span>${msg.timestamp}</span>
+                        </div>
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            panel.scrollTop = panel.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearMessages() {
+            messages = [];
+            sentCount = 0;
+            receivedCount = 0;
+            updateStats();
+            renderMessages();
+            saveToStorage();
+        }
+
+        // Send
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (!content || !isConnected) return;
+
+            try {
+                ws.send(content);
+                sentCount++;
+                updateStats();
+                addMessage('sent', content);
+                input.value = '';
+            } catch (error) {
+                showToast('Failed to send: ' + error.message, 'error');
+            }
+        }
+
+        function formatMessage() {
+            const input = document.getElementById('messageInput');
+            try {
+                const obj = JSON.parse(input.value);
+                input.value = JSON.stringify(obj, null, 2);
+            } catch (e) {
+                showToast('Invalid JSON', 'error');
+            }
+        }
+
+        function loadSampleMessage() {
+            document.getElementById('messageInput').value = JSON.stringify({
+                type: "message",
+                content: "Hello, WebSocket!",
+                timestamp: new Date().toISOString()
+            }, null, 2);
+        }
+
+        // Mock Response
+        function sendMockResponse(mockId) {
+            const delay = parseInt(document.getElementById('autoDelay').value) || 0;
+            const dataEl = document.getElementById(mockId + 'Data');
+            if (!dataEl) return;
+
+            let response = dataEl.value;
+
+            // Replace placeholders
+            response = response.replace(/\${timestamp}/g, new Date().toISOString());
+            response = response.replace(/\${message}/g, JSON.stringify(messages[messages.length - 1]?.content || {}));
+
+            setTimeout(() => {
+                if (isConnected) {
+                    receivedCount++;
+                    updateStats();
+                    addMessage('received', response);
+                }
+            }, delay);
+        }
+
+        function addMockResponse() {
+            const container = document.getElementById('mockResponses');
+            const id = 'mock' + Date.now();
+            const div = document.createElement('div');
+            div.className = 'mock-item';
+            div.innerHTML = `
+                <div class="mock-item-header">
+                    <input type="text" value="New Response" style="background: transparent; border: none; color: #00d4ff; font-size: 13px; width: 150px;">
+                    <button class="copy-btn" onclick="this.closest('.mock-item').remove()">×</button>
+                </div>
+                <textarea class="mock-textarea" id="${id}Data">{"type": "response", "data": "..."}</textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        // Auto Response
+        function checkAutoResponse(receivedMessage) {
+            const rules = document.querySelectorAll('#autoResponses .auto-response-item');
+            const delay = parseInt(document.getElementById('autoDelay').value) || 0;
+
+            rules.forEach(rule => {
+                const triggerInput = rule.querySelector('.trigger-input');
+                const responseTextarea = rule.querySelector('.mock-textarea');
+
+                if (triggerInput && responseTextarea) {
+                    const trigger = triggerInput.value;
+                    let response = responseTextarea.value;
+
+                    if (trigger && receivedMessage.includes(trigger)) {
+                        response = response.replace(/\${timestamp}/g, new Date().toISOString());
+                        response = response.replace(/\${message}/g, JSON.stringify(receivedMessage));
+
+                        setTimeout(() => {
+                            if (isConnected) {
+                                ws.send(response);
+                                sentCount++;
+                                updateStats();
+                                addMessage('sent', response);
+                            }
+                        }, delay);
+                    }
+                }
+            });
+        }
+
+        function addAutoResponse() {
+            const container = document.getElementById('autoResponses');
+            const div = document.createElement('div');
+            div.className = 'auto-response-item';
+            div.innerHTML = `
+                <div class="auto-response-header">
+                    <span style="font-size: 12px; color: #00d4ff;">New Rule</span>
+                    <button class="copy-btn" onclick="this.closest('.auto-response-item').remove()">Remove</button>
+                </div>
+                <input type="text" class="trigger-input" placeholder="Trigger (substring match)">
+                <textarea class="mock-textarea" placeholder="Response (JSON)">{"type": "response", "timestamp": "${timestamp}"}</textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        // Stats
+        function updateStats() {
+            document.getElementById('sentCount').textContent = sentCount;
+            document.getElementById('receivedCount').textContent = receivedCount;
+        }
+
+        // History
+        function addToHistory(url, success) {
+            connectionHistory.unshift({
+                url,
+                success,
+                timestamp: new Date().toISOString()
+            });
+            if (connectionHistory.length > 20) {
+                connectionHistory.pop();
+            }
+            updateHistoryDisplay();
+            saveToStorage();
+        }
+
+        function updateHistoryDisplay() {
+            const container = document.getElementById('historyList');
+
+            if (connectionHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📜</div>
+                        <p>No connection history yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = connectionHistory.map(item => `
+                <div class="template-card" onclick="setUrl('${item.url}')">
+                    <div class="template-name" style="color: ${item.success ? '#00ff88' : '#ff4444'}">${item.success ? '✓' : '✗'} ${item.url}</div>
+                    <div class="template-desc">${new Date(item.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            connectionHistory = [];
+            updateHistoryDisplay();
+            saveToStorage();
+        }
+
+        // Templates
+        const templates = {
+            chat: {
+                mock1Data: '{"type": "welcome", "user": "User_' + Math.floor(Math.random() * 1000) + '", "message": "Welcome to chat!", "timestamp": "${timestamp}"}',
+                mock2Data: '{"type": "message", "user": "Bot", "text": "Echo: ${message}", "timestamp": "${timestamp}"}'
+            },
+            stocks: {
+                mock1Data: '{"type": "subscribed", "symbols": ["AAPL", "GOOGL", "MSFT"]}',
+                mock2Data: '{"type": "quote", "symbol": "AAPL", "price": ' + (150 + Math.random() * 10).toFixed(2) + ', "change": ' + (Math.random() * 2 - 1).toFixed(2) + ', "timestamp": "${timestamp}"}'
+            },
+            notifications: {
+                mock1Data: '{"type": "connected", "userId": "user_123"}',
+                mock2Data: '{"type": "notification", "title": "New Message", "body": "You have a new message", "timestamp": "${timestamp}"}'
+            },
+            game: {
+                mock1Data: '{"type": "game_state", "players": [{"id": 1, "x": 100, "y": 200}], "timestamp": "${timestamp}"}',
+                mock2Data: '{"type": "player_update", "action": ${message}, "timestamp": "${timestamp}"}'
+            }
+        };
+
+        function loadTemplate(name) {
+            const template = templates[name];
+            if (template) {
+                document.getElementById('mock1Data').value = template.mock1Data;
+                document.getElementById('mock2Data').value = template.mock2Data;
+                showToast('Template loaded!', 'success');
+            }
+        }
+
+        // Utilities
+        function setUrl(url) {
+            document.getElementById('wsUrl').value = url;
+        }
+
+        function exportMessages() {
+            const data = {
+                messages,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'websocket-messages.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + (type === 'error' ? 'error' : '');
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.getElementById('messageInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

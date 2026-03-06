@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Box Shadow Generator - Visual Shadow Builder</title>
+    <meta name="description" content="Generate CSS box shadows visually. Create multiple shadows, preview in real-time, and copy CSS code.">
+    <meta name="keywords" content="box shadow generator, css shadow, drop shadow, css generator, box shadow css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        .preview-area {
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #2a2a3a 25%, transparent 25%),
+                        linear-gradient(-45deg, #2a2a3a 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #2a2a3a 75%),
+                        linear-gradient(-45deg, transparent 75%, #2a2a3a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .preview-box {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            transition: box-shadow 0.3s;
+        }
+        .preview-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .preview-controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .preview-controls input[type="color"] {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .settings-panel {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        .setting-group label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+        }
+        .setting-group input[type="number"] {
+            width: 60px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        .color-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .color-input input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .color-input input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            font-family: monospace;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00d4ff;
+        }
+        .shadows-list {
+            margin-top: 15px;
+        }
+        .shadow-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .shadow-item .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .shadow-item .info {
+            flex: 1;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+        .shadow-item button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .shadow-item button:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+        .btn-add {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed rgba(0,212,255,0.5);
+            border-radius: 8px;
+            background: transparent;
+            color: #00d4ff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .btn-add:hover {
+            border-color: #00d4ff;
+            background: rgba(0,212,255,0.1);
+        }
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        .preset-btn:hover {
+            border-color: #00d4ff;
+            background: rgba(0,212,255,0.1);
+        }
+        .code-output {
+            margin-top: 20px;
+        }
+        .code-output h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        .code-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #4ade80;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,212,255,0.3);
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: #4ade80;
+            color: #000;
+            border-radius: 8px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .toast.show {
+            opacity: 1;
+        }
+        .divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 CSS Box Shadow Generator</h1>
+            <p class="subtitle">Create beautiful box shadows with live preview</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>👁️ Live Preview</h2>
+                <div class="preview-area">
+                    <div class="preview-box" id="previewBox"></div>
+                    <div class="preview-controls">
+                        <label>
+                            Box Color
+                            <input type="color" id="boxColor" value="#667eea">
+                        </label>
+                        <label>
+                            <input type="checkbox" id="boxBorder">
+                            Border
+                        </label>
+                        <label>
+                            Background
+                            <input type="color" id="bgColor" value="#2a2a3a">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card settings-panel">
+                <h2>⚙️ Shadow Settings</h2>
+
+                <div class="presets">
+                    <button class="preset-btn" onclick="applyPreset('soft')">Soft</button>
+                    <button class="preset-btn" onclick="applyPreset('hard')">Hard</button>
+                    <button class="preset-btn" onclick="applyPreset('glow')">Glow</button>
+                    <button class="preset-btn" onclick="applyPreset('layered')">Layered</button>
+                    <button class="preset-btn" onclick="applyPreset('neon')">Neon</button>
+                    <button class="preset-btn" onclick="applyPreset('inset')">Inset</button>
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        Offset X
+                        <input type="number" id="offsetX" value="0">px
+                    </label>
+                    <input type="range" id="offsetXRange" min="-100" max="100" value="0">
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        Offset Y
+                        <input type="number" id="offsetY" value="10">px
+                    </label>
+                    <input type="range" id="offsetYRange" min="-100" max="100" value="10">
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        Blur Radius
+                        <input type="number" id="blur" value="20">px
+                    </label>
+                    <input type="range" id="blurRange" min="0" max="100" value="20">
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        Spread Radius
+                        <input type="number" id="spread" value="0">px
+                    </label>
+                    <input type="range" id="spreadRange" min="-50" max="50" value="0">
+                </div>
+
+                <div class="setting-group">
+                    <label>Shadow Color</label>
+                    <div class="color-input">
+                        <input type="color" id="shadowColor" value="#000000">
+                        <input type="text" id="shadowColorText" value="#000000">
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>
+                        Opacity
+                        <input type="number" id="opacity" value="50" min="0" max="100" step="1">%
+                    </label>
+                    <input type="range" id="opacityRange" min="0" max="100" value="50">
+                </div>
+
+                <div class="setting-group checkbox-group">
+                    <input type="checkbox" id="inset">
+                    <label for="inset">Inset Shadow (inner shadow)</label>
+                </div>
+
+                <div class="divider"></div>
+
+                <h3 style="margin-bottom: 10px; font-size: 1rem; color: #aaa;">Multiple Shadows</h3>
+                <div class="shadows-list" id="shadowsList"></div>
+                <button class="btn-add" onclick="addCurrentShadow()">+ Add Current Shadow</button>
+
+                <div class="divider"></div>
+
+                <div class="code-output">
+                    <h3>CSS Code</h3>
+                    <div class="code-box" id="codeOutput">box-shadow: 0 10px 20px rgba(0,0,0,0.5);</div>
+                    <button class="copy-btn" onclick="copyCode()">📋 Copy CSS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        // State
+        let shadows = [];
+        let currentShadow = {
+            offsetX: 0,
+            offsetY: 10,
+            blur: 20,
+            spread: 0,
+            color: '#000000',
+            opacity: 50,
+            inset: false
+        };
+
+        // Elements
+        const previewBox = document.getElementById('previewBox');
+        const codeOutput = document.getElementById('codeOutput');
+        const shadowsList = document.getElementById('shadowsList');
+
+        // Presets
+        const presets = {
+            soft: { offsetX: 0, offsetY: 10, blur: 40, spread: 0, color: '#000000', opacity: 20, inset: false },
+            hard: { offsetX: 5, offsetY: 5, blur: 0, spread: 0, color: '#000000', opacity: 80, inset: false },
+            glow: { offsetX: 0, offsetY: 0, blur: 20, spread: 5, color: '#00d4ff', opacity: 80, inset: false },
+            layered: { offsetX: 0, offsetY: 4, blur: 8, spread: 0, color: '#000000', opacity: 30, inset: false },
+            neon: { offsetX: 0, offsetY: 0, blur: 10, spread: 0, color: '#ff00ff', opacity: 100, inset: false },
+            inset: { offsetX: 0, offsetY: 5, blur: 10, spread: 0, color: '#000000', opacity: 50, inset: true }
+        };
+
+        // Convert hex to rgba
+        function hexToRgba(hex, opacity) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (result) {
+                const r = parseInt(result[1], 16);
+                const g = parseInt(result[2], 16);
+                const b = parseInt(result[3], 16);
+                return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+            }
+            return `rgba(0, 0, 0, ${opacity / 100})`;
+        }
+
+        // Generate shadow string
+        function generateShadowString(shadow) {
+            const inset = shadow.inset ? 'inset ' : '';
+            const color = hexToRgba(shadow.color, shadow.opacity);
+            return `${inset}${shadow.offsetX}px ${shadow.offsetY}px ${shadow.blur}px ${shadow.spread}px ${color}`;
+        }
+
+        // Update preview
+        function updatePreview() {
+            const shadowStrings = [generateShadowString(currentShadow), ...shadows.map(s => generateShadowString(s))];
+            const boxShadow = shadowStrings.join(',\n             ');
+            previewBox.style.boxShadow = shadowStrings.join(', ');
+
+            // Generate CSS output
+            let css = `box-shadow: ${shadowStrings.join(',\n             ')};`;
+            codeOutput.textContent = css;
+        }
+
+        // Apply preset
+        function applyPreset(name) {
+            const preset = presets[name];
+            if (!preset) return;
+
+            currentShadow = { ...preset };
+            updateInputs();
+            shadows = [];
+            updateShadowsList();
+            updatePreview();
+        }
+
+        // Update inputs from current shadow
+        function updateInputs() {
+            document.getElementById('offsetX').value = currentShadow.offsetX;
+            document.getElementById('offsetXRange').value = currentShadow.offsetX;
+            document.getElementById('offsetY').value = currentShadow.offsetY;
+            document.getElementById('offsetYRange').value = currentShadow.offsetY;
+            document.getElementById('blur').value = currentShadow.blur;
+            document.getElementById('blurRange').value = currentShadow.blur;
+            document.getElementById('spread').value = currentShadow.spread;
+            document.getElementById('spreadRange').value = currentShadow.spread;
+            document.getElementById('shadowColor').value = currentShadow.color;
+            document.getElementById('shadowColorText').value = currentShadow.color;
+            document.getElementById('opacity').value = currentShadow.opacity;
+            document.getElementById('opacityRange').value = currentShadow.opacity;
+            document.getElementById('inset').checked = currentShadow.inset;
+        }
+
+        // Add current shadow to list
+        function addCurrentShadow() {
+            shadows.push({ ...currentShadow });
+            updateShadowsList();
+            updatePreview();
+        }
+
+        // Update shadows list UI
+        function updateShadowsList() {
+            shadowsList.innerHTML = shadows.map((s, i) => `
+                <div class="shadow-item">
+                    <div class="color-preview" style="background: ${s.color}"></div>
+                    <div class="info">
+                        ${s.inset ? 'inset ' : ''}${s.offsetX}px ${s.offsetY}px ${s.blur}px ${s.spread}px
+                    </div>
+                    <button onclick="removeShadow(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Remove shadow
+        function removeShadow(index) {
+            shadows.splice(index, 1);
+            updateShadowsList();
+            updatePreview();
+        }
+
+        // Copy code
+        function copyCode() {
+            const css = codeOutput.textContent;
+            navigator.clipboard.writeText(css).then(() => {
+                showToast('Copied to clipboard!');
+            });
+        }
+
+        // Show toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Bind inputs
+        function bindInput(id, prop, isCheckbox = false) {
+            const el = document.getElementById(id);
+            el.addEventListener('input', (e) => {
+                currentShadow[prop] = isCheckbox ? e.target.checked : parseFloat(e.target.value);
+                updatePreview();
+            });
+        }
+
+        function bindRangeAndInput(rangeId, inputId, prop) {
+            const range = document.getElementById(rangeId);
+            const input = document.getElementById(inputId);
+
+            range.addEventListener('input', (e) => {
+                currentShadow[prop] = parseFloat(e.target.value);
+                input.value = e.target.value;
+                updatePreview();
+            });
+
+            input.addEventListener('input', (e) => {
+                currentShadow[prop] = parseFloat(e.target.value);
+                range.value = e.target.value;
+                updatePreview();
+            });
+        }
+
+        // Initialize bindings
+        bindRangeAndInput('offsetXRange', 'offsetX', 'offsetX');
+        bindRangeAndInput('offsetYRange', 'offsetY', 'offsetY');
+        bindRangeAndInput('blurRange', 'blur', 'blur');
+        bindRangeAndInput('spreadRange', 'spread', 'spread');
+        bindRangeAndInput('opacityRange', 'opacity', 'opacity');
+        bindInput('inset', 'inset', true);
+
+        // Color inputs
+        document.getElementById('shadowColor').addEventListener('input', (e) => {
+            currentShadow.color = e.target.value;
+            document.getElementById('shadowColorText').value = e.target.value;
+            updatePreview();
+        });
+
+        document.getElementById('shadowColorText').addEventListener('input', (e) => {
+            if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+                currentShadow.color = e.target.value;
+                document.getElementById('shadowColor').value = e.target.value;
+                updatePreview();
+            }
+        });
+
+        // Box customization
+        document.getElementById('boxColor').addEventListener('input', (e) => {
+            previewBox.style.background = `linear-gradient(135deg, ${e.target.value} 0%, ${adjustColor(e.target.value, -30)} 100%)`;
+        });
+
+        document.getElementById('boxBorder').addEventListener('change', (e) => {
+            previewBox.style.border = e.target.checked ? '2px solid rgba(255,255,255,0.2)' : 'none';
+        });
+
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            document.querySelector('.preview-area').style.background = e.target.value;
+        });
+
+        // Adjust color brightness
+        function adjustColor(hex, amount) {
+            const num = parseInt(hex.slice(1), 16);
+            const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+            const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+            const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+            return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+        }
+
+        // Initialize
+        updateInputs();
+        updatePreview();
+    </script>
+</body>
+</html>

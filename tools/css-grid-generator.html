@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Generator - Dev Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #00d9ff;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .control-group select,
+        .control-group input[type="text"],
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .control-group small {
+            display: block;
+            color: #888;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #00ff88;
+        }
+
+        .preview-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h2 {
+            font-size: 1.1rem;
+            color: #00d9ff;
+        }
+
+        .grid-container {
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            min-height: 350px;
+            padding: 10px;
+            display: grid;
+            transition: all 0.3s ease;
+        }
+
+        .grid-item {
+            background: linear-gradient(135deg, #00d9ff33, #00ff8833);
+            border: 2px solid #00d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 40px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .grid-item:hover {
+            border-color: #00ff88;
+            background: linear-gradient(135deg, #00d9ff55, #00ff8855);
+        }
+
+        .grid-item.selected {
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .grid-item .cell-label {
+            font-size: 0.9rem;
+        }
+
+        .code-section {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-header span {
+            color: #00d9ff;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .code-block {
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .code-block .property {
+            color: #00d9ff;
+        }
+
+        .code-block .value {
+            color: #00ff88;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            color: #00d9ff;
+            margin: 20px 0 12px 0;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .presets {
+            margin-top: 15px;
+        }
+
+        .preset-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(0,217,255,0.2);
+            border-color: #00d9ff;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,71,87,0.2);
+            border: 1px solid #ff4757;
+            border-radius: 8px;
+            color: #ff4757;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,71,87,0.3);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .item-editor {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .item-editor.visible {
+            display: block;
+        }
+
+        .item-editor h3 {
+            font-size: 0.95rem;
+            color: #00ff88;
+            margin-bottom: 12px;
+        }
+
+        .row-inputs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .row-inputs input {
+            flex: 1;
+            min-width: 60px;
+            padding: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .gap-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .units-helper {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .unit-btn {
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            color: #888;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .unit-btn:hover {
+            background: rgba(0,217,255,0.2);
+            color: #00d9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CSS Grid Generator</h1>
+            <p class="subtitle">Visual CSS Grid layout generator with live preview</p>
+        </header>
+
+        <div class="main-content">
+            <div class="controls">
+                <div class="section-title">Container Settings</div>
+
+                <div class="control-group">
+                    <label>grid-template-columns</label>
+                    <input type="text" id="gridColumns" value="1fr 1fr 1fr" placeholder="e.g., 1fr 1fr 1fr, 200px auto, repeat(3, 1fr)">
+                    <small>Use fr, px, %, auto, minmax(), repeat()</small>
+                    <div class="units-helper">
+                        <button class="unit-btn" data-target="gridColumns" data-value="1fr">1fr</button>
+                        <button class="unit-btn" data-target="gridColumns" data-value="auto">auto</button>
+                        <button class="unit-btn" data-target="gridColumns" data-value="repeat(3, 1fr)">repeat()</button>
+                        <button class="unit-btn" data-target="gridColumns" data-value="minmax(100px, 1fr)">minmax()</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>grid-template-rows</label>
+                    <input type="text" id="gridRows" value="auto auto" placeholder="e.g., 100px auto 100px">
+                    <small>Use fr, px, %, auto</small>
+                </div>
+
+                <div class="control-group">
+                    <label>grid-auto-flow</label>
+                    <select id="gridAutoFlow">
+                        <option value="row">row</option>
+                        <option value="column">column</option>
+                        <option value="row dense">row dense</option>
+                        <option value="column dense">column dense</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>justify-items</label>
+                    <select id="justifyItems">
+                        <option value="stretch">stretch</option>
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>align-items</label>
+                    <select id="alignItems">
+                        <option value="stretch">stretch</option>
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>justify-content</label>
+                    <select id="justifyContent">
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                        <option value="stretch">stretch</option>
+                        <option value="space-around">space-around</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-evenly">space-evenly</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>align-content</label>
+                    <select id="alignContent">
+                        <option value="start">start</option>
+                        <option value="end">end</option>
+                        <option value="center">center</option>
+                        <option value="stretch">stretch</option>
+                        <option value="space-around">space-around</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-evenly">space-evenly</option>
+                    </select>
+                </div>
+
+                <div class="section-title">Gap Settings</div>
+
+                <div class="gap-inputs">
+                    <div class="control-group">
+                        <label>row-gap</label>
+                        <div class="slider-container">
+                            <input type="range" id="rowGap" min="0" max="50" value="10">
+                            <span class="slider-value" id="rowGapValue">10px</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label>column-gap</label>
+                        <div class="slider-container">
+                            <input type="range" id="columnGap" min="0" max="50" value="10">
+                            <span class="slider-value" id="columnGapValue">10px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">Grid Items</div>
+
+                <div class="control-group">
+                    <label>Number of Items</label>
+                    <div class="slider-container">
+                        <input type="range" id="itemCount" min="1" max="20" value="6">
+                        <span class="slider-value" id="itemCountValue">6</span>
+                    </div>
+                </div>
+
+                <div class="presets">
+                    <h3 style="font-size: 0.95rem; color: #00d9ff; margin-bottom: 12px;">Quick Presets</h3>
+                    <div class="preset-btns">
+                        <button class="preset-btn" data-preset="3col">3 Columns</button>
+                        <button class="preset-btn" data-preset="4col">4 Columns</button>
+                        <button class="preset-btn" data-preset="sidebar">Sidebar</button>
+                        <button class="preset-btn" data-preset="header-footer">Header Footer</button>
+                        <button class="preset-btn" data-preset="holy-grail">Holy Grail</button>
+                        <button class="preset-btn" data-preset="gallery">Gallery</button>
+                        <button class="preset-btn" data-preset="dashboard">Dashboard</button>
+                        <button class="preset-btn" data-preset="cards">Cards Grid</button>
+                    </div>
+                </div>
+
+                <button class="reset-btn" id="resetBtn">Reset to Default</button>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-header">
+                    <h2>Preview (click items to edit)</h2>
+                </div>
+
+                <div class="grid-container" id="gridContainer">
+                </div>
+
+                <div class="item-editor" id="itemEditor">
+                    <h3>Edit Item <span id="selectedItemNum"></span></h3>
+                    <div class="control-group">
+                        <label>grid-column</label>
+                        <input type="text" id="itemColumn" placeholder="e.g., 1 / 3, span 2">
+                    </div>
+                    <div class="control-group">
+                        <label>grid-row</label>
+                        <input type="text" id="itemRow" placeholder="e.g., 1 / 3, span 2">
+                    </div>
+                    <div class="control-group">
+                        <label>justify-self</label>
+                        <select id="itemJustifySelf">
+                            <option value="">auto</option>
+                            <option value="start">start</option>
+                            <option value="end">end</option>
+                            <option value="center">center</option>
+                            <option value="stretch">stretch</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>align-self</label>
+                        <select id="itemAlignSelf">
+                            <option value="">auto</option>
+                            <option value="start">start</option>
+                            <option value="end">end</option>
+                            <option value="center">center</option>
+                            <option value="stretch">stretch</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="code-section">
+                    <div class="code-header">
+                        <span>CSS Code</span>
+                        <button class="copy-btn" id="copyBtn">Copy</button>
+                    </div>
+                    <div class="code-block" id="codeBlock"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const container = document.getElementById('gridContainer');
+        const codeBlock = document.getElementById('codeBlock');
+        const itemEditor = document.getElementById('itemEditor');
+        const toast = document.getElementById('toast');
+
+        let selectedItem = null;
+        let itemStyles = {};
+
+        // Initialize
+        function init() {
+            updateItems();
+            updatePreview();
+            loadFromStorage();
+        }
+
+        // Get current grid container styles
+        function getGridStyles() {
+            return {
+                gridTemplateColumns: document.getElementById('gridColumns').value,
+                gridTemplateRows: document.getElementById('gridRows').value,
+                gridAutoFlow: document.getElementById('gridAutoFlow').value,
+                justifyItems: document.getElementById('justifyItems').value,
+                alignItems: document.getElementById('alignItems').value,
+                justifyContent: document.getElementById('justifyContent').value,
+                alignContent: document.getElementById('alignContent').value,
+                rowGap: document.getElementById('rowGap').value + 'px',
+                columnGap: document.getElementById('columnGap').value + 'px'
+            };
+        }
+
+        // Update items in grid
+        function updateItems() {
+            const count = parseInt(document.getElementById('itemCount').value);
+            container.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-item';
+                item.dataset.index = i;
+                item.innerHTML = `<span class="cell-label">${i + 1}</span>`;
+                item.addEventListener('click', () => selectItem(i));
+                container.appendChild(item);
+            }
+
+            // Re-apply item styles
+            Object.entries(itemStyles).forEach(([index, styles]) => {
+                const item = container.querySelector(`.grid-item[data-index="${index}"]`);
+                if (item) {
+                    applyItemStyles(item, styles);
+                }
+            });
+
+            document.getElementById('itemCountValue').textContent = count;
+        }
+
+        // Select item for editing
+        function selectItem(index) {
+            // Deselect previous
+            if (selectedItem !== null) {
+                const prevItem = container.querySelector(`.grid-item[data-index="${selectedItem}"]`);
+                if (prevItem) prevItem.classList.remove('selected');
+            }
+
+            selectedItem = index;
+            const item = container.querySelector(`.grid-item[data-index="${index}"]`);
+            if (item) {
+                item.classList.add('selected');
+            }
+
+            // Show editor with current values
+            itemEditor.classList.add('visible');
+            document.getElementById('selectedItemNum').textContent = index + 1;
+
+            const styles = itemStyles[index] || {};
+            document.getElementById('itemColumn').value = styles.gridColumn || '';
+            document.getElementById('itemRow').value = styles.gridRow || '';
+            document.getElementById('itemJustifySelf').value = styles.justifySelf || '';
+            document.getElementById('itemAlignSelf').value = styles.alignSelf || '';
+        }
+
+        // Apply item styles
+        function applyItemStyles(item, styles) {
+            item.style.gridColumn = styles.gridColumn || '';
+            item.style.gridRow = styles.gridRow || '';
+            item.style.justifySelf = styles.justifySelf || '';
+            item.style.alignSelf = styles.alignSelf || '';
+        }
+
+        // Update preview
+        function updatePreview() {
+            const styles = getGridStyles();
+
+            // Apply styles to container
+            container.style.gridTemplateColumns = styles.gridTemplateColumns;
+            container.style.gridTemplateRows = styles.gridTemplateRows;
+            container.style.gridAutoFlow = styles.gridAutoFlow;
+            container.style.justifyItems = styles.justifyItems;
+            container.style.alignItems = styles.alignItems;
+            container.style.justifyContent = styles.justifyContent;
+            container.style.alignContent = styles.alignContent;
+            container.style.rowGap = styles.rowGap;
+            container.style.columnGap = styles.columnGap;
+
+            // Update code block
+            updateCodeBlock(styles);
+
+            // Save to localStorage
+            saveToStorage();
+        }
+
+        // Update code block
+        function updateCodeBlock(styles) {
+            let css = `<span class="property">.grid-container</span> {\n`;
+            css += `  <span class="property">display</span>: <span class="value">grid</span>;\n`;
+            css += `  <span class="property">grid-template-columns</span>: <span class="value">${styles.gridTemplateColumns}</span>;\n`;
+
+            if (styles.gridTemplateRows && styles.gridTemplateRows !== 'auto') {
+                css += `  <span class="property">grid-template-rows</span>: <span class="value">${styles.gridTemplateRows}</span>;\n`;
+            }
+
+            if (styles.gridAutoFlow !== 'row') {
+                css += `  <span class="property">grid-auto-flow</span>: <span class="value">${styles.gridAutoFlow}</span>;\n`;
+            }
+
+            css += `  <span class="property">justify-items</span>: <span class="value">${styles.justifyItems}</span>;\n`;
+            css += `  <span class="property">align-items</span>: <span class="value">${styles.alignItems}</span>;\n`;
+            css += `  <span class="property">justify-content</span>: <span class="value">${styles.justifyContent}</span>;\n`;
+            css += `  <span class="property">align-content</span>: <span class="value">${styles.alignContent}</span>;\n`;
+            css += `  <span class="property">gap</span>: <span class="value">${styles.rowGap} ${styles.columnGap}</span>;\n`;
+            css += `}`;
+
+            // Add item styles if any
+            const hasItemStyles = Object.keys(itemStyles).some(k =>
+                itemStyles[k].gridColumn || itemStyles[k].gridRow ||
+                itemStyles[k].justifySelf || itemStyles[k].alignSelf
+            );
+
+            if (hasItemStyles) {
+                Object.entries(itemStyles).forEach(([index, styles]) => {
+                    if (styles.gridColumn || styles.gridRow || styles.justifySelf || styles.alignSelf) {
+                        css += `\n\n<span class="property">.grid-item:nth-child(${parseInt(index) + 1})</span> {\n`;
+                        if (styles.gridColumn) css += `  <span class="property">grid-column</span>: <span class="value">${styles.gridColumn}</span>;\n`;
+                        if (styles.gridRow) css += `  <span class="property">grid-row</span>: <span class="value">${styles.gridRow}</span>;\n`;
+                        if (styles.justifySelf) css += `  <span class="property">justify-self</span>: <span class="value">${styles.justifySelf}</span>;\n`;
+                        if (styles.alignSelf) css += `  <span class="property">align-self</span>: <span class="value">${styles.alignSelf}</span>;\n`;
+                        css += `}`;
+                    }
+                });
+            }
+
+            codeBlock.innerHTML = css;
+        }
+
+        // Presets
+        const presets = {
+            '3col': {
+                gridTemplateColumns: '1fr 1fr 1fr',
+                gridTemplateRows: 'auto',
+                itemCount: 6
+            },
+            '4col': {
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateRows: 'auto',
+                itemCount: 8
+            },
+            'sidebar': {
+                gridTemplateColumns: '250px 1fr',
+                gridTemplateRows: '100vh',
+                itemCount: 2,
+                itemStyles: {
+                    0: { gridColumn: '1', gridRow: '1' },
+                    1: { gridColumn: '2', gridRow: '1' }
+                }
+            },
+            'header-footer': {
+                gridTemplateColumns: '1fr',
+                gridTemplateRows: '80px 1fr 60px',
+                itemCount: 3,
+                itemStyles: {
+                    0: { gridRow: '1' },
+                    1: { gridRow: '2' },
+                    2: { gridRow: '3' }
+                }
+            },
+            'holy-grail': {
+                gridTemplateColumns: '200px 1fr 200px',
+                gridTemplateRows: '80px 1fr 60px',
+                itemCount: 5,
+                itemStyles: {
+                    0: { gridColumn: '1 / 4', gridRow: '1' },
+                    1: { gridColumn: '1', gridRow: '2' },
+                    2: { gridColumn: '2', gridRow: '2' },
+                    3: { gridColumn: '3', gridRow: '2' },
+                    4: { gridColumn: '1 / 4', gridRow: '3' }
+                }
+            },
+            'gallery': {
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                gridTemplateRows: 'auto',
+                itemCount: 12
+            },
+            'dashboard': {
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateRows: 'auto auto auto',
+                itemCount: 8,
+                itemStyles: {
+                    0: { gridColumn: '1 / 3' },
+                    1: { gridColumn: '3 / 5' },
+                    6: { gridColumn: '1 / 4' }
+                }
+            },
+            'cards': {
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gridTemplateRows: 'auto',
+                itemCount: 6
+            }
+        };
+
+        // Apply preset
+        function applyPreset(preset) {
+            const p = presets[preset];
+            if (p) {
+                document.getElementById('gridColumns').value = p.gridTemplateColumns;
+                document.getElementById('gridRows').value = p.gridTemplateRows;
+                document.getElementById('gridAutoFlow').value = 'row';
+                document.getElementById('justifyItems').value = 'stretch';
+                document.getElementById('alignItems').value = 'stretch';
+                document.getElementById('justifyContent').value = 'start';
+                document.getElementById('alignContent').value = 'start';
+                document.getElementById('rowGap').value = 10;
+                document.getElementById('columnGap').value = 10;
+                document.getElementById('rowGapValue').textContent = '10px';
+                document.getElementById('columnGapValue').textContent = '10px';
+                document.getElementById('itemCount').value = p.itemCount;
+
+                // Reset and apply item styles
+                itemStyles = {};
+                if (p.itemStyles) {
+                    itemStyles = JSON.parse(JSON.stringify(p.itemStyles));
+                }
+
+                updateItems();
+                updatePreview();
+            }
+        }
+
+        // Copy to clipboard
+        function copyCode() {
+            const styles = getGridStyles();
+            let css = `.grid-container {\n`;
+            css += `  display: grid;\n`;
+            css += `  grid-template-columns: ${styles.gridTemplateColumns};\n`;
+            if (styles.gridTemplateRows && styles.gridTemplateRows !== 'auto') {
+                css += `  grid-template-rows: ${styles.gridTemplateRows};\n`;
+            }
+            if (styles.gridAutoFlow !== 'row') {
+                css += `  grid-auto-flow: ${styles.gridAutoFlow};\n`;
+            }
+            css += `  justify-items: ${styles.justifyItems};\n`;
+            css += `  align-items: ${styles.alignItems};\n`;
+            css += `  justify-content: ${styles.justifyContent};\n`;
+            css += `  align-content: ${styles.alignContent};\n`;
+            css += `  gap: ${styles.rowGap} ${styles.columnGap};\n`;
+            css += `}`;
+
+            Object.entries(itemStyles).forEach(([index, styles]) => {
+                if (styles.gridColumn || styles.gridRow || styles.justifySelf || styles.alignSelf) {
+                    css += `\n\n.grid-item:nth-child(${parseInt(index) + 1}) {\n`;
+                    if (styles.gridColumn) css += `  grid-column: ${styles.gridColumn};\n`;
+                    if (styles.gridRow) css += `  grid-row: ${styles.gridRow};\n`;
+                    if (styles.justifySelf) css += `  justify-self: ${styles.justifySelf};\n`;
+                    if (styles.alignSelf) css += `  align-self: ${styles.alignSelf};\n`;
+                    css += `}`;
+                }
+            });
+
+            navigator.clipboard.writeText(css).then(() => {
+                showToast();
+            });
+        }
+
+        // Show toast
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            const data = {
+                styles: getGridStyles(),
+                itemStyles: itemStyles,
+                itemCount: parseInt(document.getElementById('itemCount').value)
+            };
+            localStorage.setItem('css-grid-generator', JSON.stringify(data));
+        }
+
+        // Load from localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('css-grid-generator');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    document.getElementById('gridColumns').value = data.styles.gridTemplateColumns;
+                    document.getElementById('gridRows').value = data.styles.gridTemplateRows;
+                    document.getElementById('gridAutoFlow').value = data.styles.gridAutoFlow;
+                    document.getElementById('justifyItems').value = data.styles.justifyItems;
+                    document.getElementById('alignItems').value = data.styles.alignItems;
+                    document.getElementById('justifyContent').value = data.styles.justifyContent;
+                    document.getElementById('alignContent').value = data.styles.alignContent;
+                    document.getElementById('rowGap').value = parseInt(data.styles.rowGap);
+                    document.getElementById('columnGap').value = parseInt(data.styles.columnGap);
+                    document.getElementById('rowGapValue').textContent = data.styles.rowGap;
+                    document.getElementById('columnGapValue').textContent = data.styles.columnGap;
+                    document.getElementById('itemCount').value = data.itemCount;
+                    itemStyles = data.itemStyles || {};
+                    updateItems();
+                    updatePreview();
+                } catch (e) {}
+            }
+        }
+
+        // Reset
+        function reset() {
+            document.getElementById('gridColumns').value = '1fr 1fr 1fr';
+            document.getElementById('gridRows').value = 'auto auto';
+            document.getElementById('gridAutoFlow').value = 'row';
+            document.getElementById('justifyItems').value = 'stretch';
+            document.getElementById('alignItems').value = 'stretch';
+            document.getElementById('justifyContent').value = 'start';
+            document.getElementById('alignContent').value = 'start';
+            document.getElementById('rowGap').value = 10;
+            document.getElementById('columnGap').value = 10;
+            document.getElementById('rowGapValue').textContent = '10px';
+            document.getElementById('columnGapValue').textContent = '10px';
+            document.getElementById('itemCount').value = 6;
+            document.getElementById('itemCountValue').textContent = '6';
+            itemStyles = {};
+            selectedItem = null;
+            itemEditor.classList.remove('visible');
+            updateItems();
+            updatePreview();
+        }
+
+        // Event listeners for container controls
+        ['gridColumns', 'gridRows', 'gridAutoFlow', 'justifyItems', 'alignItems', 'justifyContent', 'alignContent'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+            document.getElementById(id).addEventListener('change', updatePreview);
+        });
+
+        // Gap sliders
+        ['rowGap', 'columnGap'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                document.getElementById(id + 'Value').textContent = e.target.value + 'px';
+                updatePreview();
+            });
+        });
+
+        // Item count slider
+        document.getElementById('itemCount').addEventListener('input', (e) => {
+            document.getElementById('itemCountValue').textContent = e.target.value;
+            updateItems();
+            updatePreview();
+        });
+
+        // Item editor controls
+        ['itemColumn', 'itemRow', 'itemJustifySelf', 'itemAlignSelf'].forEach(id => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                if (selectedItem !== null) {
+                    if (!itemStyles[selectedItem]) itemStyles[selectedItem] = {};
+                    const prop = id === 'itemColumn' ? 'gridColumn' :
+                                 id === 'itemRow' ? 'gridRow' :
+                                 id === 'itemJustifySelf' ? 'justifySelf' : 'alignSelf';
+                    itemStyles[selectedItem][prop] = e.target.value;
+
+                    const item = container.querySelector(`.grid-item[data-index="${selectedItem}"]`);
+                    if (item) {
+                        applyItemStyles(item, itemStyles[selectedItem]);
+                    }
+                    updateCodeBlock(getGridStyles());
+                    saveToStorage();
+                }
+            });
+        });
+
+        // Unit helper buttons
+        document.querySelectorAll('.unit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.getElementById(btn.dataset.target);
+                target.value = btn.dataset.value;
+                target.focus();
+                updatePreview();
+            });
+        });
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', copyCode);
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

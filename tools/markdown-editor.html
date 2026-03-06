@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Editor - Live Preview</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: #2a2a4a;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 3px;
+            padding-right: 10px;
+            border-right: 1px solid #3a3a5a;
+            margin-right: 10px;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+            margin-right: 0;
+        }
+
+        .toolbar-btn {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .toolbar-btn:hover {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        .toolbar-btn.active {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            color: white;
+        }
+
+        .toolbar-btn i {
+            pointer-events: none;
+        }
+
+        .editor-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            height: calc(100vh - 250px);
+            min-height: 500px;
+        }
+
+        @media (max-width: 900px) {
+            .editor-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            background: #1e1e3a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #3a3a5a;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #2a2a4a;
+            border-bottom: 1px solid #3a3a5a;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: #3a3a5a;
+            color: #e0e0e0;
+        }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 15px;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            resize: none;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        .preview {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        /* Markdown Preview Styles */
+        .preview h1 { font-size: 2em; margin: 0.67em 0; border-bottom: 1px solid #3a3a5a; padding-bottom: 0.3em; }
+        .preview h2 { font-size: 1.5em; margin: 0.83em 0; border-bottom: 1px solid #3a3a5a; padding-bottom: 0.3em; }
+        .preview h3 { font-size: 1.17em; margin: 1em 0; }
+        .preview h4 { font-size: 1em; margin: 1.33em 0; }
+        .preview h5 { font-size: 0.83em; margin: 1.67em 0; }
+        .preview h6 { font-size: 0.67em; margin: 2.33em 0; }
+
+        .preview p { margin: 1em 0; }
+        .preview ul, .preview ol { margin: 1em 0; padding-left: 2em; }
+        .preview li { margin: 0.5em 0; }
+        .preview ul { list-style-type: disc; }
+        .preview ol { list-style-type: decimal; }
+
+        .preview code {
+            background: #2a2a4a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+
+        .preview pre {
+            background: #2a2a4a;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .preview pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .preview blockquote {
+            border-left: 4px solid #7c3aed;
+            padding-left: 15px;
+            margin: 1em 0;
+            color: #888;
+            font-style: italic;
+        }
+
+        .preview a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+
+        .preview a:hover {
+            text-decoration: underline;
+        }
+
+        .preview img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+
+        .preview th, .preview td {
+            border: 1px solid #3a3a5a;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .preview th {
+            background: #2a2a4a;
+        }
+
+        .preview hr {
+            border: none;
+            border-top: 1px solid #3a3a5a;
+            margin: 2em 0;
+        }
+
+        .preview input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 15px;
+            background: #2a2a4a;
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .status-bar span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .examples {
+            margin: 20px 0;
+        }
+
+        .examples h3 {
+            margin-bottom: 15px;
+            color: #888;
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .example-btn {
+            padding: 12px;
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            color: #e0e0e0;
+        }
+
+        .example-btn:hover {
+            background: #3a3a5a;
+            border-color: #00d4ff;
+        }
+
+        .example-btn strong {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 0.9rem;
+        }
+
+        .example-btn span {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1e1e3a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #00d4ff;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            color: #e0e0e0;
+        }
+
+        .modal-body pre {
+            background: #2a2a4a;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+
+        .modal-body code {
+            background: #2a2a4a;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .modal-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .modal-body th, .modal-body td {
+            border: 1px solid #3a3a5a;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .modal-body th {
+            background: #2a2a4a;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e3a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3a3a5a;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4a6a;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-edit"></i> Markdown Editor</h1>
+            <p class="subtitle">Write Markdown with live preview - no server required</p>
+        </header>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="insertMarkdown('bold')" title="Bold (Ctrl+B)">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('italic')" title="Italic (Ctrl+I)">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('strikethrough')" title="Strikethrough">
+                    <i class="fas fa-strikethrough"></i>
+                </button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="insertMarkdown('h1')" title="Heading 1">
+                    H1
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('h2')" title="Heading 2">
+                    H2
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('h3')" title="Heading 3">
+                    H3
+                </button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="insertMarkdown('ul')" title="Unordered List">
+                    <i class="fas fa-list-ul"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('ol')" title="Ordered List">
+                    <i class="fas fa-list-ol"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('checklist')" title="Checklist">
+                    <i class="fas fa-tasks"></i>
+                </button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="insertMarkdown('link')" title="Link">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('image')" title="Image">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('code')" title="Inline Code">
+                    <i class="fas fa-code"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('codeblock')" title="Code Block">
+                    <i class="fas fa-file-code"></i>
+                </button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="insertMarkdown('quote')" title="Blockquote">
+                    <i class="fas fa-quote-right"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('hr')" title="Horizontal Rule">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <button class="toolbar-btn" onclick="insertMarkdown('table')" title="Table">
+                    <i class="fas fa-table"></i>
+                </button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" onclick="showHelp()" title="Markdown Help">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="editor-wrapper">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-pencil-alt"></i> Markdown
+                    </div>
+                    <div class="panel-actions">
+                        <button class="icon-btn" onclick="loadFile()" title="Load File">
+                            <i class="fas fa-folder-open"></i>
+                        </button>
+                        <button class="icon-btn" onclick="downloadMarkdown()" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="icon-btn" onclick="clearEditor()" title="Clear">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="editor" placeholder="Write your Markdown here..."></textarea>
+                <div class="status-bar">
+                    <span id="charCount"><i class="fas fa-font"></i> 0 characters</span>
+                    <span id="wordCount"><i class="fas fa-file-word"></i> 0 words</span>
+                    <span id="lineCount"><i class="fas fa-align-left"></i> 0 lines</span>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="fas fa-eye"></i> Preview
+                    </div>
+                    <div class="panel-actions">
+                        <button class="icon-btn" onclick="copyHtml()" title="Copy HTML">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="icon-btn" onclick="downloadHtml()" title="Download HTML">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="preview" class="preview"></div>
+            </div>
+        </div>
+
+        <div class="examples">
+            <h3><i class="fas fa-lightbulb"></i> Quick Templates</h3>
+            <div class="example-grid">
+                <button class="example-btn" onclick="loadTemplate('readme')">
+                    <strong><i class="fab fa-github"></i> README</strong>
+                    <span>GitHub README template</span>
+                </button>
+                <button class="example-btn" onclick="loadTemplate('blog')">
+                    <strong><i class="fas fa-blog"></i> Blog Post</strong>
+                    <span>Blog article structure</span>
+                </button>
+                <button class="example-btn" onclick="loadTemplate('docs')">
+                    <strong><i class="fas fa-book"></i> Documentation</strong>
+                    <span>Technical docs template</span>
+                </button>
+                <button class="example-btn" onclick="loadTemplate('cheatsheet')">
+                    <strong><i class="fas fa-list"></i> Cheatsheet</strong>
+                    <span>Markdown syntax examples</span>
+                </button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Markdown Editor - Write beautiful documentation</p>
+        </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Markdown Cheatsheet</h3>
+                <button class="modal-close" onclick="closeHelp()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4>Headings</h4>
+                <pre># H1
+## H2
+### H3</pre>
+
+                <h4>Text Styling</h4>
+                <pre>**bold**
+*italic*
+~~strikethrough~~</pre>
+
+                <h4>Lists</h4>
+                <pre>- Unordered item
+1. Ordered item
+- [ ] Checklist item</pre>
+
+                <h4>Links & Images</h4>
+                <pre>[link text](url)
+![alt text](image-url)</pre>
+
+                <h4>Code</h4>
+                <pre>`inline code`
+
+```javascript
+// code block
+```</pre>
+
+                <h4>Blockquote</h4>
+                <pre>> quoted text</pre>
+
+                <h4>Table</h4>
+                <pre>| Header | Header |
+|--------|--------|
+| Cell   | Cell   |</pre>
+
+                <h4>Horizontal Rule</h4>
+                <pre>---</pre>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none" accept=".md,.markdown,.txt">
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    editor.value = e.target.result;
+                    updatePreview();
+                };
+                reader.readAsText(file);
+            }
+            this.value = '';
+        });
+
+        function loadFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        function downloadMarkdown() {
+            const content = editor.value;
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadHtml() {
+            const html = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown Document</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        h1, h2 { border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+        code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        blockquote { border-left: 4px solid #ddd; padding-left: 15px; color: #666; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        img { max-width: 100%; }
+    </style>
+</head>
+<body>
+${parseMarkdown(editor.value)}
+</body>
+</html>`;
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'document.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyHtml() {
+            const html = parseMarkdown(editor.value);
+            navigator.clipboard.writeText(html).then(() => {
+                alert('HTML copied to clipboard!');
+            });
+        }
+
+        function clearEditor() {
+            if (confirm('Clear all content?')) {
+                editor.value = '';
+                updatePreview();
+            }
+        }
+
+        function showHelp() {
+            document.getElementById('helpModal').classList.add('active');
+        }
+
+        function closeHelp() {
+            document.getElementById('helpModal').classList.remove('active');
+        }
+
+        // Insert markdown syntax
+        function insertMarkdown(type) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            const selected = text.substring(start, end);
+
+            let insertion = '';
+            let cursorOffset = 0;
+
+            switch(type) {
+                case 'bold':
+                    insertion = `**${selected || 'bold text'}**`;
+                    cursorOffset = selected ? insertion.length : 2;
+                    break;
+                case 'italic':
+                    insertion = `*${selected || 'italic text'}*`;
+                    cursorOffset = selected ? insertion.length : 1;
+                    break;
+                case 'strikethrough':
+                    insertion = `~~${selected || 'strikethrough'}~~`;
+                    cursorOffset = selected ? insertion.length : 2;
+                    break;
+                case 'h1':
+                    insertion = `# ${selected || 'Heading 1'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'h2':
+                    insertion = `## ${selected || 'Heading 2'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'h3':
+                    insertion = `### ${selected || 'Heading 3'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'ul':
+                    insertion = `- ${selected || 'List item'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'ol':
+                    insertion = `1. ${selected || 'List item'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'checklist':
+                    insertion = `- [ ] ${selected || 'Checkbox item'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'link':
+                    insertion = `[${selected || 'link text'}](url)`;
+                    cursorOffset = selected ? insertion.length - 5 : 1;
+                    break;
+                case 'image':
+                    insertion = `![${selected || 'alt text'}](image-url)`;
+                    cursorOffset = selected ? insertion.length - 10 : 2;
+                    break;
+                case 'code':
+                    insertion = `\`${selected || 'code'}\``;
+                    cursorOffset = selected ? insertion.length : 1;
+                    break;
+                case 'codeblock':
+                    insertion = `\`\`\`\n${selected || 'code'}\n\`\`\``;
+                    cursorOffset = selected ? insertion.length : 4;
+                    break;
+                case 'quote':
+                    insertion = `> ${selected || 'Quote'}`;
+                    cursorOffset = insertion.length;
+                    break;
+                case 'hr':
+                    insertion = '\n---\n';
+                    cursorOffset = insertion.length;
+                    break;
+                case 'table':
+                    insertion = `| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |`;
+                    cursorOffset = insertion.length;
+                    break;
+            }
+
+            editor.value = text.substring(0, start) + insertion + text.substring(end);
+            editor.focus();
+            editor.setSelectionRange(start + cursorOffset, start + cursorOffset);
+            updatePreview();
+        }
+
+        // Simple Markdown parser
+        function parseMarkdown(text) {
+            let html = text;
+
+            // Escape HTML
+            html = html.replace(/&/g, '&amp;');
+            html = html.replace(/</g, '&lt;');
+            html = html.replace(/>/g, '&gt;');
+
+            // Code blocks (must be before other processing)
+            html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+
+            // Inline code
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Headers
+            html = html.replace(/^###### (.+)$/gm, '<h6>$1</h6>');
+            html = html.replace(/^##### (.+)$/gm, '<h5>$1</h5>');
+            html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+            // Bold and Italic
+            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/___(.+?)___/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+            html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+            // Links and Images
+            html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+            // Blockquotes
+            html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+            // Horizontal rules
+            html = html.replace(/^---$/gm, '<hr>');
+            html = html.replace(/^\*\*\*$/gm, '<hr>');
+
+            // Tables
+            html = html.replace(/^\|(.+)\|$/gm, function(match, content) {
+                const cells = content.split('|').map(c => c.trim());
+                if (cells.every(c => /^[-:]+$/.test(c))) {
+                    return '<!--table-separator-->';
+                }
+                return '<tr>' + cells.map(c => '<td>' + c + '</td>').join('') + '</tr>';
+            });
+
+            // Wrap table rows
+            html = html.replace(/(<tr>.*<\/tr>\n?)+/g, function(match) {
+                const rows = match.split('<!--table-separator-->');
+                if (rows.length === 2) {
+                    return '<table>\n<thead>' + rows[0] + '</thead>\n<tbody>' + rows[1] + '</tbody>\n</table>\n';
+                }
+                return '<table>\n' + match + '</table>\n';
+            });
+
+            // Checkboxes
+            html = html.replace(/^- \[x\] (.+)$/gm, '<li><input type="checkbox" checked disabled> $1</li>');
+            html = html.replace(/^- \[ \] (.+)$/gm, '<li><input type="checkbox" disabled> $1</li>');
+
+            // Lists
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>');
+
+            // Wrap consecutive list items
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, function(match) {
+                return '<ul>\n' + match + '</ul>\n';
+            });
+
+            // Paragraphs
+            html = html.split('\n\n').map(block => {
+                block = block.trim();
+                if (!block) return '';
+                if (block.match(/^<(h[1-6]|ul|ol|blockquote|pre|hr|table|li)/)) {
+                    return block;
+                }
+                return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+            }).join('\n');
+
+            return html;
+        }
+
+        function updatePreview() {
+            const markdown = editor.value;
+            preview.innerHTML = parseMarkdown(markdown);
+            updateStats();
+        }
+
+        function updateStats() {
+            const text = editor.value;
+            const chars = text.length;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const lines = text ? text.split('\n').length : 0;
+
+            document.getElementById('charCount').innerHTML = `<i class="fas fa-font"></i> ${chars} characters`;
+            document.getElementById('wordCount').innerHTML = `<i class="fas fa-file-word"></i> ${words} words`;
+            document.getElementById('lineCount').innerHTML = `<i class="fas fa-align-left"></i> ${lines} lines`;
+        }
+
+        // Templates
+        function loadTemplate(type) {
+            const templates = {
+                readme: `# Project Name
+
+A brief description of what this project does and who it's for.
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Installation
+
+\`\`\`bash
+npm install my-project
+\`\`\`
+
+## Usage
+
+\`\`\`javascript
+const myProject = require('my-project');
+
+myProject.doSomething();
+\`\`\`
+
+## API Reference
+
+### \`functionName(param1, param2)\`
+
+Description of what the function does.
+
+| Parameter | Type     | Description                |
+|-----------|----------|----------------------------|
+| param1    | string   | Description of param1      |
+| param2    | number   | Description of param2      |
+
+## Contributing
+
+Pull requests are welcome. For major changes, please open an issue first.
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/)
+`,
+                blog: `# Blog Post Title
+
+*Published on ${new Date().toLocaleDateString()}*
+
+## Introduction
+
+Start with an engaging hook that captures the reader's attention.
+
+## Main Section 1
+
+Write your content here. Use **bold** for emphasis and *italics* for subtle highlights.
+
+### Subsection
+
+- Point one
+- Point two
+- Point three
+
+> "A great quote that supports your argument."
+
+## Main Section 2
+
+Add code examples when relevant:
+
+\`\`\`javascript
+// Example code
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+\`\`\`
+
+## Conclusion
+
+Summarize your key points and include a call to action.
+
+---
+
+*Thanks for reading! Follow me for more content.*
+`,
+                docs: `# Documentation
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 16+
+- npm or yarn
+
+### Quick Start
+
+1. Clone the repository
+2. Install dependencies
+3. Run the development server
+
+## Architecture
+
+### Overview
+
+The system consists of the following components:
+
+| Component | Description |
+|-----------|-------------|
+| API       | REST API server |
+| Frontend  | React application |
+| Database  | PostgreSQL |
+
+### API Endpoints
+
+#### \`GET /api/users\`
+
+Returns a list of users.
+
+**Response:**
+\`\`\`json
+{
+  "users": [
+    { "id": 1, "name": "John" }
+  ]
+}
+\`\`\`
+
+## Configuration
+
+Environment variables:
+
+| Variable | Required | Default |
+|----------|----------|---------|
+| DATABASE_URL | Yes | - |
+| PORT | No | 3000 |
+
+## Troubleshooting
+
+### Common Issues
+
+- **Connection refused**: Check if the server is running
+- **Auth failed**: Verify your API key
+`,
+                cheatsheet: `# Markdown Cheatsheet
+
+## Headings
+
+# Heading 1
+## Heading 2
+### Heading 3
+
+## Text Formatting
+
+**Bold text**
+*Italic text*
+~~Strikethrough~~
+
+## Lists
+
+### Unordered
+- Item 1
+- Item 2
+
+### Ordered
+1. First
+2. Second
+
+### Checklist
+- [x] Done
+- [ ] Todo
+
+## Links & Images
+
+[Link text](https://example.com)
+
+![Alt text](image-url)
+
+## Code
+
+Inline \`code\` example.
+
+\`\`\`javascript
+// Code block
+console.log('Hello World');
+\`\`\`
+
+## Blockquote
+
+> This is a blockquote.
+> It can span multiple lines.
+
+## Table
+
+| Column 1 | Column 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+
+## Horizontal Rule
+
+---
+
+## Task List
+
+- [x] Learn Markdown
+- [ ] Practice more
+- [ ] Teach others
+`
+            };
+
+            editor.value = templates[type];
+            updatePreview();
+        }
+
+        // Keyboard shortcuts
+        editor.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'b':
+                        e.preventDefault();
+                        insertMarkdown('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        insertMarkdown('italic');
+                        break;
+                }
+            }
+
+            // Tab to insert spaces
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+                updatePreview();
+            }
+        });
+
+        // Auto-update preview
+        editor.addEventListener('input', updatePreview);
+
+        // Load saved content
+        const saved = localStorage.getItem('markdown-editor-content');
+        if (saved) {
+            editor.value = saved;
+            updatePreview();
+        }
+
+        // Save content
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('markdown-editor-content', editor.value);
+        });
+
+        // Close modal on outside click
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHelp();
+            }
+        });
+    </script>
+</body>
+</html>

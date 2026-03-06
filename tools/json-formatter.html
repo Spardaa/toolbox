@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter - Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #feca57, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 5px;
+            background: #1a1a1a;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        .btn {
+            background: #2a2a2a;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #3a3a3a;
+        }
+
+        .btn.active {
+            background: #feca57;
+            color: #000;
+        }
+
+        .btn.primary {
+            background: linear-gradient(135deg, #feca57, #ff9f43);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(254, 202, 87, 0.3);
+        }
+
+        .btn.danger {
+            background: #d63031;
+            color: #fff;
+        }
+
+        .btn.danger:hover {
+            background: #e74c3c;
+        }
+
+        .indent-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .indent-selector select {
+            background: #2a2a2a;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+
+        @media (max-width: 900px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .editor-panel {
+                min-height: 300px;
+            }
+        }
+
+        .editor-panel {
+            background: #1a1a1a;
+            border-radius: 12px;
+            border: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #222;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .status-badge.valid {
+            background: #00b894;
+            color: #fff;
+        }
+
+        .status-badge.invalid {
+            background: #d63031;
+            color: #fff;
+        }
+
+        .editor {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .line-numbers {
+            width: 40px;
+            background: #1a1a1a;
+            color: #555;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 15px 10px;
+            text-align: right;
+            user-select: none;
+            overflow: hidden;
+            border-right: 1px solid #2a2a2a;
+        }
+
+        textarea {
+            flex: 1;
+            background: #0f0f0f;
+            border: none;
+            color: #e0e0e0;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 15px;
+            resize: none;
+            outline: none;
+        }
+
+        .output {
+            flex: 1;
+            background: #0f0f0f;
+            overflow: auto;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* JSON Syntax Highlighting */
+        .json-key { color: #feca57; }
+        .json-string { color: #00b894; }
+        .json-number { color: #fd79a8; }
+        .json-boolean { color: #74b9ff; }
+        .json-null { color: #a29bfe; }
+        .json-bracket { color: #e0e0e0; }
+
+        .error-message {
+            background: rgba(214, 48, 49, 0.1);
+            border-left: 3px solid #d63031;
+            padding: 10px 15px;
+            color: #ff7675;
+            font-size: 0.85rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            padding: 10px 15px;
+            background: #222;
+            border-top: 1px solid #2a2a2a;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            color: #feca57;
+            font-weight: 600;
+        }
+
+        .tree-view {
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .tree-item {
+            margin-left: 20px;
+        }
+
+        .tree-key {
+            color: #feca57;
+        }
+
+        .tree-string {
+            color: #00b894;
+        }
+
+        .tree-number {
+            color: #fd79a8;
+        }
+
+        .tree-boolean {
+            color: #74b9ff;
+        }
+
+        .tree-null {
+            color: #a29bfe;
+            font-style: italic;
+        }
+
+        .tree-toggle {
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            color: #666;
+        }
+
+        .tree-toggle:hover {
+            color: #fff;
+        }
+
+        .tree-collapsed .tree-children {
+            display: none;
+        }
+
+        .tree-collapsed .tree-toggle::before {
+            content: '▶';
+        }
+
+        .tree-expanded .tree-toggle::before {
+            content: '▼';
+        }
+
+        .path-display {
+            background: #222;
+            padding: 8px 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #48dbfb;
+            border-top: 1px solid #2a2a2a;
+            min-height: 32px;
+        }
+
+        .drop-zone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(254, 202, 87, 0.1);
+            border: 2px dashed #feca57;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #feca57;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .editor.drag-over .drop-zone {
+            opacity: 1;
+        }
+
+        .history-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: #1a1a1a;
+            border-left: 1px solid #2a2a2a;
+            padding: 20px;
+            transition: right 0.3s;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .history-panel.open {
+            right: 0;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .history-header h3 {
+            color: #feca57;
+            font-size: 1rem;
+        }
+
+        .close-history {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .history-item {
+            background: #222;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #2a2a2a;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .history-preview {
+            font-size: 0.8rem;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            color: #feca57;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .url-input-group input {
+            flex: 1;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .url-input-group button {
+            padding: 10px 20px;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 15, 15, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #feca57;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: 5px;
+        }
+
+        .view-tab {
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON Formatter</h1>
+            <p class="subtitle">Format, validate, minify, and explore JSON data</p>
+        </header>
+
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button class="btn primary" id="formatBtn">✨ Format</button>
+                <button class="btn" id="minifyBtn">🗜️ Minify</button>
+                <button class="btn" id="validateBtn">✓ Validate</button>
+            </div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="copyBtn">📋 Copy</button>
+                <button class="btn" id="downloadBtn">💾 Download</button>
+                <button class="btn" id="clearBtn">🗑️ Clear</button>
+            </div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="loadUrlBtn">🌐 Load URL</button>
+                <button class="btn" id="uploadBtn">📁 Upload File</button>
+                <button class="btn" id="sampleBtn">📝 Sample</button>
+            </div>
+
+            <div class="indent-selector">
+                <span>Indent:</span>
+                <select id="indentSize">
+                    <option value="2">2 spaces</option>
+                    <option value="4">4 spaces</option>
+                    <option value="tab">Tab</option>
+                </select>
+            </div>
+
+            <div class="toolbar-group">
+                <button class="btn" id="historyBtn">📜 History</button>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        📥 Input
+                        <span class="status-badge" id="inputStatus">Empty</span>
+                    </span>
+                    <div class="panel-actions">
+                        <button class="btn" id="pasteBtn">📋 Paste</button>
+                    </div>
+                </div>
+                <div class="editor" id="inputEditor">
+                    <div class="line-numbers" id="inputLineNumbers"></div>
+                    <textarea id="inputText" placeholder="Paste your JSON here..."></textarea>
+                    <div class="drop-zone">Drop JSON file here</div>
+                </div>
+                <div class="error-message" id="errorMessage" style="display: none;"></div>
+                <div class="stats-bar" id="inputStats">
+                    <span class="stat">Lines: <span class="stat-value" id="lineCount">0</span></span>
+                    <span class="stat">Size: <span class="stat-value" id="inputSize">0 B</span></span>
+                </div>
+            </div>
+
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <span class="panel-title">
+                        📤 Output
+                        <div class="view-tabs">
+                            <button class="btn view-tab active" data-view="formatted">Formatted</button>
+                            <button class="btn view-tab" data-view="tree">Tree</button>
+                        </div>
+                    </span>
+                    <div class="panel-actions">
+                        <button class="btn" id="copyOutputBtn">📋 Copy</button>
+                    </div>
+                </div>
+                <div class="editor">
+                    <div class="output" id="outputFormatted">
+                        <pre id="outputText"></pre>
+                    </div>
+                    <div class="output" id="outputTree" style="display: none;"></div>
+                </div>
+                <div class="path-display" id="pathDisplay">Hover over a value to see its path</div>
+                <div class="stats-bar" id="outputStats">
+                    <span class="stat">Keys: <span class="stat-value" id="keyCount">0</span></span>
+                    <span class="stat">Depth: <span class="stat-value" id="depthCount">0</span></span>
+                    <span class="stat">Size: <span class="stat-value" id="outputSize">0 B</span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-panel" id="historyPanel">
+        <div class="history-header">
+            <h3>📜 History</h3>
+            <button class="close-history" id="closeHistory">&times;</button>
+        </div>
+        <div id="historyList"></div>
+        <button class="btn danger" id="clearHistory" style="width: 100%; margin-top: 15px;">Clear All History</button>
+    </div>
+
+    <div class="modal" id="urlModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Load JSON from URL</h3>
+                <button class="modal-close" id="closeUrlModal">&times;</button>
+            </div>
+            <div class="url-input-group">
+                <input type="url" id="urlInput" placeholder="https://api.example.com/data.json">
+                <button class="btn primary" id="fetchUrlBtn">Fetch</button>
+            </div>
+            <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">
+                Note: The server must support CORS for this to work.
+            </p>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json,application/json" style="display: none;">
+
+    <script>
+        // State
+        let currentJson = null;
+        let history = JSON.parse(localStorage.getItem('jsonHistory') || '[]');
+
+        // Elements
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const outputFormatted = document.getElementById('outputFormatted');
+        const outputTree = document.getElementById('outputTree');
+        const inputLineNumbers = document.getElementById('inputLineNumbers');
+        const inputStatus = document.getElementById('inputStatus');
+        const errorMessage = document.getElementById('errorMessage');
+        const indentSize = document.getElementById('indentSize');
+        const pathDisplay = document.getElementById('pathDisplay');
+
+        // Update line numbers
+        function updateLineNumbers() {
+            const lines = inputText.value.split('\n');
+            inputLineNumbers.innerHTML = lines.map((_, i) => i + 1).join('<br>');
+        }
+
+        // Update stats
+        function updateStats(json) {
+            // Input stats
+            const inputLines = inputText.value.split('\n').length;
+            const inputBytes = new Blob([inputText.value]).size;
+            document.getElementById('lineCount').textContent = inputLines;
+            document.getElementById('inputSize').textContent = formatBytes(inputBytes);
+
+            if (json) {
+                // Output stats
+                const outputStr = JSON.stringify(json);
+                const outputBytes = new Blob([outputStr]).size;
+                document.getElementById('outputSize').textContent = formatBytes(outputBytes);
+
+                // Count keys and depth
+                let keyCount = 0;
+                let maxDepth = 0;
+
+                function traverse(obj, depth) {
+                    if (depth > maxDepth) maxDepth = depth;
+                    if (typeof obj === 'object' && obj !== null) {
+                        if (Array.isArray(obj)) {
+                            obj.forEach(item => traverse(item, depth + 1));
+                        } else {
+                            Object.keys(obj).forEach(key => {
+                                keyCount++;
+                                traverse(obj[key], depth + 1);
+                            });
+                        }
+                    }
+                }
+
+                traverse(json, 0);
+                document.getElementById('keyCount').textContent = keyCount;
+                document.getElementById('depthCount').textContent = maxDepth;
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Syntax highlighting
+        function syntaxHighlight(json) {
+            const str = JSON.stringify(json, null, getIndent());
+            return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function getIndent() {
+            const val = indentSize.value;
+            return val === 'tab' ? '\t' : parseInt(val);
+        }
+
+        // Format JSON
+        function format() {
+            const input = inputText.value.trim();
+            if (!input) {
+                inputStatus.textContent = 'Empty';
+                inputStatus.className = 'status-badge';
+                outputText.innerHTML = '';
+                outputTree.innerHTML = '';
+                currentJson = null;
+                return;
+            }
+
+            try {
+                currentJson = JSON.parse(input);
+                inputStatus.textContent = 'Valid';
+                inputStatus.className = 'status-badge valid';
+                errorMessage.style.display = 'none';
+
+                // Format output
+                outputText.innerHTML = syntaxHighlight(currentJson);
+
+                // Tree view
+                renderTree(currentJson, outputTree);
+
+                // Update stats
+                updateStats(currentJson);
+
+                // Save to history
+                saveToHistory(input);
+            } catch (e) {
+                inputStatus.textContent = 'Invalid';
+                inputStatus.className = 'status-badge invalid';
+                errorMessage.textContent = '❌ ' + e.message;
+                errorMessage.style.display = 'block';
+                outputText.innerHTML = '';
+                outputTree.innerHTML = '';
+                currentJson = null;
+            }
+        }
+
+        // Minify JSON
+        function minify() {
+            if (!currentJson) return;
+            const minified = JSON.stringify(currentJson);
+            inputText.value = minified;
+            updateLineNumbers();
+        }
+
+        // Render tree view
+        function renderTree(data, container, path = '$') {
+            container.innerHTML = '';
+
+            function createNode(value, key, path) {
+                const div = document.createElement('div');
+                div.className = 'tree-item';
+
+                if (typeof value === 'object' && value !== null) {
+                    const isArray = Array.isArray(value);
+                    const keys = Object.keys(value);
+                    const toggle = document.createElement('span');
+                    toggle.className = 'tree-toggle tree-expanded';
+                    toggle.innerHTML = '▼';
+                    div.appendChild(toggle);
+
+                    const keySpan = document.createElement('span');
+                    keySpan.className = 'tree-key';
+                    keySpan.textContent = key !== undefined ? `"${key}": ` : '';
+                    div.appendChild(keySpan);
+
+                    const bracket = document.createElement('span');
+                    bracket.className = 'json-bracket';
+                    bracket.textContent = isArray ? '[' : '{';
+                    div.appendChild(bracket);
+
+                    const count = document.createElement('span');
+                    count.style.color = '#666';
+                    count.style.marginLeft = '5px';
+                    count.textContent = `// ${keys.length} ${isArray ? 'items' : 'keys'}`;
+                    div.appendChild(count);
+
+                    const children = document.createElement('div');
+                    children.className = 'tree-children';
+                    children.style.marginLeft = '20px';
+
+                    keys.forEach(k => {
+                        children.appendChild(createNode(value[k], k, `${path}${isArray ? `[${k}]` : `.${k}`}`));
+                    });
+
+                    const closeBracket = document.createElement('div');
+                    closeBracket.style.marginLeft = '20px';
+                    closeBracket.innerHTML = `<span class="json-bracket">${isArray ? ']' : '}'}</span>`;
+                    children.appendChild(closeBracket);
+
+                    div.appendChild(children);
+
+                    toggle.onclick = () => {
+                        const isCollapsed = div.classList.toggle('tree-collapsed');
+                        toggle.className = isCollapsed ? 'tree-toggle tree-collapsed' : 'tree-toggle tree-expanded';
+                    };
+
+                    // Auto-collapse large arrays/objects
+                    if (keys.length > 10) {
+                        div.classList.add('tree-collapsed');
+                        toggle.className = 'tree-toggle tree-collapsed';
+                    }
+                } else {
+                    let valueSpan = document.createElement('span');
+                    let typeClass = 'tree-null';
+                    let displayValue = String(value);
+
+                    if (typeof value === 'string') {
+                        typeClass = 'tree-string';
+                        displayValue = `"${value}"`;
+                    } else if (typeof value === 'number') {
+                        typeClass = 'tree-number';
+                    } else if (typeof value === 'boolean') {
+                        typeClass = 'tree-boolean';
+                    }
+
+                    if (key !== undefined) {
+                        const keySpan = document.createElement('span');
+                        keySpan.className = 'tree-key';
+                        keySpan.textContent = `"${key}": `;
+                        div.appendChild(keySpan);
+                    }
+
+                    valueSpan.className = typeClass;
+                    valueSpan.textContent = displayValue;
+                    div.appendChild(valueSpan);
+                }
+
+                // Path display on hover
+                div.addEventListener('mouseenter', () => {
+                    pathDisplay.textContent = path;
+                });
+
+                div.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('tree-toggle')) return;
+                    navigator.clipboard.writeText(path);
+                    pathDisplay.textContent = 'Copied: ' + path;
+                });
+
+                return div;
+            }
+
+            container.appendChild(createNode(data, undefined, path));
+        }
+
+        // History functions
+        function saveToHistory(jsonStr) {
+            const item = {
+                timestamp: Date.now(),
+                preview: jsonStr.substring(0, 100) + (jsonStr.length > 100 ? '...' : ''),
+                data: jsonStr.length > 10000 ? jsonStr.substring(0, 10000) + '...' : jsonStr
+            };
+
+            // Remove duplicate
+            history = history.filter(h => h.data !== item.data);
+
+            // Add to beginning
+            history.unshift(item);
+
+            // Keep only last 20
+            history = history.slice(0, 20);
+
+            localStorage.setItem('jsonHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+
+            history.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
+                    <div class="history-preview">${escapeHtml(item.preview)}</div>
+                `;
+                div.onclick = () => {
+                    inputText.value = item.data;
+                    updateLineNumbers();
+                    format();
+                    document.getElementById('historyPanel').classList.remove('open');
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        inputText.addEventListener('input', () => {
+            updateLineNumbers();
+            format();
+        });
+
+        inputText.addEventListener('scroll', () => {
+            inputLineNumbers.scrollTop = inputText.scrollTop;
+        });
+
+        indentSize.addEventListener('change', format);
+
+        document.getElementById('formatBtn').addEventListener('click', format);
+        document.getElementById('minifyBtn').addEventListener('click', minify);
+        document.getElementById('validateBtn').addEventListener('click', format);
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(inputText.value);
+            showCopyFeedback('copyBtn');
+        });
+
+        document.getElementById('copyOutputBtn').addEventListener('click', () => {
+            if (currentJson) {
+                navigator.clipboard.writeText(JSON.stringify(currentJson, null, getIndent()));
+                showCopyFeedback('copyOutputBtn');
+            }
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (!currentJson) return;
+            const blob = new Blob([JSON.stringify(currentJson, null, getIndent())], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'formatted.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            inputText.value = '';
+            outputText.innerHTML = '';
+            outputTree.innerHTML = '';
+            currentJson = null;
+            inputStatus.textContent = 'Empty';
+            inputStatus.className = 'status-badge';
+            errorMessage.style.display = 'none';
+            updateLineNumbers();
+            updateStats(null);
+        });
+
+        document.getElementById('pasteBtn').addEventListener('click', async () => {
+            const text = await navigator.clipboard.readText();
+            inputText.value = text;
+            updateLineNumbers();
+            format();
+        });
+
+        document.getElementById('sampleBtn').addEventListener('click', () => {
+            const sample = {
+                name: "JSON Formatter",
+                version: "1.0.0",
+                description: "A tool to format and validate JSON",
+                features: ["Format", "Minify", "Validate", "Tree View"],
+                author: {
+                    name: "Developer",
+                    email: "dev@example.com",
+                    social: {
+                        twitter: "@developer",
+                        github: "developer"
+                    }
+                },
+                stats: {
+                    downloads: 10000,
+                    stars: 500,
+                    forks: 100
+                },
+                tags: ["json", "formatter", "tool"],
+                isActive: true,
+                lastUpdated: "2026-03-06T00:00:00Z",
+                price: null
+            };
+            inputText.value = JSON.stringify(sample, null, 2);
+            updateLineNumbers();
+            format();
+        });
+
+        // View tabs
+        document.querySelectorAll('.view-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const view = tab.dataset.view;
+                outputFormatted.style.display = view === 'formatted' ? 'block' : 'none';
+                outputTree.style.display = view === 'tree' ? 'block' : 'none';
+            });
+        });
+
+        // History panel
+        document.getElementById('historyBtn').addEventListener('click', () => {
+            document.getElementById('historyPanel').classList.add('open');
+        });
+
+        document.getElementById('closeHistory').addEventListener('click', () => {
+            document.getElementById('historyPanel').classList.remove('open');
+        });
+
+        document.getElementById('clearHistory').addEventListener('click', () => {
+            history = [];
+            localStorage.removeItem('jsonHistory');
+            renderHistory();
+        });
+
+        // URL modal
+        document.getElementById('loadUrlBtn').addEventListener('click', () => {
+            document.getElementById('urlModal').classList.add('open');
+        });
+
+        document.getElementById('closeUrlModal').addEventListener('click', () => {
+            document.getElementById('urlModal').classList.remove('open');
+        });
+
+        document.getElementById('fetchUrlBtn').addEventListener('click', async () => {
+            const url = document.getElementById('urlInput').value.trim();
+            if (!url) return;
+
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                inputText.value = text;
+                updateLineNumbers();
+                format();
+                document.getElementById('urlModal').classList.remove('open');
+            } catch (e) {
+                alert('Failed to fetch: ' + e.message);
+            }
+        });
+
+        // File upload
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                inputText.value = event.target.result;
+                updateLineNumbers();
+                format();
+            };
+            reader.readAsText(file);
+        });
+
+        // Drag and drop
+        const inputEditor = document.getElementById('inputEditor');
+
+        inputEditor.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            inputEditor.classList.add('drag-over');
+        });
+
+        inputEditor.addEventListener('dragleave', () => {
+            inputEditor.classList.remove('drag-over');
+        });
+
+        inputEditor.addEventListener('drop', (e) => {
+            e.preventDefault();
+            inputEditor.classList.remove('drag-over');
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    inputText.value = event.target.result;
+                    updateLineNumbers();
+                    format();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function showCopyFeedback(btnId) {
+            const btn = document.getElementById(btnId);
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 1500);
+        }
+
+        // Initialize
+        updateLineNumbers();
+        renderHistory();
+    </script>
+</body>
+</html>

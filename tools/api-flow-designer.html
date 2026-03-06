@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Flow Designer - Visual API Flow Builder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00d4ff, #7c3aed);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .components-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .component-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .component-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+        }
+
+        .component-item.dragging {
+            opacity: 0.5;
+        }
+
+        .component-icon {
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .component-name {
+            font-weight: 500;
+        }
+
+        .component-desc {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .canvas-container {
+            position: relative;
+            min-height: 500px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .canvas {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .canvas.drag-over {
+            background-color: rgba(0, 212, 255, 0.05);
+        }
+
+        .flow-node {
+            position: absolute;
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 12px;
+            padding: 15px;
+            min-width: 180px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: move;
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+
+        .flow-node:hover {
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .flow-node.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .flow-node.endpoint {
+            border-color: #98c379;
+        }
+
+        .flow-node.process {
+            border-color: #d19a66;
+        }
+
+        .flow-node.condition {
+            border-color: #c678dd;
+        }
+
+        .flow-node.database {
+            border-color: #61afef;
+        }
+
+        .flow-node.external {
+            border-color: #e06c75;
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .node-icon {
+            font-size: 1.1rem;
+        }
+
+        .node-title {
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .node-delete {
+            color: #888;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .node-delete:hover {
+            color: #e06c75;
+        }
+
+        .node-content {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .node-connector {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #00d4ff;
+            border-radius: 50%;
+            cursor: crosshair;
+        }
+
+        .node-connector.input {
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .node-connector.output {
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connection-line {
+            stroke: #00d4ff;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .properties-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .property-group {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .property-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        select.property-input {
+            cursor: pointer;
+        }
+
+        .code-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .no-selection {
+            color: #888;
+            text-align: center;
+            padding: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .template-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-get { background: #61afef; }
+        .status-post { background: #98c379; }
+        .status-put { background: #d19a66; }
+        .status-delete { background: #e06c75; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-project-diagram"></i> API Flow Designer</h1>
+            <p class="subtitle">Visual API flow builder - drag, drop, and connect</p>
+        </header>
+
+        <div class="toolbar">
+            <button onclick="clearCanvas()">
+                <i class="fas fa-trash"></i> Clear
+            </button>
+            <button onclick="exportJSON()" class="secondary">
+                <i class="fas fa-download"></i> Export JSON
+            </button>
+            <button onclick="importJSON()" class="secondary">
+                <i class="fas fa-upload"></i> Import
+            </button>
+            <button onclick="generateCode()" class="secondary">
+                <i class="fas fa-code"></i> Generate Code
+            </button>
+            <button onclick="saveToStorage()" class="secondary">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-cubes"></i> Components
+                </div>
+                <div class="components-list">
+                    <div class="component-item" draggable="true" data-type="endpoint">
+                        <div><span class="component-icon">🔌</span><span class="component-name">API Endpoint</span></div>
+                        <div class="component-desc">REST API endpoint</div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="process">
+                        <div><span class="component-icon">⚙️</span><span class="component-name">Process</span></div>
+                        <div class="component-desc">Data processing logic</div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="condition">
+                        <div><span class="component-icon">🔀</span><span class="component-name">Condition</span></div>
+                        <div class="component-desc">If/else branching</div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="database">
+                        <div><span class="component-icon">🗄️</span><span class="component-name">Database</span></div>
+                        <div class="component-desc">Database operation</div>
+                    </div>
+                    <div class="component-item" draggable="true" data-type="external">
+                        <div><span class="component-icon">🌐</span><span class="component-name">External API</span></div>
+                        <div class="component-desc">Third-party service</div>
+                    </div>
+                </div>
+
+                <div class="panel-title" style="margin-top: 20px;">
+                    <i class="fas fa-magic"></i> Templates
+                </div>
+                <div class="templates-grid">
+                    <button class="template-btn" onclick="loadTemplate('crud')">CRUD Flow</button>
+                    <button class="template-btn" onclick="loadTemplate('auth')">Auth Flow</button>
+                    <button class="template-btn" onclick="loadTemplate('webhook')">Webhook</button>
+                    <button class="template-btn" onclick="loadTemplate('sync')">Data Sync</button>
+                </div>
+            </div>
+
+            <div class="panel canvas-container">
+                <div class="canvas" id="canvas">
+                    <svg id="connections" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">
+                    <i class="fas fa-sliders-h"></i> Properties
+                </div>
+                <div id="propertiesContent">
+                    <div class="no-selection">
+                        <i class="fas fa-mouse-pointer" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Select a node to edit properties</p>
+                    </div>
+                </div>
+
+                <div class="panel-title" style="margin-top: 20px;">
+                    <i class="fas fa-code"></i> Generated Code
+                </div>
+                <div class="code-output" id="codeOutput">// Select nodes and click "Generate Code"</div>
+            </div>
+        </div>
+
+        <footer>
+            <p>API Flow Designer - Visual API flow builder</p>
+        </footer>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+    <script>
+        let nodes = [];
+        let connections = [];
+        let selectedNode = null;
+        let draggedNode = null;
+        let nodeIdCounter = 0;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        const canvas = document.getElementById('canvas');
+        const propertiesContent = document.getElementById('propertiesContent');
+        const codeOutput = document.getElementById('codeOutput');
+
+        // Component definitions
+        const componentDefs = {
+            endpoint: {
+                icon: '🔌',
+                name: 'API Endpoint',
+                method: 'GET',
+                path: '/api/resource',
+                color: '#98c379'
+            },
+            process: {
+                icon: '⚙️',
+                name: 'Process',
+                operation: 'transform',
+                color: '#d19a66'
+            },
+            condition: {
+                icon: '🔀',
+                name: 'Condition',
+                expression: 'data.success === true',
+                color: '#c678dd'
+            },
+            database: {
+                icon: '🗄️',
+                name: 'Database',
+                operation: 'SELECT',
+                table: 'users',
+                color: '#61afef'
+            },
+            external: {
+                icon: '🌐',
+                name: 'External API',
+                url: 'https://api.example.com',
+                color: '#e06c75'
+            }
+        };
+
+        // Initialize drag and drop
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('type', item.dataset.type);
+                item.classList.add('dragging');
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+            });
+        });
+
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            canvas.classList.add('drag-over');
+        });
+
+        canvas.addEventListener('dragleave', () => {
+            canvas.classList.remove('drag-over');
+        });
+
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            canvas.classList.remove('drag-over');
+            const type = e.dataTransfer.getData('type');
+            if (type) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left - 90;
+                const y = e.clientY - rect.top - 30;
+                createNode(type, x, y);
+            }
+        });
+
+        function createNode(type, x, y) {
+            const def = componentDefs[type];
+            const node = {
+                id: `node_${nodeIdCounter++}`,
+                type: type,
+                x: Math.max(0, x),
+                y: Math.max(0, y),
+                ...JSON.parse(JSON.stringify(def))
+            };
+            nodes.push(node);
+            renderNode(node);
+            selectNode(node);
+        }
+
+        function renderNode(node) {
+            const el = document.createElement('div');
+            el.className = `flow-node ${node.type}`;
+            el.id = node.id;
+            el.style.left = node.x + 'px';
+            el.style.top = node.y + 'px';
+
+            el.innerHTML = `
+                <div class="node-connector input" data-node="${node.id}" data-dir="input"></div>
+                <div class="node-connector output" data-node="${node.id}" data-dir="output"></div>
+                <div class="node-header">
+                    <span class="node-icon">${node.icon}</span>
+                    <span class="node-title">${node.name}</span>
+                    <span class="node-delete" onclick="deleteNode('${node.id}')"><i class="fas fa-times"></i></span>
+                </div>
+                <div class="node-content">${getNodeDescription(node)}</div>
+            `;
+
+            el.addEventListener('mousedown', (e) => startDrag(e, node));
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectNode(node);
+            });
+
+            canvas.appendChild(el);
+        }
+
+        function getNodeDescription(node) {
+            switch (node.type) {
+                case 'endpoint':
+                    return `<span class="status-badge status-${node.method.toLowerCase()}">${node.method}</span> ${node.path}`;
+                case 'process':
+                    return `Operation: ${node.operation}`;
+                case 'condition':
+                    return node.expression || 'condition';
+                case 'database':
+                    return `${node.operation} FROM ${node.table}`;
+                case 'external':
+                    return node.url;
+                default:
+                    return '';
+            }
+        }
+
+        function startDrag(e, node) {
+            if (e.target.classList.contains('node-delete') || e.target.closest('.node-delete')) return;
+            isDragging = true;
+            draggedNode = node;
+            const el = document.getElementById(node.id);
+            const rect = el.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            selectNode(node);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging && draggedNode) {
+                const canvasRect = canvas.getBoundingClientRect();
+                draggedNode.x = e.clientX - canvasRect.left - dragOffset.x;
+                draggedNode.y = e.clientY - canvasRect.top - dragOffset.y;
+                const el = document.getElementById(draggedNode.id);
+                el.style.left = draggedNode.x + 'px';
+                el.style.top = draggedNode.y + 'px';
+                renderConnections();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedNode = null;
+        });
+
+        function selectNode(node) {
+            document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('selected'));
+            selectedNode = node;
+            document.getElementById(node.id).classList.add('selected');
+            renderProperties(node);
+        }
+
+        function renderProperties(node) {
+            let html = '';
+
+            switch (node.type) {
+                case 'endpoint':
+                    html = `
+                        <div class="property-group">
+                            <div class="property-label">Name</div>
+                            <input class="property-input" value="${node.name}" onchange="updateNode('name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Method</div>
+                            <select class="property-input" onchange="updateNode('method', this.value)">
+                                <option ${node.method === 'GET' ? 'selected' : ''}>GET</option>
+                                <option ${node.method === 'POST' ? 'selected' : ''}>POST</option>
+                                <option ${node.method === 'PUT' ? 'selected' : ''}>PUT</option>
+                                <option ${node.method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+                                <option ${node.method === 'PATCH' ? 'selected' : ''}>PATCH</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Path</div>
+                            <input class="property-input" value="${node.path}" onchange="updateNode('path', this.value)">
+                        </div>
+                    `;
+                    break;
+                case 'process':
+                    html = `
+                        <div class="property-group">
+                            <div class="property-label">Name</div>
+                            <input class="property-input" value="${node.name}" onchange="updateNode('name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Operation</div>
+                            <select class="property-input" onchange="updateNode('operation', this.value)">
+                                <option ${node.operation === 'transform' ? 'selected' : ''}>transform</option>
+                                <option ${node.operation === 'validate' ? 'selected' : ''}>validate</option>
+                                <option ${node.operation === 'filter' ? 'selected' : ''}>filter</option>
+                                <option ${node.operation === 'map' ? 'selected' : ''}>map</option>
+                                <option ${node.operation === 'reduce' ? 'selected' : ''}>reduce</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                case 'condition':
+                    html = `
+                        <div class="property-group">
+                            <div class="property-label">Name</div>
+                            <input class="property-input" value="${node.name}" onchange="updateNode('name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Expression</div>
+                            <input class="property-input" value="${node.expression}" onchange="updateNode('expression', this.value)">
+                        </div>
+                    `;
+                    break;
+                case 'database':
+                    html = `
+                        <div class="property-group">
+                            <div class="property-label">Name</div>
+                            <input class="property-input" value="${node.name}" onchange="updateNode('name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Operation</div>
+                            <select class="property-input" onchange="updateNode('operation', this.value)">
+                                <option ${node.operation === 'SELECT' ? 'selected' : ''}>SELECT</option>
+                                <option ${node.operation === 'INSERT' ? 'selected' : ''}>INSERT</option>
+                                <option ${node.operation === 'UPDATE' ? 'selected' : ''}>UPDATE</option>
+                                <option ${node.operation === 'DELETE' ? 'selected' : ''}>DELETE</option>
+                            </select>
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">Table</div>
+                            <input class="property-input" value="${node.table}" onchange="updateNode('table', this.value)">
+                        </div>
+                    `;
+                    break;
+                case 'external':
+                    html = `
+                        <div class="property-group">
+                            <div class="property-label">Name</div>
+                            <input class="property-input" value="${node.name}" onchange="updateNode('name', this.value)">
+                        </div>
+                        <div class="property-group">
+                            <div class="property-label">URL</div>
+                            <input class="property-input" value="${node.url}" onchange="updateNode('url', this.value)">
+                        </div>
+                    `;
+                    break;
+            }
+
+            propertiesContent.innerHTML = html;
+        }
+
+        function updateNode(prop, value) {
+            if (selectedNode) {
+                selectedNode[prop] = value;
+                const el = document.getElementById(selectedNode.id);
+                el.querySelector('.node-content').innerHTML = getNodeDescription(selectedNode);
+                if (prop === 'name') {
+                    el.querySelector('.node-title').textContent = value;
+                }
+            }
+        }
+
+        function deleteNode(id) {
+            nodes = nodes.filter(n => n.id !== id);
+            connections = connections.filter(c => c.from !== id && c.to !== id);
+            document.getElementById(id)?.remove();
+            renderConnections();
+            if (selectedNode?.id === id) {
+                selectedNode = null;
+                propertiesContent.innerHTML = '<div class="no-selection"><p>Select a node to edit properties</p></div>';
+            }
+        }
+
+        function renderConnections() {
+            const svg = document.getElementById('connections');
+            svg.innerHTML = '';
+            connections.forEach(conn => {
+                const fromEl = document.getElementById(conn.from);
+                const toEl = document.getElementById(conn.to);
+                if (fromEl && toEl) {
+                    const fromRect = fromEl.getBoundingClientRect();
+                    const toRect = toEl.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+
+                    const x1 = fromRect.right - canvasRect.left;
+                    const y1 = fromRect.top + fromRect.height / 2 - canvasRect.top;
+                    const x2 = toRect.left - canvasRect.left;
+                    const y2 = toRect.top + toRect.height / 2 - canvasRect.top;
+
+                    const midX = (x1 + x2) / 2;
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+                    path.setAttribute('class', 'connection-line');
+                    svg.appendChild(path);
+                }
+            });
+        }
+
+        function clearCanvas() {
+            if (confirm('Clear all nodes?')) {
+                nodes.forEach(n => document.getElementById(n.id)?.remove());
+                nodes = [];
+                connections = [];
+                selectedNode = null;
+                renderConnections();
+                propertiesContent.innerHTML = '<div class="no-selection"><p>Select a node to edit properties</p></div>';
+                codeOutput.textContent = '// Canvas cleared';
+            }
+        }
+
+        function exportJSON() {
+            const data = { nodes, connections };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'api-flow.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importJSON() {
+            document.getElementById('fileInput').click();
+        }
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        clearCanvas();
+                        nodes = data.nodes || [];
+                        connections = data.connections || [];
+                        nodeIdCounter = nodes.length;
+                        nodes.forEach(n => renderNode(n));
+                        renderConnections();
+                    } catch (err) {
+                        alert('Invalid JSON file');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function generateCode() {
+            if (nodes.length === 0) {
+                codeOutput.textContent = '// No nodes to generate code from';
+                return;
+            }
+
+            let code = '// Generated API Flow Code\n\n';
+            nodes.forEach(node => {
+                switch (node.type) {
+                    case 'endpoint':
+                        code += `// ${node.name}\n`;
+                        code += `app.${node.method.toLowerCase()}('${node.path}', async (req, res) => {\n`;
+                        code += `  // TODO: Implement endpoint logic\n`;
+                        code += `});\n\n`;
+                        break;
+                    case 'process':
+                        code += `// ${node.name}\n`;
+                        code += `const ${node.operation}Data = (data) => {\n`;
+                        code += `  // TODO: Implement ${node.operation} logic\n`;
+                        code += `  return data;\n`;
+                        code += `};\n\n`;
+                        break;
+                    case 'condition':
+                        code += `// ${node.name}\n`;
+                        code += `if (${node.expression}) {\n`;
+                        code += `  // True branch\n`;
+                        code += `} else {\n`;
+                        code += `  // False branch\n`;
+                        code += `}\n\n`;
+                        break;
+                    case 'database':
+                        code += `// ${node.name}\n`;
+                        code += `const result = await db.query(\n`;
+                        code += `  '${node.operation} * FROM ${node.table}'\n`;
+                        code += `);\n\n`;
+                        break;
+                    case 'external':
+                        code += `// ${node.name}\n`;
+                        code += `const response = await fetch('${node.url}');\n`;
+                        code += `const data = await response.json();\n\n`;
+                        break;
+                }
+            });
+
+            codeOutput.textContent = code;
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('apiFlowDesigner', JSON.stringify({ nodes, connections }));
+            alert('Flow saved to browser storage!');
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('apiFlowDesigner');
+            if (saved) {
+                const data = JSON.parse(saved);
+                nodes = data.nodes || [];
+                connections = data.connections || [];
+                nodeIdCounter = nodes.length;
+                nodes.forEach(n => renderNode(n));
+                renderConnections();
+            }
+        }
+
+        function loadTemplate(name) {
+            clearCanvas();
+            const templates = {
+                crud: [
+                    { type: 'endpoint', x: 50, y: 50, name: 'Get Users', method: 'GET', path: '/api/users' },
+                    { type: 'endpoint', x: 50, y: 150, name: 'Create User', method: 'POST', path: '/api/users' },
+                    { type: 'endpoint', x: 50, y: 250, name: 'Update User', method: 'PUT', path: '/api/users/:id' },
+                    { type: 'endpoint', x: 50, y: 350, name: 'Delete User', method: 'DELETE', path: '/api/users/:id' },
+                    { type: 'database', x: 300, y: 200, name: 'Users DB', operation: 'SELECT', table: 'users' }
+                ],
+                auth: [
+                    { type: 'endpoint', x: 50, y: 100, name: 'Login', method: 'POST', path: '/api/auth/login' },
+                    { type: 'process', x: 280, y: 100, name: 'Validate', operation: 'validate' },
+                    { type: 'database', x: 500, y: 100, name: 'Find User', operation: 'SELECT', table: 'users' },
+                    { type: 'condition', x: 280, y: 250, name: 'Check Password', expression: 'user.password === hash' },
+                    { type: 'process', x: 500, y: 250, name: 'Generate Token', operation: 'transform' }
+                ],
+                webhook: [
+                    { type: 'endpoint', x: 50, y: 150, name: 'Webhook Receiver', method: 'POST', path: '/webhook' },
+                    { type: 'process', x: 280, y: 150, name: 'Parse Payload', operation: 'transform' },
+                    { type: 'condition', x: 500, y: 150, name: 'Validate Signature', expression: 'signature === expected' },
+                    { type: 'database', x: 280, y: 300, name: 'Log Event', operation: 'INSERT', table: 'events' }
+                ],
+                sync: [
+                    { type: 'endpoint', x: 50, y: 100, name: 'Sync Trigger', method: 'POST', path: '/api/sync' },
+                    { type: 'external', x: 280, y: 100, name: 'Fetch External', url: 'https://api.source.com/data' },
+                    { type: 'process', x: 500, y: 100, name: 'Transform', operation: 'transform' },
+                    { type: 'database', x: 500, y: 250, name: 'Upsert Data', operation: 'UPDATE', table: 'sync_data' }
+                ]
+            };
+
+            templates[name].forEach((node, i) => {
+                const def = componentDefs[node.type];
+                nodes.push({
+                    id: `node_${nodeIdCounter++}`,
+                    ...def,
+                    ...node
+                });
+            });
+
+            nodes.forEach(n => renderNode(n));
+
+            // Add some connections
+            if (name === 'crud') {
+                connections = [
+                    { from: 'node_0', to: 'node_4' },
+                    { from: 'node_1', to: 'node_4' },
+                    { from: 'node_2', to: 'node_4' },
+                    { from: 'node_3', to: 'node_4' }
+                ];
+            }
+
+            renderConnections();
+        }
+
+        // Load saved flow on startup
+        loadFromStorage();
+    </script>
+</body>
+</html>

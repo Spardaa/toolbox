@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slug Generator - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        
+        .panel { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .panel h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1.1rem; }
+        
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #888; }
+        .input-group input, .input-group textarea { 
+            width: 100%; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 12px; border-radius: 6px; font-size: 15px;
+        }
+        .input-group textarea { min-height: 100px; resize: vertical; }
+        
+        .options { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px; }
+        .option { display: flex; align-items: center; gap: 8px; }
+        .option input[type="checkbox"] { width: 16px; height: 16px; }
+        .option label { color: #888; font-size: 14px; cursor: pointer; }
+        
+        .option-group { margin-bottom: 15px; }
+        .option-group label { display: block; margin-bottom: 5px; color: #888; }
+        .option-group select { 
+            width: 100%; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 10px; border-radius: 6px;
+        }
+        
+        .output { background: #1a1a2e; border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .output-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .output-item input { flex: 1; background: transparent; border: none; color: #27ae60; font-size: 16px; font-family: 'Monaco', 'Menlo', monospace; }
+        .output-item button { padding: 8px 12px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        
+        .history { margin-top: 20px; }
+        .history-item { display: flex; justify-content: space-between; padding: 10px; background: #1a1a2e; border-radius: 6px; margin-bottom: 8px; }
+        .history-item .original { color: #888; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .history-item .slug { color: #27ae60; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+        
+        .stats { display: flex; gap: 15px; margin-top: 15px; padding: 10px; background: #1a1a2e; border-radius: 6px; }
+        .stat { text-align: center; flex: 1; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; color: #00d4ff; }
+        .stat-label { font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Slug Generator</h1>
+        
+        <div class="panel">
+            <h2>Input</h2>
+            <div class="input-group">
+                <label>Text to convert</label>
+                <textarea id="input-text" placeholder="Enter text to convert to slug..." oninput="generateSlugs()"></textarea>
+            </div>
+            
+            <div class="options">
+                <div class="option">
+                    <input type="checkbox" id="lowercase" checked>
+                    <label for="lowercase">Lowercase</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="trim-dashes" checked>
+                    <label for="trim-dashes">Trim dashes</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="remove-duplicates" checked>
+                    <label for="remove-duplicates">Remove duplicate dashes</label>
+                </div>
+                <div class="option">
+                    <input type="checkbox" id="remove-special">
+                    <label for="remove-special">Remove special chars</label>
+                </div>
+            </div>
+            
+            <div class="option-group">
+                <label>Separator</label>
+                <select id="separator" onchange="generateSlugs()">
+                    <option value="-">Hyphen (-)</option>
+                    <option value="_">Underscore (_)</option>
+                    <option value=".">Dot (.)</option>
+                    <option value="">None</option>
+                </select>
+            </div>
+            
+            <div class="option-group">
+                <label>Maximum Length</label>
+                <select id="max-length" onchange="generateSlugs()">
+                    <option value="0">Unlimited</option>
+                    <option value="50">50 characters</option>
+                    <option value="100">100 characters</option>
+                    <option value="200">200 characters</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Output</h2>
+            <div class="output" id="output"></div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="input-length">0</div>
+                    <div class="stat-label">Input Length</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="output-length">0</div>
+                    <div class="stat-label">Output Length</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="word-count">0</div>
+                    <div class="stat-label">Words</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>History</h2>
+            <div class="history" id="history"></div>
+        </div>
+    </div>
+    
+    <script>
+        let history = JSON.parse(localStorage.getItem('slugHistory') || '[]');
+        
+        function generateSlug(text) {
+            const lowercase = document.getElementById('lowercase').checked;
+            const trimDashes = document.getElementById('trim-dashes').checked;
+            const removeDuplicates = document.getElementById('remove-duplicates').checked;
+            const removeSpecial = document.getElementById('remove-special').checked;
+            const separator = document.getElementById('separator').value;
+            const maxLength = parseInt(document.getElementById('max-length').value);
+            
+            let slug = text;
+            
+            // Convert to lowercase
+            if (lowercase) {
+                slug = slug.toLowerCase();
+            }
+            
+            // Transliterate common characters
+            const transliterate = {
+                'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
+                'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e',
+                'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+                'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                'ù': 'u', 'ú': 'u', 'û': 'u', 'ü': 'u',
+                'ý': 'y', 'ÿ': 'y',
+                'ñ': 'n', 'ç': 'c',
+                'ß': 'ss'
+            };
+            
+            for (const [from, to] of Object.entries(transliterate)) {
+                slug = slug.split(from).join(to);
+            }
+            
+            if (removeSpecial) {
+                // Remove all special characters except alphanumeric and spaces
+                slug = slug.replace(/[^a-zA-Z0-9\s]/g, '');
+            } else {
+                // Keep alphanumeric, spaces, hyphens, underscores
+                slug = slug.replace(/[^a-zA-Z0-9\s\-_]/g, '');
+            }
+            
+            // Replace spaces and underscores with separator
+            if (separator) {
+                slug = slug.replace(/[\s_]+/g, separator);
+                slug = slug.replace(/-/g, separator);
+            } else {
+                slug = slug.replace(/[\s\-_]+/g, '');
+            }
+            
+            // Remove duplicate separators
+            if (removeDuplicates && separator) {
+                const regex = new RegExp(`\\${separator}+`, 'g');
+                slug = slug.replace(regex, separator);
+            }
+            
+            // Trim separators from start and end
+            if (trimDashes && separator) {
+                const regex = new RegExp(`^\\${separator}+|\\${separator}+$`, 'g');
+                slug = slug.replace(regex, '');
+            }
+            
+            // Apply max length
+            if (maxLength > 0 && slug.length > maxLength) {
+                slug = slug.substring(0, maxLength);
+                // Trim trailing separator
+                if (separator && slug.endsWith(separator)) {
+                    slug = slug.slice(0, -1);
+                }
+            }
+            
+            return slug;
+        }
+        
+        function generateSlugs() {
+            const input = document.getElementById('input-text').value;
+            const lines = input.split('\n').filter(line => line.trim());
+            
+            const output = document.getElementById('output');
+            
+            if (lines.length === 0) {
+                output.innerHTML = '<p style="color: #888;">Enter text to generate slugs</p>';
+                return;
+            }
+            
+            const slugs = lines.map(line => generateSlug(line));
+            
+            output.innerHTML = slugs.map((slug, i) => `
+                <div class="output-item">
+                    <input type="text" value="${slug}" readonly id="slug-${i}">
+                    <button onclick="copySlug(${i})">Copy</button>
+                </div>
+            `).join('');
+            
+            // Update stats
+            document.getElementById('input-length').textContent = input.length;
+            document.getElementById('output-length').textContent = slugs.join('\n').length;
+            document.getElementById('word-count').textContent = input.split(/\s+/).filter(w => w).length;
+            
+            // Add to history
+            if (lines.length === 1 && slugs[0]) {
+                addToHistory(lines[0], slugs[0]);
+            }
+        }
+        
+        function copySlug(index) {
+            const input = document.getElementById(`slug-${index}`);
+            navigator.clipboard.writeText(input.value);
+            alert('Copied!');
+        }
+        
+        function addToHistory(original, slug) {
+            // Avoid duplicates
+            const exists = history.some(h => h.original === original);
+            if (exists) return;
+            
+            history.unshift({
+                original,
+                slug,
+                timestamp: Date.now()
+            });
+            
+            if (history.length > 10) history.pop();
+            localStorage.setItem('slugHistory', JSON.stringify(history));
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const container = document.getElementById('history');
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color: #888; text-align: center;">No history yet</p>';
+                return;
+            }
+            
+            container.innerHTML = history.map(h => `
+                <div class="history-item">
+                    <span class="original">${h.original}</span>
+                    <span class="slug">${h.slug}</span>
+                </div>
+            `).join('');
+        }
+        
+        // Initialize
+        renderHistory();
+    </script>
+</body>
+</html>

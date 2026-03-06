@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Mock - Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.2em;
+            color: #e94560;
+        }
+
+        .schema-editor {
+            width: 100%;
+            min-height: 200px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            padding: 15px;
+            resize: vertical;
+        }
+
+        .query-editor {
+            width: 100%;
+            min-height: 150px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            padding: 15px;
+            resize: vertical;
+        }
+
+        .response-viewer {
+            width: 100%;
+            min-height: 200px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #7ee787;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            padding: 15px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-success {
+            background: #238636;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #2ea043;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 15px;
+        }
+
+        .mock-section {
+            margin-top: 20px;
+        }
+
+        .mock-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .mock-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mock-item-name {
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .mock-item-type {
+            font-size: 12px;
+            color: #888;
+            padding: 2px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        .mock-input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            padding: 10px;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: rgba(255,255,255,0.1);
+            color: #e94560;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .status-success {
+            color: #7ee787;
+        }
+
+        .status-error {
+            color: #f85149;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(126, 231, 135, 0.2);
+            color: #7ee787;
+        }
+
+        .badge-error {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .history-query {
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: #58a6ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+
+        .history-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .variables-editor {
+            margin-top: 15px;
+        }
+
+        .variables-editor label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .examples-section {
+            margin-top: 20px;
+        }
+
+        .example-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .example-card:hover {
+            border-color: #e94560;
+            transform: translateY(-2px);
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 5px;
+        }
+
+        .example-desc {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .copy-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #238636;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #f85149;
+        }
+
+        .settings-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item label {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .setting-item input[type="checkbox"] {
+            accent-color: #e94560;
+        }
+
+        .setting-item input[type="number"] {
+            width: 80px;
+            padding: 5px 10px;
+            background: #0d1117;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 4px;
+            color: #c9d1d9;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>GraphQL Mock</h1>
+            <p class="subtitle">Simulate GraphQL API responses without a backend</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- Left Panel: Schema & Query -->
+            <div class="left-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Schema Definition</span>
+                        <button class="copy-btn" onclick="copySchema()">Copy</button>
+                    </div>
+                    <textarea id="schema" class="schema-editor" placeholder="Define your GraphQL schema here...
+
+type Query {
+  user(id: ID!): User
+  users: [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+}"></textarea>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="parseSchema()">Parse Schema</button>
+                        <button class="btn btn-secondary" onclick="loadExampleSchema()">Load Example</button>
+                        <button class="btn btn-secondary" onclick="clearSchema()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">
+                        <span class="panel-title">Query</span>
+                        <button class="copy-btn" onclick="copyQuery()">Copy</button>
+                    </div>
+                    <textarea id="query" class="query-editor" placeholder="Write your GraphQL query...
+
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    name
+    email
+    posts {
+      id
+      title
+    }
+  }
+}"></textarea>
+
+                    <div class="variables-editor">
+                        <label>Variables (JSON)</label>
+                        <textarea id="variables" class="mock-input" placeholder='{"id": "1"}'></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="executeQuery()">Execute Query</button>
+                        <button class="btn btn-secondary" onclick="formatQuery()">Format</button>
+                        <button class="btn btn-secondary" onclick="clearQuery()">Clear</button>
+                    </div>
+                </div>
+
+                <!-- Mock Data Section -->
+                <div class="panel mock-section">
+                    <div class="panel-header">
+                        <span class="panel-title">Mock Data</span>
+                        <button class="btn btn-secondary" onclick="addMockField()">+ Add Field</button>
+                    </div>
+                    <div id="mockFields"></div>
+                    <p class="help-text">Define mock data for each field in your schema. Use JSON format for complex types.</p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Response & Settings -->
+            <div class="right-panel">
+                <div class="panel">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('response')">Response</button>
+                        <button class="tab" onclick="switchTab('history')">History</button>
+                        <button class="tab" onclick="switchTab('examples')">Examples</button>
+                    </div>
+
+                    <div id="responseTab" class="tab-content active">
+                        <div class="panel-header">
+                            <span class="panel-title">Response</span>
+                            <button class="copy-btn" onclick="copyResponse()">Copy</button>
+                        </div>
+                        <div id="response" class="response-viewer">// Execute a query to see the response</div>
+                        <div class="status-bar">
+                            <span id="statusText">Ready</span>
+                            <span id="timeText">0ms</span>
+                        </div>
+                    </div>
+
+                    <div id="historyTab" class="tab-content">
+                        <div class="panel-header">
+                            <span class="panel-title">Query History</span>
+                            <button class="btn btn-secondary" onclick="clearHistory()">Clear All</button>
+                        </div>
+                        <div id="historyList">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p>No queries yet</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="examplesTab" class="tab-content">
+                        <div class="panel-header">
+                            <span class="panel-title">Example Queries</span>
+                        </div>
+                        <div class="examples-section">
+                            <div class="example-card" onclick="loadExample('users')">
+                                <div class="example-title">User Query</div>
+                                <div class="example-desc">Query users with nested posts</div>
+                            </div>
+                            <div class="example-card" onclick="loadExample('products')">
+                                <div class="example-title">Product Query</div>
+                                <div class="example-desc">E-commerce product catalog</div>
+                            </div>
+                            <div class="example-card" onclick="loadExample('posts')">
+                                <div class="example-title">Blog Posts</div>
+                                <div class="example-desc">Blog with authors and comments</div>
+                            </div>
+                            <div class="example-card" onclick="loadExample('movies')">
+                                <div class="example-title">Movies API</div>
+                                <div class="example-desc">Movie database with actors</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="panel" style="margin-top: 20px;">
+                    <div class="panel-header">
+                        <span class="panel-title">Settings</span>
+                    </div>
+                    <div class="settings-row">
+                        <div class="setting-item">
+                            <input type="checkbox" id="simulateDelay" onchange="saveSettings()">
+                            <label for="simulateDelay">Simulate Delay</label>
+                        </div>
+                        <div class="setting-item">
+                            <input type="number" id="delayMs" value="500" min="0" max="5000" onchange="saveSettings()">
+                            <label>ms</label>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="setting-item">
+                            <input type="checkbox" id="randomErrors" onchange="saveSettings()">
+                            <label for="randomErrors">Random Errors (10%)</label>
+                        </div>
+                        <div class="setting-item">
+                            <input type="checkbox" id="autoSave" checked onchange="saveSettings()">
+                            <label for="autoSave">Auto-save Mocks</label>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="exportConfig()">Export Config</button>
+                        <button class="btn btn-secondary" onclick="importConfig()">Import Config</button>
+                        <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+                    </div>
+                    <input type="file" id="importFile" style="display: none" accept=".json" onchange="handleImport(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // State
+        let mockData = {};
+        let queryHistory = [];
+        let parsedSchema = null;
+        let mockFieldCounter = 0;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            updateHistoryDisplay();
+        });
+
+        // Storage
+        function saveToStorage() {
+            const data = {
+                schema: document.getElementById('schema').value,
+                query: document.getElementById('query').value,
+                variables: document.getElementById('variables').value,
+                mockData: mockData,
+                queryHistory: queryHistory,
+                settings: {
+                    simulateDelay: document.getElementById('simulateDelay').checked,
+                    delayMs: document.getElementById('delayMs').value,
+                    randomErrors: document.getElementById('randomErrors').checked,
+                    autoSave: document.getElementById('autoSave').checked
+                }
+            };
+            localStorage.setItem('graphql-mock', JSON.stringify(data));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('graphql-mock');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('schema').value = data.schema || '';
+                document.getElementById('query').value = data.query || '';
+                document.getElementById('variables').value = data.variables || '';
+                mockData = data.mockData || {};
+                queryHistory = data.queryHistory || [];
+                if (data.settings) {
+                    document.getElementById('simulateDelay').checked = data.settings.simulateDelay;
+                    document.getElementById('delayMs').value = data.settings.delayMs || 500;
+                    document.getElementById('randomErrors').checked = data.settings.randomErrors;
+                    document.getElementById('autoSave').checked = data.settings.autoSave !== false;
+                }
+                renderMockFields();
+            }
+        }
+
+        function saveSettings() {
+            saveToStorage();
+        }
+
+        // Schema Parsing
+        function parseSchema() {
+            const schemaText = document.getElementById('schema').value;
+            try {
+                parsedSchema = parseGraphQLSchema(schemaText);
+                showToast('Schema parsed successfully!', 'success');
+                generateMockFields();
+                if (document.getElementById('autoSave').checked) {
+                    saveToStorage();
+                }
+            } catch (error) {
+                showToast('Schema parse error: ' + error.message, 'error');
+            }
+        }
+
+        function parseGraphQLSchema(schema) {
+            const types = {};
+            const queries = {};
+            const mutations = {};
+
+            // Simple parser - extract types and fields
+            const typeRegex = /type\s+(\w+)(?:\s*implements\s+\w+)?\s*\{([^}]+)\}/g;
+            let match;
+
+            while ((match = typeRegex.exec(schema)) !== null) {
+                const typeName = match[1];
+                const fieldsText = match[2];
+                const fields = {};
+
+                const fieldRegex = /(\w+)\s*(?:\(([^)]*)\))?\s*:\s*([\[\]\w!]+)/g;
+                let fieldMatch;
+
+                while ((fieldMatch = fieldRegex.exec(fieldsText)) !== null) {
+                    fields[fieldMatch[1]] = {
+                        args: fieldMatch[2] ? parseArgs(fieldMatch[2]) : {},
+                        type: fieldMatch[3]
+                    };
+                }
+
+                if (typeName === 'Query') {
+                    Object.assign(queries, fields);
+                } else if (typeName === 'Mutation') {
+                    Object.assign(mutations, fields);
+                } else {
+                    types[typeName] = fields;
+                }
+            }
+
+            return { types, queries, mutations };
+        }
+
+        function parseArgs(argsText) {
+            const args = {};
+            const argRegex = /(\w+)\s*:\s*([\[\]\w!]+)/g;
+            let match;
+
+            while ((match = argRegex.exec(argsText)) !== null) {
+                args[match[1]] = match[2];
+            }
+
+            return args;
+        }
+
+        function generateMockFields() {
+            mockData = {};
+
+            // Generate mock fields for queries
+            for (const [queryName, queryInfo] of Object.entries(parsedSchema.queries)) {
+                const returnType = queryInfo.type.replace(/[\[\]!]/g, '');
+                const isArray = queryInfo.type.includes('[');
+
+                if (isArray) {
+                    mockData[queryName] = generateArrayMock(returnType);
+                } else {
+                    mockData[queryName] = generateObjectMock(returnType, parsedSchema.types);
+                }
+            }
+
+            renderMockFields();
+        }
+
+        function generateObjectMock(typeName, types) {
+            if (!types[typeName]) {
+                return generatePrimitiveMock(typeName);
+            }
+
+            const obj = { __typename: typeName };
+            for (const [fieldName, fieldInfo] of Object.entries(types[typeName])) {
+                const returnType = fieldInfo.type.replace(/[\[\]!]/g, '');
+                const isArray = fieldInfo.type.includes('[');
+
+                if (isArray) {
+                    obj[fieldName] = [generatePrimitiveMock(returnType)];
+                } else if (types[returnType]) {
+                    obj[fieldName] = { __typename: returnType };
+                } else {
+                    obj[fieldName] = generatePrimitiveMock(returnType);
+                }
+            }
+            return obj;
+        }
+
+        function generateArrayMock(typeName) {
+            return [
+                generateObjectMock(typeName, parsedSchema.types),
+                generateObjectMock(typeName, parsedSchema.types)
+            ];
+        }
+
+        function generatePrimitiveMock(type) {
+            switch (type) {
+                case 'String': return 'Mock String';
+                case 'Int': return 42;
+                case 'Float': return 3.14;
+                case 'Boolean': return true;
+                case 'ID': return '1';
+                default: return null;
+            }
+        }
+
+        // Mock Fields UI
+        function renderMockFields() {
+            const container = document.getElementById('mockFields');
+            container.innerHTML = '';
+
+            for (const [fieldName, fieldValue] of Object.entries(mockData)) {
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'mock-item';
+                fieldDiv.innerHTML = `
+                    <div class="mock-item-header">
+                        <span class="mock-item-name">${fieldName}</span>
+                        <button class="copy-btn" onclick="removeMockField('${fieldName}')">Remove</button>
+                    </div>
+                    <textarea class="mock-input" onchange="updateMockField('${fieldName}', this.value)">${JSON.stringify(fieldValue, null, 2)}</textarea>
+                `;
+                container.appendChild(fieldDiv);
+            }
+        }
+
+        function updateMockField(fieldName, value) {
+            try {
+                mockData[fieldName] = JSON.parse(value);
+                if (document.getElementById('autoSave').checked) {
+                    saveToStorage();
+                }
+            } catch (e) {
+                // Keep as string if not valid JSON
+            }
+        }
+
+        function removeMockField(fieldName) {
+            delete mockData[fieldName];
+            renderMockFields();
+            saveToStorage();
+        }
+
+        function addMockField() {
+            const name = prompt('Enter field name:');
+            if (name) {
+                mockData[name] = {};
+                renderMockFields();
+                saveToStorage();
+            }
+        }
+
+        // Query Execution
+        async function executeQuery() {
+            const queryText = document.getElementById('query').value;
+            const variablesText = document.getElementById('variables').value;
+
+            let variables = {};
+            try {
+                if (variablesText.trim()) {
+                    variables = JSON.parse(variablesText);
+                }
+            } catch (e) {
+                showToast('Invalid variables JSON', 'error');
+                return;
+            }
+
+            // Simulate delay if enabled
+            if (document.getElementById('simulateDelay').checked) {
+                await new Promise(resolve => setTimeout(resolve, parseInt(document.getElementById('delayMs').value)));
+            }
+
+            // Random errors if enabled
+            if (document.getElementById('randomErrors').checked && Math.random() < 0.1) {
+                displayResponse({ errors: [{ message: 'Random simulated error' }] }, 0, false);
+                addToHistory(queryText, false);
+                return;
+            }
+
+            const startTime = performance.now();
+
+            try {
+                const response = executeGraphQL(queryText, variables);
+                const endTime = performance.now();
+                displayResponse(response, endTime - startTime, true);
+                addToHistory(queryText, true);
+            } catch (error) {
+                displayResponse({ errors: [{ message: error.message }] }, 0, false);
+                addToHistory(queryText, false);
+            }
+
+            if (document.getElementById('autoSave').checked) {
+                saveToStorage();
+            }
+        }
+
+        function executeGraphQL(query, variables) {
+            // Simple GraphQL executor
+            const queryName = extractQueryName(query);
+            const selectedFields = extractSelectedFields(query);
+
+            if (!queryName) {
+                throw new Error('Could not extract query name');
+            }
+
+            const mockValue = mockData[queryName];
+            if (!mockValue) {
+                throw new Error(`No mock data for query: ${queryName}`);
+            }
+
+            // Filter response based on selected fields
+            const data = filterByFields({ [queryName]: mockValue }, { [queryName]: selectedFields });
+
+            return { data };
+        }
+
+        function extractQueryName(query) {
+            const match = query.match(/(?:query|mutation)\s*\w*\s*(?:\([^)]*\))?\s*\{\s*(\w+)/);
+            return match ? match[1] : null;
+        }
+
+        function extractSelectedFields(query) {
+            // Simple field extraction - get fields between { }
+            const bodyMatch = query.match(/\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/);
+            if (!bodyMatch) return [];
+
+            const body = bodyMatch[1];
+            const fields = [];
+
+            // Extract top-level fields
+            const fieldRegex = /(\w+)(?:\s*\([^)]*\))?\s*(?:\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\})?/g;
+            let match;
+
+            while ((match = fieldRegex.exec(body)) !== null) {
+                if (match[2]) {
+                    // Nested fields
+                    fields.push({ name: match[1], fields: extractFieldsFromText(match[2]) });
+                } else {
+                    fields.push(match[1]);
+                }
+            }
+
+            return fields;
+        }
+
+        function extractFieldsFromText(text) {
+            const fields = [];
+            const fieldRegex = /(\w+)(?:\s*\([^)]*\))?\s*(?:\{([^{}]*)\})?/g;
+            let match;
+
+            while ((match = fieldRegex.exec(text)) !== null) {
+                if (match[2]) {
+                    fields.push({ name: match[1], fields: match[2].trim().split(/\s+/) });
+                } else if (match[1]) {
+                    fields.push(match[1]);
+                }
+            }
+
+            return fields;
+        }
+
+        function filterByFields(data, fields) {
+            const result = {};
+
+            for (const [key, value] of Object.entries(fields)) {
+                if (data[key] === undefined) continue;
+
+                if (Array.isArray(value)) {
+                    if (Array.isArray(data[key])) {
+                        result[key] = data[key].map(item => filterObject(item, value));
+                    } else {
+                        result[key] = filterObject(data[key], value);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function filterObject(obj, fields) {
+            const result = {};
+
+            for (const field of fields) {
+                if (typeof field === 'string') {
+                    if (obj[field] !== undefined) {
+                        result[field] = obj[field];
+                    }
+                } else if (typeof field === 'object' && field.name) {
+                    if (obj[field.name] !== undefined) {
+                        if (Array.isArray(obj[field.name])) {
+                            result[field.name] = obj[field.name].map(item =>
+                                filterObject(item, field.fields || [])
+                            );
+                        } else {
+                            result[field.name] = filterObject(obj[field.name], field.fields || []);
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function displayResponse(response, time, success) {
+            const responseEl = document.getElementById('response');
+            const statusEl = document.getElementById('statusText');
+            const timeEl = document.getElementById('timeText');
+
+            responseEl.textContent = JSON.stringify(response, null, 2);
+
+            if (success) {
+                statusEl.innerHTML = '<span class="status-success">✓ Success</span>';
+                statusEl.className = 'status-success';
+            } else {
+                statusEl.innerHTML = '<span class="status-error">✗ Error</span>';
+                statusEl.className = 'status-error';
+            }
+
+            timeEl.textContent = `${Math.round(time)}ms`;
+        }
+
+        // History
+        function addToHistory(query, success) {
+            const entry = {
+                query: query,
+                success: success,
+                timestamp: new Date().toISOString()
+            };
+            queryHistory.unshift(entry);
+            if (queryHistory.length > 20) {
+                queryHistory.pop();
+            }
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const container = document.getElementById('historyList');
+
+            if (queryHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>No queries yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = queryHistory.map((entry, index) => `
+                <div class="history-item" onclick="loadHistoryItem(${index})">
+                    <span class="history-query">${entry.query.split('\n')[0].substring(0, 50)}...</span>
+                    <span class="badge ${entry.success ? 'badge-success' : 'badge-error'}">${entry.success ? '✓' : '✗'}</span>
+                </div>
+            `).join('');
+        }
+
+        function loadHistoryItem(index) {
+            const entry = queryHistory[index];
+            document.getElementById('query').value = entry.query;
+            switchTab('response');
+        }
+
+        function clearHistory() {
+            queryHistory = [];
+            updateHistoryDisplay();
+            saveToStorage();
+        }
+
+        // Examples
+        const examples = {
+            users: {
+                schema: `type Query {
+  user(id: ID!): User
+  users: [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  role: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  createdAt: String!
+}`,
+                query: `query GetUsers {
+  users {
+    id
+    name
+    email
+    role
+    posts {
+      id
+      title
+    }
+  }
+}`,
+                mockData: {
+                    users: [
+                        { id: '1', name: 'John Doe', email: 'john@example.com', role: 'Admin', posts: [{ id: '1', title: 'Hello World' }] },
+                        { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'User', posts: [{ id: '2', title: 'My First Post' }] }
+                    ]
+                }
+            },
+            products: {
+                schema: `type Query {
+  product(id: ID!): Product
+  products(category: String): [Product!]!
+}
+
+type Product {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  category: String!
+  inStock: Boolean!
+}`,
+                query: `query GetProducts {
+  products {
+    id
+    name
+    price
+    category
+    inStock
+  }
+}`,
+                mockData: {
+                    products: [
+                        { id: '1', name: 'Laptop', price: 999.99, category: 'Electronics', inStock: true },
+                        { id: '2', name: 'Headphones', price: 149.99, category: 'Electronics', inStock: true },
+                        { id: '3', name: 'Keyboard', price: 79.99, category: 'Accessories', inStock: false }
+                    ]
+                }
+            },
+            posts: {
+                schema: `type Query {
+  post(id: ID!): Post
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: Author!
+  comments: [Comment!]!
+}
+
+type Author {
+  id: ID!
+  name: String!
+  avatar: String!
+}
+
+type Comment {
+  id: ID!
+  text: String!
+  author: String!
+}`,
+                query: `query GetPosts {
+  posts {
+    id
+    title
+    content
+    author {
+      name
+      avatar
+    }
+    comments {
+      text
+      author
+    }
+  }
+}`,
+                mockData: {
+                    posts: [
+                        {
+                            id: '1',
+                            title: 'GraphQL is Awesome',
+                            content: 'Learn GraphQL today!',
+                            author: { name: 'Developer', avatar: 'avatar.png' },
+                            comments: [{ text: 'Great post!', author: 'Reader' }]
+                        }
+                    ]
+                }
+            },
+            movies: {
+                schema: `type Query {
+  movie(id: ID!): Movie
+  movies(genre: String): [Movie!]!
+}
+
+type Movie {
+  id: ID!
+  title: String!
+  year: Int!
+  genre: String!
+  rating: Float!
+  actors: [Actor!]!
+}
+
+type Actor {
+  id: ID!
+  name: String!
+  role: String!
+}`,
+                query: `query GetMovies {
+  movies {
+    id
+    title
+    year
+    genre
+    rating
+    actors {
+      name
+      role
+    }
+  }
+}`,
+                mockData: {
+                    movies: [
+                        {
+                            id: '1',
+                            title: 'The Matrix',
+                            year: 1999,
+                            genre: 'Sci-Fi',
+                            rating: 8.7,
+                            actors: [{ name: 'Keanu Reeves', role: 'Neo' }]
+                        }
+                    ]
+                }
+            }
+        };
+
+        function loadExample(name) {
+            const example = examples[name];
+            if (example) {
+                document.getElementById('schema').value = example.schema;
+                document.getElementById('query').value = example.query;
+                mockData = example.mockData;
+                parseSchema();
+                renderMockFields();
+                switchTab('response');
+                showToast('Example loaded!', 'success');
+            }
+        }
+
+        function loadExampleSchema() {
+            loadExample('users');
+        }
+
+        // Tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        // Utilities
+        function formatQuery() {
+            const queryEl = document.getElementById('query');
+            let query = queryEl.value;
+
+            // Simple formatting
+            query = query.replace(/\{/g, ' {\n  ')
+                        .replace(/\}/g, '\n}')
+                        .replace(/,/g, ',\n  ');
+
+            queryEl.value = query;
+        }
+
+        function clearSchema() {
+            document.getElementById('schema').value = '';
+            mockData = {};
+            renderMockFields();
+        }
+
+        function clearQuery() {
+            document.getElementById('query').value = '';
+            document.getElementById('variables').value = '';
+        }
+
+        function copySchema() {
+            navigator.clipboard.writeText(document.getElementById('schema').value);
+            showToast('Schema copied!', 'success');
+        }
+
+        function copyQuery() {
+            navigator.clipboard.writeText(document.getElementById('query').value);
+            showToast('Query copied!', 'success');
+        }
+
+        function copyResponse() {
+            navigator.clipboard.writeText(document.getElementById('response').textContent);
+            showToast('Response copied!', 'success');
+        }
+
+        // Export/Import
+        function exportConfig() {
+            const config = {
+                schema: document.getElementById('schema').value,
+                mockData: mockData,
+                exportedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'graphql-mock-config.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importConfig() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    document.getElementById('schema').value = config.schema || '';
+                    mockData = config.mockData || {};
+                    parseSchema();
+                    renderMockFields();
+                    showToast('Config imported!', 'success');
+                } catch (error) {
+                    showToast('Invalid config file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all data?')) {
+                localStorage.removeItem('graphql-mock');
+                location.reload();
+            }
+        }
+
+        // Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + (type === 'error' ? 'error' : '');
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+{
+  "categories": [
+    {"id": "api-mock", "name": {"zh": "API 模拟", "en": "API Mock"}, "icon": "🔌"},
+    {"id": "dev-tools", "name": {"zh": "开发工具", "en": "Dev Tools"}, "icon": "🛠️"},
+    {"id": "data", "name": {"zh": "数据转换", "en": "Data Conversion"}, "icon": "📊"},
+    {"id": "visualizer", "name": {"zh": "可视化", "en": "Visualizer"}, "icon": "📈"},
+    {"id": "image", "name": {"zh": "图片处理", "en": "Image Processing"}, "icon": "🖼️"},
+    {"id": "calculator", "name": {"zh": "计算工具", "en": "Calculator Tools"}, "icon": "💰"}
+  ],
+  "tools": [
+    {
+      "id": "rest-api-mock",
+      "name": {"zh": "REST API 模拟器", "en": "REST API Mock"},
+      "category": "api-mock",
+      "tags": ["API", "REST", "Mock", "测试"],
+      "description": {"zh": "创建模拟 REST API 端点，支持自定义响应、延迟和请求头", "en": "Create mock REST API endpoints with custom responses, delays, and headers"},
+      "url": "/tools/rest-api-mock.html",
+      "icon": "🔌",
+      "popular": true
+    },
+    {
+      "id": "webhook-tester",
+      "name": {"zh": "Webhook 测试器", "en": "Webhook Tester"},
+      "category": "api-mock",
+      "tags": ["Webhook", "API", "测试"],
+      "description": {"zh": "模拟和测试 Webhook 请求，支持常见平台模板", "en": "Simulate and test webhook requests with platform templates"},
+      "url": "/tools/webhook-tester.html",
+      "icon": "🪝",
+      "popular": true
+    },
+    {
+      "id": "graphql-mock",
+      "name": {"zh": "GraphQL 模拟器", "en": "GraphQL Mock"},
+      "category": "api-mock",
+      "tags": ["GraphQL", "API", "Mock"],
+      "description": {"zh": "模拟 GraphQL API 响应，支持 Schema 定义", "en": "Simulate GraphQL API responses with schema definition"},
+      "url": "/tools/graphql-mock.html",
+      "icon": "🔷",
+      "popular": true
+    },
+    {
+      "id": "websocket-mock",
+      "name": {"zh": "WebSocket 模拟器", "en": "WebSocket Mock"},
+      "category": "api-mock",
+      "tags": ["WebSocket", "API", "实时"],
+      "description": {"zh": "模拟 WebSocket 连接，支持消息收发和自动响应", "en": "Simulate WebSocket connections with message support"},
+      "url": "/tools/websocket-mock.html",
+      "icon": "🔌",
+      "popular": true
+    },
+    {
+      "id": "http-request-builder",
+      "name": {"zh": "HTTP 请求构建器", "en": "HTTP Request Builder"},
+      "category": "api-mock",
+      "tags": ["HTTP", "Request", "API", "测试"],
+      "description": {"zh": "构建和测试 HTTP 请求，支持多种认证方式", "en": "Build and test HTTP requests with multiple auth methods"},
+      "url": "/tools/http-request-builder.html",
+      "icon": "🌐",
+      "popular": true
+    },
+    {
+      "id": "json-path-tester",
+      "name": {"zh": "JSONPath 测试器", "en": "JSONPath Tester"},
+      "category": "dev-tools",
+      "tags": ["JSONPath", "JSON", "查询"],
+      "description": {"zh": "测试和评估 JSONPath 表达式", "en": "Test and evaluate JSONPath expressions"},
+      "url": "/tools/json-path-tester.html",
+      "icon": "🔍",
+      "popular": true
+    },
+    {
+      "id": "regex-tester",
+      "name": {"zh": "正则表达式测试器", "en": "Regex Tester"},
+      "category": "dev-tools",
+      "tags": ["Regex", "正则", "测试"],
+      "description": {"zh": "测试正则表达式，实时匹配高亮", "en": "Test regular expressions with real-time highlighting"},
+      "url": "/tools/regex-tester.html",
+      "icon": "🧪",
+      "popular": true
+    },
+    {
+      "id": "cron-builder",
+      "name": {"zh": "Cron 表达式生成器", "en": "Cron Expression Builder"},
+      "category": "dev-tools",
+      "tags": ["Cron", "定时", "调度"],
+      "description": {"zh": "可视化的 Cron 表达式生成器", "en": "Visual cron expression builder"},
+      "url": "/tools/cron-builder.html",
+      "icon": "⏰",
+      "popular": true
+    },
+    {
+      "id": "jwt-debugger",
+      "name": {"zh": "JWT 调试器", "en": "JWT Debugger"},
+      "category": "dev-tools",
+      "tags": ["JWT", "Token", "认证"],
+      "description": {"zh": "解码和检查 JWT 令牌", "en": "Decode and inspect JWT tokens"},
+      "url": "/tools/jwt-debugger.html",
+      "icon": "🔐",
+      "popular": true
+    },
+    {
+      "id": "base64-encoder",
+      "name": {"zh": "Base64 编码/解码", "en": "Base64 Encoder/Decoder"},
+      "category": "dev-tools",
+      "tags": ["Base64", "编码", "解码"],
+      "description": {"zh": "Base64 编码和解码工具", "en": "Encode and decode Base64 strings"},
+      "url": "/tools/base64-encoder.html",
+      "icon": "🔤",
+      "popular": true
+    },
+    {
+      "id": "url-parser",
+      "name": {"zh": "URL 解析器", "en": "URL Parser"},
+      "category": "dev-tools",
+      "tags": ["URL", "解析", "参数"],
+      "description": {"zh": "解析 URL，显示所有组件和查询参数", "en": "Parse URLs, show all components and parameters"},
+      "url": "/tools/url-parser.html",
+      "icon": "🔗",
+      "popular": true
+    },
+    {
+      "id": "hash-generator",
+      "name": {"zh": "哈希生成器", "en": "Hash Generator"},
+      "category": "dev-tools",
+      "tags": ["Hash", "MD5", "SHA"],
+      "description": {"zh": "生成 MD5、SHA-1、SHA-256、SHA-512 哈希值", "en": "Generate MD5, SHA-1, SHA-256, SHA-512 hashes"},
+      "url": "/tools/hash-generator.html",
+      "icon": "#️⃣",
+      "popular": true
+    },
+    {
+      "id": "uuid-generator",
+      "name": {"zh": "UUID 生成器", "en": "UUID Generator"},
+      "category": "dev-tools",
+      "tags": ["UUID", "GUID", "ID"],
+      "description": {"zh": "生成 UUID v1/v4/v5", "en": "Generate UUID v1/v4/v5"},
+      "url": "/tools/uuid-generator.html",
+      "icon": "🔑",
+      "popular": true
+    },
+    {
+      "id": "timestamp-converter",
+      "name": {"zh": "时间戳转换器", "en": "Timestamp Converter"},
+      "category": "dev-tools",
+      "tags": ["Timestamp", "Unix", "时间"],
+      "description": {"zh": "Unix 时间戳与日期时间转换", "en": "Convert between Unix timestamps and dates"},
+      "url": "/tools/timestamp-converter.html",
+      "icon": "🕐",
+      "popular": true
+    },
+    {
+      "id": "color-picker",
+      "name": {"zh": "颜色选择器", "en": "Color Picker"},
+      "category": "dev-tools",
+      "tags": ["Color", "HEX", "RGB"],
+      "description": {"zh": "颜色选择和格式转换工具", "en": "Pick colors and convert between formats"},
+      "url": "/tools/color-picker.html",
+      "icon": "🎨",
+      "popular": true
+    },
+    {
+      "id": "json-formatter",
+      "name": {"zh": "JSON 格式化", "en": "JSON Formatter"},
+      "category": "dev-tools",
+      "tags": ["JSON", "格式化", "验证"],
+      "description": {"zh": "格式化、验证、压缩 JSON", "en": "Format, validate, and minify JSON"},
+      "url": "/tools/json-formatter.html",
+      "icon": "📋",
+      "popular": true
+    },
+    {
+      "id": "diff-checker",
+      "name": {"zh": "文本对比工具", "en": "Diff Checker"},
+      "category": "dev-tools",
+      "tags": ["Diff", "对比", "代码"],
+      "description": {"zh": "对比两段文本或代码，高亮显示差异", "en": "Compare text or code with highlighted differences"},
+      "url": "/tools/diff-checker.html",
+      "icon": "🔍",
+      "popular": true
+    },
+    {
+      "id": "markdown-editor",
+      "name": {"zh": "Markdown 编辑器", "en": "Markdown Editor"},
+      "category": "dev-tools",
+      "tags": ["Markdown", "编辑器", "预览"],
+      "description": {"zh": "实时 Markdown 编辑器", "en": "Real-time Markdown editor with live preview"},
+      "url": "/tools/markdown-editor.html",
+      "icon": "📝",
+      "popular": true
+    },
+    {
+      "id": "code-beautifier",
+      "name": {"zh": "代码美化器", "en": "Code Beautifier"},
+      "category": "dev-tools",
+      "tags": ["代码", "美化", "格式化"],
+      "description": {"zh": "美化和压缩 JavaScript、CSS、HTML 代码", "en": "Beautify and minify JS, CSS, HTML code"},
+      "url": "/tools/code-beautifier.html",
+      "icon": "✨",
+      "popular": true
+    },
+    {
+      "id": "sql-formatter",
+      "name": {"zh": "SQL 格式化", "en": "SQL Formatter"},
+      "category": "dev-tools",
+      "tags": ["SQL", "格式化", "数据库"],
+      "description": {"zh": "格式化和美化 SQL 查询语句", "en": "Format and beautify SQL queries"},
+      "url": "/tools/sql-formatter.html",
+      "icon": "🗃️",
+      "popular": true
+    },
+    {
+      "id": "qr-code-generator",
+      "name": {"zh": "二维码生成器", "en": "QR Code Generator"},
+      "category": "dev-tools",
+      "tags": ["QR", "二维码", "生成器"],
+      "description": {"zh": "生成自定义二维码", "en": "Generate custom QR codes"},
+      "url": "/tools/qr-code-generator.html",
+      "icon": "📱",
+      "popular": true
+    },
+    {
+      "id": "slug-generator",
+      "name": {"zh": "Slug 生成器", "en": "Slug Generator"},
+      "category": "dev-tools",
+      "tags": ["Slug", "URL", "转换"],
+      "description": {"zh": "将文本转换为 URL 友好的 slug", "en": "Convert text to URL-friendly slugs"},
+      "url": "/tools/slug-generator.html",
+      "icon": "🔗",
+      "popular": true
+    },
+    {
+      "id": "json-to-typescript",
+      "name": {"zh": "JSON 转 TypeScript", "en": "JSON to TypeScript"},
+      "category": "dev-tools",
+      "tags": ["JSON", "TypeScript", "转换"],
+      "description": {"zh": "将 JSON 转换为 TypeScript 接口", "en": "Convert JSON to TypeScript interfaces"},
+      "url": "/tools/json-to-typescript.html",
+      "icon": "🔷",
+      "popular": true
+    },
+    {
+      "id": "lorem-ipsum-generator",
+      "name": {"zh": "Lorem Ipsum 生成器", "en": "Lorem Ipsum Generator"},
+      "category": "dev-tools",
+      "tags": ["Lorem", "占位符", "文本"],
+      "description": {"zh": "生成 Lorem Ipsum 占位文本", "en": "Generate Lorem Ipsum placeholder text"},
+      "url": "/tools/lorem-ipsum-generator.html",
+      "icon": "📝",
+      "popular": true
+    },
+    {
+      "id": "css-gradient-generator",
+      "name": {"zh": "CSS 渐变生成器", "en": "CSS Gradient Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "渐变", "背景"],
+      "description": {"zh": "可视化 CSS 渐变生成器", "en": "Visual CSS gradient generator"},
+      "url": "/tools/css-gradient-generator.html",
+      "icon": "🎨",
+      "popular": true
+    },
+    {
+      "id": "env-manager",
+      "name": {"zh": "环境变量管理器", "en": "Environment Variable Manager"},
+      "category": "dev-tools",
+      "tags": ["环境变量", ".env", "配置"],
+      "description": {"zh": "可视化 .env 文件管理器", "en": "Visual .env file manager"},
+      "url": "/tools/env-manager.html",
+      "icon": "🔐",
+      "popular": true
+    },
+    {
+      "id": "cookie-editor",
+      "name": {"zh": "Cookie 编辑器", "en": "Cookie Editor"},
+      "category": "dev-tools",
+      "tags": ["Cookie", "浏览器", "调试"],
+      "description": {"zh": "创建、编辑和管理浏览器 Cookie", "en": "Create, edit, and manage browser cookies"},
+      "url": "/tools/cookie-editor.html",
+      "icon": "🍪",
+      "popular": true
+    },
+    {
+      "id": "fake-data-generator",
+      "name": {"zh": "假数据生成器", "en": "Fake Data Generator"},
+      "category": "data",
+      "tags": ["Fake Data", "测试数据", "生成器"],
+      "description": {"zh": "生成测试数据，支持多种字段类型", "en": "Generate fake test data with various field types"},
+      "url": "/tools/fake-data-generator.html",
+      "icon": "🎲",
+      "popular": true
+    },
+    {
+      "id": "api-response-generator",
+      "name": {"zh": "API 响应生成器", "en": "API Response Generator"},
+      "category": "data",
+      "tags": ["API", "响应", "Mock"],
+      "description": {"zh": "生成常见 API 响应模板", "en": "Generate common API response templates"},
+      "url": "/tools/api-response-generator.html",
+      "icon": "📡",
+      "popular": true
+    },
+    {
+      "id": "json-visualizer",
+      "name": {"zh": "JSON 可视化", "en": "JSON Visualizer"},
+      "category": "visualizer",
+      "tags": ["JSON", "可视化", "树形"],
+      "description": {"zh": "交互式 JSON 树形可视化", "en": "Interactive JSON tree visualization"},
+      "url": "/tools/json-visualizer.html",
+      "icon": "🌳",
+      "popular": true
+    },
+    {
+      "id": "api-flow-designer",
+      "name": {"zh": "API 流程设计器", "en": "API Flow Designer"},
+      "category": "visualizer",
+      "tags": ["API", "流程", "设计"],
+      "description": {"zh": "可视化 API 流程设计器", "en": "Visual API flow designer"},
+      "url": "/tools/api-flow-designer.html",
+      "icon": "🔀",
+      "popular": true
+    },
+    {
+      "id": "database-schema-designer",
+      "name": {"zh": "数据库设计器", "en": "Database Schema Designer"},
+      "category": "visualizer",
+      "tags": ["数据库", "ERD", "Schema"],
+      "description": {"zh": "可视化数据库设计器", "en": "Visual database schema designer"},
+      "url": "/tools/database-schema-designer.html",
+      "icon": "🗄️",
+      "popular": true
+    },
+    {
+      "id": "svg-path-editor",
+      "name": {"zh": "SVG 路径编辑器", "en": "SVG Path Editor"},
+      "category": "visualizer",
+      "tags": ["SVG", "Path", "编辑器"],
+      "description": {"zh": "可视化 SVG 路径编辑器", "en": "Visual SVG path editor"},
+      "url": "/tools/svg-path-editor.html",
+      "icon": "✏️",
+      "popular": true
+    },
+    {
+      "id": "performance-budget-calculator",
+      "name": {"zh": "性能预算计算器", "en": "Performance Budget Calculator"},
+      "category": "calculator",
+      "tags": ["性能", "预算", "优化"],
+      "description": {"zh": "跟踪网页性能预算", "en": "Track web performance budgets"},
+      "url": "/tools/performance-budget.html",
+      "icon": "📊",
+      "popular": true
+    },
+    {
+      "id": "csv-to-json-converter",
+      "name": {"zh": "CSV 转 JSON", "en": "CSV to JSON Converter"},
+      "category": "data",
+      "tags": ["CSV", "JSON", "转换"],
+      "description": {"zh": "将 CSV 数据转换为 JSON 格式", "en": "Convert CSV data to JSON format"},
+      "url": "/tools/csv-to-json-converter.html",
+      "icon": "📄",
+      "popular": true
+    },
+    {
+      "id": "sql-query-tester",
+      "name": {"zh": "SQL 查询测试器", "en": "SQL Query Tester"},
+      "category": "dev-tools",
+      "tags": ["SQL", "查询", "测试"],
+      "description": {"zh": "在浏览器中测试 SQL 查询", "en": "Test SQL queries in browser"},
+      "url": "/tools/sql-query-tester.html",
+      "icon": "🗃️",
+      "popular": true
+    },
+    {
+      "id": "accessibility-checker",
+      "name": {"zh": "无障碍检查器", "en": "Accessibility Checker"},
+      "category": "dev-tools",
+      "tags": ["无障碍", "WCAG", "可访问性"],
+      "description": {"zh": "WCAG 2.1 合规性检查器", "en": "WCAG 2.1 compliance checker"},
+      "url": "/tools/accessibility-checker.html",
+      "icon": "♿",
+      "popular": true
+    },
+    {
+      "id": "image-compressor",
+      "name": {"zh": "图片压缩器", "en": "Image Compressor"},
+      "category": "image",
+      "tags": ["图片", "压缩", "优化"],
+      "description": {"zh": "浏览器端图片压缩，支持批量处理，完全本地处理", "en": "Browser-based image compression with batch support, 100% local"},
+      "url": "/tools/image-compressor.html",
+      "icon": "🖼️",
+      "popular": true
+    },
+    {
+      "id": "box-shadow-generator",
+      "name": {"zh": "CSS 阴影生成器", "en": "CSS Box Shadow Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "阴影", "生成器"],
+      "description": {"zh": "可视化 CSS 阴影生成器，支持多层阴影", "en": "Visual CSS box shadow generator with multiple shadow support"},
+      "url": "/tools/box-shadow-generator.html",
+      "icon": "📦",
+      "popular": true
+    },
+    {
+      "id": "user-agent-parser",
+      "name": {"zh": "User Agent 解析器", "en": "User Agent Parser"},
+      "category": "dev-tools",
+      "tags": ["User Agent", "浏览器", "设备"],
+      "description": {"zh": "解析 User Agent 字符串，识别浏览器、操作系统、设备类型", "en": "Parse UA strings to identify browser, OS, and device type"},
+      "url": "/tools/user-agent-parser.html",
+      "icon": "🔍",
+      "popular": true
+    },
+    {
+      "id": "html-entity-encoder",
+      "name": {"zh": "HTML 实体编码/解码", "en": "HTML Entity Encoder/Decoder"},
+      "category": "dev-tools",
+      "tags": ["HTML", "实体", "编码"],
+      "description": {"zh": "HTML 实体编码和解码工具，支持命名、十进制、十六进制格式", "en": "Encode and decode HTML entities with named, decimal, hex support"},
+      "url": "/tools/html-entity-encoder.html",
+      "icon": "🔤",
+      "popular": true
+    },
+    {
+      "id": "mime-type-lookup",
+      "name": {"zh": "MIME 类型查询", "en": "MIME Type Lookup"},
+      "category": "dev-tools",
+      "tags": ["MIME", "类型", "文件扩展名"],
+      "description": {"zh": "搜索文件扩展名对应的 MIME 类型，或通过 MIME 类型查找扩展名", "en": "Search MIME types by extension or find extensions by MIME type"},
+      "url": "/tools/mime-type-lookup.html",
+      "icon": "📁",
+      "popular": true
+    },
+    {
+      "id": "code-minifier",
+      "name": {"zh": "代码压缩器", "en": "Code Minifier"},
+      "category": "dev-tools",
+      "tags": ["代码", "压缩", "JS", "CSS", "HTML"],
+      "description": {"zh": "压缩 JavaScript、CSS、HTML 代码，减小文件体积", "en": "Minify JS/CSS/HTML code for production"},
+      "url": "/tools/code-minifier.html",
+      "icon": "🗜️",
+      "popular": true
+    },
+    {
+      "id": "flexbox-generator",
+      "name": {"zh": "Flexbox 生成器", "en": "Flexbox Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "Flexbox", "布局", "生成器"],
+      "description": {"zh": "可视化 CSS Flexbox 布局生成器，支持所有属性调整", "en": "Visual CSS Flexbox layout generator with all properties"},
+      "url": "/tools/flexbox-generator.html",
+      "icon": "📐",
+      "popular": true
+    },
+    {
+      "id": "css-filter-generator",
+      "name": {"zh": "CSS 滤镜生成器", "en": "CSS Filter Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "滤镜", "效果", "生成器"],
+      "description": {"zh": "可视化 CSS 滤镜效果生成器，支持模糊、亮度、对比度等", "en": "Visual CSS filter generator with blur, brightness, contrast, etc."},
+      "url": "/tools/css-filter-generator.html",
+      "icon": "🎨",
+      "popular": true
+    },
+    {
+      "id": "image-to-base64",
+      "name": {"zh": "图片转 Base64", "en": "Image to Base64"},
+      "category": "image",
+      "tags": ["图片", "Base64", "编码", "转换"],
+      "description": {"zh": "将图片转换为 Base64 编码，支持批量处理", "en": "Convert images to Base64 encoding with batch support"},
+      "url": "/tools/image-to-base64.html",
+      "icon": "🔄",
+      "popular": true
+    },
+    {
+      "id": "saas-metrics-calculator",
+      "name": {"zh": "SaaS 指标计算器", "en": "SaaS Metrics Calculator"},
+      "category": "calculator",
+      "tags": ["SaaS", "指标", "MRR", "LTV", "CAC", "创始"],
+      "description": {"zh": "计算关键 SaaS 指标：MRR/ARR、LTV/CAC、流失率、NRR、Rule of 40 等", "en": "Calculate key SaaS metrics: MRR/ARR, LTV/CAC, churn, NRR, Rule of 40, and more"},
+      "url": "/tools/saas-metrics-calculator.html",
+      "icon": "📊",
+      "popular": true
+    },
+    {
+      "id": "css-grid-generator",
+      "name": {"zh": "CSS Grid 生成器", "en": "CSS Grid Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "Grid", "布局", "生成器"],
+      "description": {"zh": "可视化 CSS Grid 布局生成器，支持行列定义、间距、对齐等", "en": "Visual CSS Grid layout generator with rows, columns, gaps, alignment"},
+      "url": "/tools/css-grid-generator.html",
+      "icon": "🔲",
+      "popular": true
+    },
+    {
+      "id": "http-status-codes",
+      "name": {"zh": "HTTP 状态码参考", "en": "HTTP Status Code Reference"},
+      "category": "dev-tools",
+      "tags": ["HTTP", "状态码", "参考", "API"],
+      "description": {"zh": "完整的 HTTP 状态码参考指南，支持搜索和过滤", "en": "Complete HTTP status code reference with search and filter"},
+      "url": "/tools/http-status-codes.html",
+      "icon": "📡",
+      "popular": true
+    },
+    {
+      "id": "code-snippet-manager",
+      "name": {"zh": "代码片段管理器", "en": "Code Snippet Manager"},
+      "category": "dev-tools",
+      "tags": ["代码", "片段", "管理", "保存"],
+      "description": {"zh": "保存和组织代码片段，支持语法高亮和搜索", "en": "Save and organize code snippets with syntax highlighting and search"},
+      "url": "/tools/code-snippet-manager.html",
+      "icon": "📝",
+      "popular": true
+    },
+    {
+      "id": "css-transform-generator",
+      "name": {"zh": "CSS Transform 生成器", "en": "CSS Transform Generator"},
+      "category": "dev-tools",
+      "tags": ["CSS", "Transform", "动画", "生成器"],
+      "description": {"zh": "可视化 CSS Transform 生成器，支持平移、旋转、缩放、倾斜", "en": "Visual CSS Transform generator with translate, rotate, scale, skew"},
+      "url": "/tools/css-transform-generator.html",
+      "icon": "🔄",
+      "popular": true
+    }
+  ]
+}

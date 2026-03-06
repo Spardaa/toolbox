@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexbox Generator - Dev Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #00d9ff;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .control-group select,
+        .control-group input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .control-group select:focus,
+        .control-group input[type="number"]:focus {
+            outline: none;
+            border-color: #00d9ff;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #00ff88;
+        }
+
+        .preview-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .preview-header h2 {
+            font-size: 1.1rem;
+            color: #00d9ff;
+        }
+
+        .flex-container {
+            background: rgba(0,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            min-height: 300px;
+            padding: 10px;
+            display: flex;
+            transition: all 0.3s ease;
+        }
+
+        .flex-item {
+            background: linear-gradient(135deg, #00d9ff33, #00ff8833);
+            border: 2px solid #00d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 60px;
+            min-height: 60px;
+            transition: all 0.3s ease;
+        }
+
+        .code-section {
+            margin-top: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .code-header span {
+            color: #00d9ff;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .code-block {
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            color: #e0e0e0;
+        }
+
+        .code-block .property {
+            color: #00d9ff;
+        }
+
+        .code-block .value {
+            color: #00ff88;
+        }
+
+        .child-controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .child-controls h3 {
+            font-size: 0.95rem;
+            color: #00d9ff;
+            margin-bottom: 15px;
+        }
+
+        .child-item-control {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .child-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .child-item-header span {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .add-item-btn {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,217,255,0.2);
+            border: 1px dashed #00d9ff;
+            border-radius: 8px;
+            color: #00d9ff;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-item-btn:hover {
+            background: rgba(0,217,255,0.3);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,71,87,0.2);
+            border: 1px solid #ff4757;
+            border-radius: 8px;
+            color: #ff4757;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,71,87,0.3);
+        }
+
+        .presets {
+            margin-top: 20px;
+        }
+
+        .presets h3 {
+            font-size: 0.95rem;
+            color: #00d9ff;
+            margin-bottom: 12px;
+        }
+
+        .preset-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: rgba(0,217,255,0.2);
+            border-color: #00d9ff;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00d9ff, #00ff88);
+            color: #1a1a2e;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gap-slider {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Flexbox Generator</h1>
+            <p class="subtitle">Visual CSS flexbox layout generator with live preview</p>
+        </header>
+
+        <div class="main-content">
+            <div class="controls">
+                <div class="control-group">
+                    <label>display</label>
+                    <select id="display">
+                        <option value="flex">flex</option>
+                        <option value="inline-flex">inline-flex</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>flex-direction</label>
+                    <select id="flexDirection">
+                        <option value="row">row</option>
+                        <option value="row-reverse">row-reverse</option>
+                        <option value="column">column</option>
+                        <option value="column-reverse">column-reverse</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>flex-wrap</label>
+                    <select id="flexWrap">
+                        <option value="nowrap">nowrap</option>
+                        <option value="wrap">wrap</option>
+                        <option value="wrap-reverse">wrap-reverse</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>justify-content</label>
+                    <select id="justifyContent">
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-around">space-around</option>
+                        <option value="space-evenly">space-evenly</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>align-items</label>
+                    <select id="alignItems">
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="baseline">baseline</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>align-content</label>
+                    <select id="alignContent">
+                        <option value="stretch">stretch</option>
+                        <option value="flex-start">flex-start</option>
+                        <option value="flex-end">flex-end</option>
+                        <option value="center">center</option>
+                        <option value="space-between">space-between</option>
+                        <option value="space-around">space-around</option>
+                    </select>
+                </div>
+
+                <div class="control-group gap-slider">
+                    <label>gap</label>
+                    <div class="slider-container">
+                        <input type="range" id="gap" min="0" max="50" value="10">
+                        <span class="slider-value" id="gapValue">10px</span>
+                    </div>
+                </div>
+
+                <div class="presets">
+                    <h3>Quick Presets</h3>
+                    <div class="preset-btns">
+                        <button class="preset-btn" data-preset="center">Center</button>
+                        <button class="preset-btn" data-preset="space-between">Space Between</button>
+                        <button class="preset-btn" data-preset="space-around">Space Around</button>
+                        <button class="preset-btn" data-preset="column">Column</button>
+                        <button class="preset-btn" data-preset="sidebar">Sidebar</button>
+                        <button class="preset-btn" data-preset="cards">Cards Grid</button>
+                    </div>
+                </div>
+
+                <button class="reset-btn" id="resetBtn">Reset to Default</button>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-header">
+                    <h2>Preview</h2>
+                </div>
+
+                <div class="flex-container" id="flexContainer">
+                    <div class="flex-item" data-index="1">1</div>
+                    <div class="flex-item" data-index="2">2</div>
+                    <div class="flex-item" data-index="3">3</div>
+                </div>
+
+                <div class="code-section">
+                    <div class="code-header">
+                        <span>CSS Code</span>
+                        <button class="copy-btn" id="copyBtn">Copy</button>
+                    </div>
+                    <div class="code-block" id="codeBlock"></div>
+                </div>
+
+                <div class="child-controls">
+                    <h3>Flex Items</h3>
+                    <div id="childControls"></div>
+                    <button class="add-item-btn" id="addItemBtn">+ Add Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const container = document.getElementById('flexContainer');
+        const codeBlock = document.getElementById('codeBlock');
+        const childControls = document.getElementById('childControls');
+        const toast = document.getElementById('toast');
+
+        let itemCount = 3;
+        let childStyles = {};
+
+        // Initialize
+        function init() {
+            updatePreview();
+            updateChildControls();
+            loadFromStorage();
+        }
+
+        // Get current flex container styles
+        function getFlexStyles() {
+            return {
+                display: document.getElementById('display').value,
+                flexDirection: document.getElementById('flexDirection').value,
+                flexWrap: document.getElementById('flexWrap').value,
+                justifyContent: document.getElementById('justifyContent').value,
+                alignItems: document.getElementById('alignItems').value,
+                alignContent: document.getElementById('alignContent').value,
+                gap: document.getElementById('gap').value + 'px'
+            };
+        }
+
+        // Update preview
+        function updatePreview() {
+            const styles = getFlexStyles();
+
+            // Apply styles to container
+            Object.assign(container.style, styles);
+
+            // Update code block
+            updateCodeBlock(styles);
+
+            // Save to localStorage
+            saveToStorage();
+        }
+
+        // Update code block
+        function updateCodeBlock(styles) {
+            let css = `<span class="property">.flex-container</span> {\n`;
+            css += `  <span class="property">display</span>: <span class="value">${styles.display}</span>;\n`;
+            css += `  <span class="property">flex-direction</span>: <span class="value">${styles.flexDirection}</span>;\n`;
+            css += `  <span class="property">flex-wrap</span>: <span class="value">${styles.flexWrap}</span>;\n`;
+            css += `  <span class="property">justify-content</span>: <span class="value">${styles.justifyContent}</span>;\n`;
+            css += `  <span class="property">align-items</span>: <span class="value">${styles.alignItems}</span>;\n`;
+
+            if (styles.flexWrap !== 'nowrap') {
+                css += `  <span class="property">align-content</span>: <span class="value">${styles.alignContent}</span>;\n`;
+            }
+
+            css += `  <span class="property">gap</span>: <span class="value">${styles.gap}</span>;\n`;
+            css += `}`;
+
+            // Add child styles if any
+            const hasChildStyles = Object.keys(childStyles).length > 0;
+            if (hasChildStyles) {
+                Object.entries(childStyles).forEach(([index, styles]) => {
+                    if (styles.flex || styles.alignSelf) {
+                        css += `\n\n<span class="property">.flex-item:nth-child(${parseInt(index) + 1})</span> {\n`;
+                        if (styles.flex) css += `  <span class="property">flex</span>: <span class="value">${styles.flex}</span>;\n`;
+                        if (styles.alignSelf) css += `  <span class="property">align-self</span>: <span class="value">${styles.alignSelf}</span>;\n`;
+                        css += `}`;
+                    }
+                });
+            }
+
+            codeBlock.innerHTML = css;
+        }
+
+        // Update child controls
+        function updateChildControls() {
+            const items = container.querySelectorAll('.flex-item');
+            childControls.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const control = document.createElement('div');
+                control.className = 'child-item-control';
+                control.innerHTML = `
+                    <div class="child-item-header">
+                        <span>Item ${index + 1}</span>
+                        <button class="remove-btn" data-index="${index}">Remove</button>
+                    </div>
+                    <div class="control-group">
+                        <label>flex</label>
+                        <input type="text" class="child-flex" data-index="${index}"
+                               placeholder="e.g., 1, 2, 0 0 100px"
+                               value="${childStyles[index]?.flex || ''}">
+                    </div>
+                    <div class="control-group">
+                        <label>align-self</label>
+                        <select class="child-align-self" data-index="${index}">
+                            <option value="">auto</option>
+                            <option value="flex-start" ${childStyles[index]?.alignSelf === 'flex-start' ? 'selected' : ''}>flex-start</option>
+                            <option value="flex-end" ${childStyles[index]?.alignSelf === 'flex-end' ? 'selected' : ''}>flex-end</option>
+                            <option value="center" ${childStyles[index]?.alignSelf === 'center' ? 'selected' : ''}>center</option>
+                            <option value="stretch" ${childStyles[index]?.alignSelf === 'stretch' ? 'selected' : ''}>stretch</option>
+                            <option value="baseline" ${childStyles[index]?.alignSelf === 'baseline' ? 'selected' : ''}>baseline</option>
+                        </select>
+                    </div>
+                `;
+                childControls.appendChild(control);
+            });
+
+            // Add event listeners for child controls
+            document.querySelectorAll('.child-flex').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const index = e.target.dataset.index;
+                    if (!childStyles[index]) childStyles[index] = {};
+                    childStyles[index].flex = e.target.value;
+                    applyChildStyles(index, e.target.value, childStyles[index]?.alignSelf);
+                    updateCodeBlock(getFlexStyles());
+                });
+            });
+
+            document.querySelectorAll('.child-align-self').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const index = e.target.dataset.index;
+                    if (!childStyles[index]) childStyles[index] = {};
+                    childStyles[index].alignSelf = e.target.value;
+                    applyChildStyles(index, childStyles[index]?.flex, e.target.value);
+                    updateCodeBlock(getFlexStyles());
+                });
+            });
+
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    removeItem(index);
+                });
+            });
+        }
+
+        // Apply child styles
+        function applyChildStyles(index, flex, alignSelf) {
+            const item = container.querySelector(`.flex-item[data-index="${index}"]`);
+            if (item) {
+                item.style.flex = flex || '';
+                item.style.alignSelf = alignSelf || '';
+            }
+        }
+
+        // Add item
+        function addItem() {
+            itemCount++;
+            const item = document.createElement('div');
+            item.className = 'flex-item';
+            item.dataset.index = itemCount - 1;
+            item.textContent = itemCount;
+            container.appendChild(item);
+            updateChildControls();
+            saveToStorage();
+        }
+
+        // Remove item
+        function removeItem(index) {
+            const items = container.querySelectorAll('.flex-item');
+            if (items.length > 1) {
+                items[index].remove();
+                delete childStyles[index];
+                // Reindex
+                const newItems = container.querySelectorAll('.flex-item');
+                newItems.forEach((item, i) => {
+                    item.dataset.index = i;
+                    item.textContent = i + 1;
+                });
+                updateChildControls();
+                updateCodeBlock(getFlexStyles());
+            }
+        }
+
+        // Presets
+        const presets = {
+            center: {
+                justifyContent: 'center',
+                alignItems: 'center'
+            },
+            'space-between': {
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            },
+            'space-around': {
+                justifyContent: 'space-around',
+                alignItems: 'center'
+            },
+            column: {
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center'
+            },
+            sidebar: {
+                flexDirection: 'row',
+                justifyContent: 'flex-start',
+                alignItems: 'stretch',
+                gap: '0px'
+            },
+            cards: {
+                flexWrap: 'wrap',
+                justifyContent: 'space-between',
+                gap: '20px'
+            }
+        };
+
+        // Apply preset
+        function applyPreset(preset) {
+            const p = presets[preset];
+            if (p) {
+                Object.entries(p).forEach(([key, value]) => {
+                    const el = document.getElementById(key.charAt(0).toLowerCase() + key.slice(1));
+                    if (el) {
+                        if (key === 'gap') {
+                            el.value = parseInt(value);
+                            document.getElementById('gapValue').textContent = value;
+                        } else {
+                            el.value = value;
+                        }
+                    }
+                });
+                updatePreview();
+            }
+        }
+
+        // Copy to clipboard
+        function copyCode() {
+            const styles = getFlexStyles();
+            let css = `.flex-container {\n`;
+            css += `  display: ${styles.display};\n`;
+            css += `  flex-direction: ${styles.flexDirection};\n`;
+            css += `  flex-wrap: ${styles.flexWrap};\n`;
+            css += `  justify-content: ${styles.justifyContent};\n`;
+            css += `  align-items: ${styles.alignItems};\n`;
+            if (styles.flexWrap !== 'nowrap') {
+                css += `  align-content: ${styles.alignContent};\n`;
+            }
+            css += `  gap: ${styles.gap};\n`;
+            css += `}`;
+
+            Object.entries(childStyles).forEach(([index, styles]) => {
+                if (styles.flex || styles.alignSelf) {
+                    css += `\n\n.flex-item:nth-child(${parseInt(index) + 1}) {\n`;
+                    if (styles.flex) css += `  flex: ${styles.flex};\n`;
+                    if (styles.alignSelf) css += `  align-self: ${styles.alignSelf};\n`;
+                    css += `}`;
+                }
+            });
+
+            navigator.clipboard.writeText(css).then(() => {
+                showToast();
+            });
+        }
+
+        // Show toast
+        function showToast() {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Save to localStorage
+        function saveToStorage() {
+            const data = {
+                styles: getFlexStyles(),
+                childStyles: childStyles,
+                itemCount: itemCount
+            };
+            localStorage.setItem('flexbox-generator', JSON.stringify(data));
+        }
+
+        // Load from localStorage
+        function loadFromStorage() {
+            const saved = localStorage.getItem('flexbox-generator');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    Object.entries(data.styles).forEach(([key, value]) => {
+                        const el = document.getElementById(key);
+                        if (el) {
+                            if (key === 'gap') {
+                                el.value = parseInt(value);
+                                document.getElementById('gapValue').textContent = value;
+                            } else {
+                                el.value = value;
+                            }
+                        }
+                    });
+                    childStyles = data.childStyles || {};
+                    updatePreview();
+                } catch (e) {}
+            }
+        }
+
+        // Reset
+        function reset() {
+            document.getElementById('display').value = 'flex';
+            document.getElementById('flexDirection').value = 'row';
+            document.getElementById('flexWrap').value = 'nowrap';
+            document.getElementById('justifyContent').value = 'flex-start';
+            document.getElementById('alignItems').value = 'stretch';
+            document.getElementById('alignContent').value = 'stretch';
+            document.getElementById('gap').value = 10;
+            document.getElementById('gapValue').textContent = '10px';
+            childStyles = {};
+            updatePreview();
+        }
+
+        // Event listeners
+        document.querySelectorAll('.controls select, .controls input[type="range"]').forEach(el => {
+            el.addEventListener('change', updatePreview);
+            el.addEventListener('input', (e) => {
+                if (e.target.type === 'range') {
+                    document.getElementById(e.target.id + 'Value').textContent = e.target.value + 'px';
+                }
+                updatePreview();
+            });
+        });
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', copyCode);
+        document.getElementById('addItemBtn').addEventListener('click', addItem);
+        document.getElementById('resetBtn').addEventListener('click', reset);
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

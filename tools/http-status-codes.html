@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Status Code Reference | Developer Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid #1e293b;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #f8fafc;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border: 2px solid #1e293b;
+            border-radius: 12px;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .search-input-wrapper input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: #0f172a;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: 2px solid #1e293b;
+            border-radius: 10px;
+            background: #1e293b;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .filter-tab:hover {
+            border-color: #3b82f6;
+            color: #e2e8f0;
+        }
+
+        .filter-tab.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: #1e293b;
+            border-radius: 12px;
+        }
+
+        .result-count {
+            color: #94a3b8;
+        }
+
+        .result-count strong {
+            color: #3b82f6;
+        }
+
+        .category-section {
+            margin-bottom: 40px;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #1e293b;
+        }
+
+        .category-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .category-badge.info { background: #1e40af; color: #93c5fd; }
+        .category-badge.success { background: #166534; color: #86efac; }
+        .category-badge.redirect { background: #854d0e; color: #fde047; }
+        .category-badge.client-error { background: #9a3412; color: #fdba74; }
+        .category-badge.server-error { background: #7f1d1d; color: #fca5a5; }
+
+        .category-title {
+            font-size: 1.3rem;
+            color: #f8fafc;
+        }
+
+        .category-desc {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .codes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+        }
+
+        .code-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .code-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .code-card.copied {
+            border-color: #22c55e;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .code-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .code-number.info { color: #3b82f6; }
+        .code-number.success { color: #22c55e; }
+        .code-number.redirect { color: #eab308; }
+        .code-number.client-error { color: #f97316; }
+        .code-number.server-error { color: #ef4444; }
+
+        .code-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+
+        .code-desc {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .code-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .code-tag {
+            padding: 4px 10px;
+            background: #0f172a;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .copy-hint {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .copy-hint svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #22c55e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .no-results svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .quick-ref {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .quick-ref h3 {
+            margin-bottom: 15px;
+            color: #f8fafc;
+        }
+
+        .quick-codes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .quick-code {
+            padding: 8px 14px;
+            background: #0f172a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-code:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .quick-code .num {
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .quick-code .name {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .quick-code:hover .name {
+            color: rgba(255,255,255,0.8);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.5rem; }
+            .codes-grid { grid-template-columns: 1fr; }
+            .filter-tabs { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HTTP Status Code Reference</h1>
+            <p class="subtitle">Complete reference for all HTTP response status codes</p>
+        </header>
+
+        <section class="search-section">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search by code or name...">
+                </div>
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All</button>
+                    <button class="filter-tab" data-filter="1xx">1xx Info</button>
+                    <button class="filter-tab" data-filter="2xx">2xx Success</button>
+                    <button class="filter-tab" data-filter="3xx">3xx Redirect</button>
+                    <button class="filter-tab" data-filter="4xx">4xx Client</button>
+                    <button class="filter-tab" data-filter="5xx">5xx Server</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="quick-ref">
+            <h3>Most Common Codes</h3>
+            <div class="quick-codes" id="quickCodes"></div>
+        </section>
+
+        <div class="stats-bar">
+            <span class="result-count">Showing <strong id="visibleCount">0</strong> of <strong id="totalCount">0</strong> codes</span>
+        </div>
+
+        <div id="categoriesContainer"></div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="M21 21l-4.35-4.35"></path>
+                <path d="M8 8l6 6M14 8l-6 6"></path>
+            </svg>
+            <p>No status codes found matching your search</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Copied to clipboard!</div>
+
+    <script>
+        const statusCodes = {
+            info: {
+                title: "Informational",
+                desc: "Request received, continuing process",
+                class: "info",
+                codes: [
+                    { code: 100, name: "Continue", desc: "Server has received the request headers and client should proceed to send the request body", tags: ["headers", "proceed"] },
+                    { code: 101, name: "Switching Protocols", desc: "Server understands and is willing to comply with the client's request to switch protocols", tags: ["websocket", "upgrade"] },
+                    { code: 102, name: "Processing", desc: "Server has received and is processing the request, but no response is available yet", tags: ["webdav", "async"] },
+                    { code: 103, name: "Early Hints", desc: "Server is likely to send a final response with the header fields included in the response", tags: ["preload", "hints"] }
+                ]
+            },
+            success: {
+                title: "Successful",
+                desc: "Request successfully received, understood, and accepted",
+                class: "success",
+                codes: [
+                    { code: 200, name: "OK", desc: "Standard response for successful HTTP requests", tags: ["standard", "GET", "POST"] },
+                    { code: 201, name: "Created", desc: "Request succeeded and a new resource was created", tags: ["POST", "create", "resource"] },
+                    { code: 202, name: "Accepted", desc: "Request accepted for processing, but processing not complete", tags: ["async", "queue"] },
+                    { code: 203, name: "Non-Authoritative Information", desc: "Server is a transforming proxy that received a 200 OK but changed the content", tags: ["proxy", "transform"] },
+                    { code: 204, name: "No Content", desc: "Server successfully processed request but is not returning any content", tags: ["DELETE", "empty"] },
+                    { code: 205, name: "Reset Content", desc: "Server successfully processed request, asks client to reset document view", tags: ["form", "reset"] },
+                    { code: 206, name: "Partial Content", desc: "Server is delivering only part of the resource due to a range header", tags: ["range", "streaming"] },
+                    { code: 207, name: "Multi-Status", desc: "Message body contains XML with multiple separate response codes", tags: ["webdav", "batch"] },
+                    { code: 208, name: "Already Reported", desc: "Members of a DAV binding have already been enumerated", tags: ["webdav"] },
+                    { code: 226, name: "IM Used", desc: "Server has fulfilled a GET request and response is a representation of result of one or more instance-manipulations", tags: ["delta", "compression"] }
+                ]
+            },
+            redirect: {
+                title: "Redirection",
+                desc: "Further action must be taken to complete the request",
+                class: "redirect",
+                codes: [
+                    { code: 300, name: "Multiple Choices", desc: "Multiple options for the resource that client can follow", tags: ["options", "choice"] },
+                    { code: 301, name: "Moved Permanently", desc: "Resource has been permanently moved to a new URL", tags: ["permanent", "SEO"] },
+                    { code: 302, name: "Found", desc: "Resource temporarily located under a different URL", tags: ["temporary", "redirect"] },
+                    { code: 303, name: "See Other", desc: "Response to request can be found under another URI using GET method", tags: ["POST-redirect", "GET"] },
+                    { code: 304, name: "Not Modified", desc: "Resource has not been modified since last request (cache)", tags: ["cache", "ETag", "If-None-Match"] },
+                    { code: 305, name: "Use Proxy", desc: "Requested resource must be accessed through the proxy", tags: ["proxy", "deprecated"] },
+                    { code: 306, name: "Switch Proxy", desc: "Subsequent requests should use the specified proxy", tags: ["proxy", "deprecated"] },
+                    { code: 307, name: "Temporary Redirect", desc: "Request should be repeated with another URI, but future requests can still use original URI", tags: ["temporary", "method-preserve"] },
+                    { code: 308, name: "Permanent Redirect", desc: "Request and all future requests should be repeated using another URI", tags: ["permanent", "method-preserve"] }
+                ]
+            },
+            clientError: {
+                title: "Client Errors",
+                desc: "Request contains bad syntax or cannot be fulfilled",
+                class: "client-error",
+                codes: [
+                    { code: 400, name: "Bad Request", desc: "Server cannot or will not process the request due to client error", tags: ["syntax", "malformed"] },
+                    { code: 401, name: "Unauthorized", desc: "Authentication is required and has failed or not been provided", tags: ["auth", "login", "token"] },
+                    { code: 402, name: "Payment Required", desc: "Reserved for future use, sometimes used for payment required", tags: ["payment", "subscription"] },
+                    { code: 403, name: "Forbidden", desc: "Server understood request but refuses to authorize it", tags: ["permission", "access-denied"] },
+                    { code: 404, name: "Not Found", desc: "Requested resource could not be found on the server", tags: ["missing", "URL"] },
+                    { code: 405, name: "Method Not Allowed", desc: "Request method is not supported for the requested resource", tags: ["method", "GET", "POST"] },
+                    { code: 406, name: "Not Acceptable", desc: "Server cannot produce a response matching Accept header", tags: ["content-type", "Accept"] },
+                    { code: 407, name: "Proxy Authentication Required", desc: "Client must first authenticate itself with the proxy", tags: ["proxy", "auth"] },
+                    { code: 408, name: "Request Timeout", desc: "Server timed out waiting for the request", tags: ["timeout", "slow"] },
+                    { code: 409, name: "Conflict", desc: "Request conflicts with current state of the target resource", tags: ["conflict", "version", "duplicate"] },
+                    { code: 410, name: "Gone", desc: "Resource is no longer available and will not be available again", tags: ["deleted", "permanent"] },
+                    { code: 411, name: "Length Required", desc: "Request did not specify Content-Length header", tags: ["header", "Content-Length"] },
+                    { code: 412, name: "Precondition Failed", desc: "Server does not meet one of the preconditions in request headers", tags: ["If-Match", "conditional"] },
+                    { code: 413, name: "Payload Too Large", desc: "Request entity is larger than limits defined by server", tags: ["size", "upload", "limit"] },
+                    { code: 414, name: "URI Too Long", desc: "URL requested is longer than the server is willing to interpret", tags: ["URL", "length"] },
+                    { code: 415, name: "Unsupported Media Type", desc: "Media type of request is not supported by server", tags: ["Content-Type", "format"] },
+                    { code: 416, name: "Range Not Satisfiable", desc: "Server cannot serve the requested ranges", tags: ["range", "streaming"] },
+                    { code: 417, name: "Expectation Failed", desc: "Server cannot meet requirements of Expect request header", tags: ["Expect", "header"] },
+                    { code: 418, name: "I'm a teapot", desc: "Server is a teapot, not a coffee server (April Fools joke)", tags: ["joke", "easter-egg"] },
+                    { code: 421, name: "Misdirected Request", desc: "Request was directed to a server not able to produce a response", tags: ["SNI", "HTTPS"] },
+                    { code: 422, name: "Unprocessable Entity", desc: "Request was well-formed but semantically erroneous", tags: ["validation", "semantic"] },
+                    { code: 423, name: "Locked", desc: "Resource being accessed is locked", tags: ["webdav", "lock"] },
+                    { code: 424, name: "Failed Dependency", desc: "Request failed due to failure of a previous request", tags: ["webdav", "dependency"] },
+                    { code: 425, name: "Too Early", desc: "Server is unwilling to risk processing a request that might be replayed", tags: ["replay", "security"] },
+                    { code: 426, name: "Upgrade Required", desc: "Client should switch to a different protocol", tags: ["upgrade", "protocol"] },
+                    { code: 428, name: "Precondition Required", desc: "Origin server requires the request to be conditional", tags: ["precondition", "CSRF"] },
+                    { code: 429, name: "Too Many Requests", desc: "User has sent too many requests in a given time", tags: ["rate-limit", "throttle"] },
+                    { code: 431, name: "Request Header Fields Too Large", desc: "Server is unwilling to process request due to header size", tags: ["header", "size"] },
+                    { code: 451, name: "Unavailable For Legal Reasons", desc: "Resource is unavailable due to legal demands", tags: ["legal", "censorship", "DMCA"] }
+                ]
+            },
+            serverError: {
+                title: "Server Errors",
+                desc: "Server failed to fulfill a valid request",
+                class: "server-error",
+                codes: [
+                    { code: 500, name: "Internal Server Error", desc: "Generic error message when server encountered an unexpected condition", tags: ["error", "unexpected", "bug"] },
+                    { code: 501, name: "Not Implemented", desc: "Server does not support the functionality required to fulfill request", tags: ["feature", "unsupported"] },
+                    { code: 502, name: "Bad Gateway", desc: "Server received an invalid response from upstream server", tags: ["gateway", "proxy", "upstream"] },
+                    { code: 503, name: "Service Unavailable", desc: "Server is not ready to handle the request (overloaded or down)", tags: ["maintenance", "overload", "downtime"] },
+                    { code: 504, name: "Gateway Timeout", desc: "Server did not receive a timely response from upstream server", tags: ["timeout", "gateway", "upstream"] },
+                    { code: 505, name: "HTTP Version Not Supported", desc: "Server does not support the HTTP version used in the request", tags: ["HTTP", "version"] },
+                    { code: 506, name: "Variant Also Negotiates", desc: "Server has an internal configuration error: transparent content negotiation", tags: ["negotiation", "config"] },
+                    { code: 507, name: "Insufficient Storage", desc: "Server is unable to store the representation needed to complete request", tags: ["storage", "webdav"] },
+                    { code: 508, name: "Loop Detected", desc: "Server detected an infinite loop while processing the request", tags: ["loop", "webdav"] },
+                    { code: 510, name: "Not Extended", desc: "Further extensions to the request are required", tags: ["extension"] },
+                    { code: 511, name: "Network Authentication Required", desc: "Client needs to authenticate to gain network access", tags: ["captive-portal", "wifi", "auth"] }
+                ]
+            }
+        };
+
+        const commonCodes = [200, 201, 204, 301, 302, 304, 400, 401, 403, 404, 429, 500, 502, 503];
+
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        function init() {
+            renderQuickCodes();
+            renderCategories();
+            setupEventListeners();
+            updateStats();
+        }
+
+        function renderQuickCodes() {
+            const container = document.getElementById('quickCodes');
+            container.innerHTML = '';
+
+            commonCodes.forEach(code => {
+                const found = findCode(code);
+                if (found) {
+                    const div = document.createElement('div');
+                    div.className = 'quick-code';
+                    div.innerHTML = `
+                        <span class="num">${code}</span>
+                        <span class="name">${found.name}</span>
+                    `;
+                    div.onclick = () => copyCode(code);
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        function findCode(codeNum) {
+            for (const cat of Object.values(statusCodes)) {
+                const found = cat.codes.find(c => c.code === codeNum);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+
+            const categories = [
+                ['info', '1xx'],
+                ['success', '2xx'],
+                ['redirect', '3xx'],
+                ['clientError', '4xx'],
+                ['serverError', '5xx']
+            ];
+
+            categories.forEach(([key, filterPrefix]) => {
+                const cat = statusCodes[key];
+                const visibleCodes = cat.codes.filter(c => matchesFilter(c, filterPrefix));
+
+                if (visibleCodes.length === 0) return;
+
+                const section = document.createElement('section');
+                section.className = 'category-section';
+                section.dataset.category = filterPrefix;
+
+                section.innerHTML = `
+                    <div class="category-header">
+                        <span class="category-badge ${cat.class}">${filterPrefix}</span>
+                        <div>
+                            <h2 class="category-title">${cat.title}</h2>
+                            <p class="category-desc">${cat.desc}</p>
+                        </div>
+                    </div>
+                    <div class="codes-grid">
+                        ${visibleCodes.map(c => renderCodeCard(c, cat.class)).join('')}
+                    </div>
+                `;
+
+                container.appendChild(section);
+            });
+
+            const noResults = document.getElementById('noResults');
+            noResults.style.display = container.children.length === 0 ? 'block' : 'none';
+        }
+
+        function renderCodeCard(code, className) {
+            return `
+                <div class="code-card" onclick="copyCode(${code.code}, this)">
+                    <div class="code-header">
+                        <span class="code-number ${className}">${code.code}</span>
+                    </div>
+                    <div class="code-name">${code.name}</div>
+                    <div class="code-desc">${code.desc}</div>
+                    <div class="code-tags">
+                        ${code.tags.map(t => `<span class="code-tag">${t}</span>`).join('')}
+                    </div>
+                    <div class="copy-hint">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Click to copy
+                    </div>
+                </div>
+            `;
+        }
+
+        function matchesFilter(code, filterPrefix) {
+            const matchesCategory = currentFilter === 'all' || currentFilter === filterPrefix;
+            const matchesSearch = searchTerm === '' ||
+                code.code.toString().includes(searchTerm) ||
+                code.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                code.desc.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                code.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            return matchesCategory && matchesSearch;
+        }
+
+        function copyCode(code, element) {
+            navigator.clipboard.writeText(code.toString()).then(() => {
+                showToast(`Copied: ${code}`);
+                if (element) {
+                    element.classList.add('copied');
+                    setTimeout(() => element.classList.remove('copied'), 1000);
+                }
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function updateStats() {
+            let total = 0;
+            let visible = 0;
+
+            const categories = {
+                '1xx': 'info',
+                '2xx': 'success',
+                '3xx': 'redirect',
+                '4xx': 'clientError',
+                '5xx': 'serverError'
+            };
+
+            Object.entries(categories).forEach(([filter, key]) => {
+                statusCodes[key].codes.forEach(code => {
+                    total++;
+                    if (matchesFilter(code, filter)) visible++;
+                });
+            });
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('visibleCount').textContent = visible;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                renderCategories();
+                updateStats();
+            });
+
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.filter;
+                    renderCategories();
+                    updateStats();
+                });
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>

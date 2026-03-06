@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Checker - 开发者工具箱</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; padding: 20px 0; color: #00d4ff; }
+        
+        .panel { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .panel h2 { margin-bottom: 15px; color: #00d4ff; font-size: 1.1rem; }
+        
+        textarea { 
+            width: 100%; min-height: 200px; background: #1a1a2e; border: 1px solid #333; 
+            color: #eee; padding: 15px; border-radius: 8px; font-family: 'Monaco', 'Menlo', monospace; 
+            font-size: 13px; resize: vertical;
+        }
+        
+        .toolbar { display: flex; gap: 10px; margin-top: 15px; }
+        button { 
+            padding: 12px 25px; border: none; border-radius: 6px; cursor: pointer; 
+            font-weight: bold; transition: all 0.3s;
+        }
+        .check-btn { background: #00d4ff; color: #1a1a2e; }
+        .clear-btn { background: #e74c3c; color: white; }
+        .example-btn { background: #333; color: #888; }
+        button:hover { opacity: 0.9; }
+        
+        .score-display { 
+            display: flex; justify-content: center; gap: 30px; 
+            padding: 30px; margin-bottom: 20px;
+        }
+        .score-circle { 
+            width: 120px; height: 120px; border-radius: 50%; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; font-weight: bold;
+        }
+        .score-circle.green { background: #27ae60; }
+        .score-circle.yellow { background: #f39c12; }
+        .score-circle.red { background: #e74c3c; }
+        .score-value { font-size: 2rem; }
+        .score-label { font-size: 0.8rem; opacity: 0.9; }
+        
+        .results { margin-top: 20px; }
+        .category { margin-bottom: 20px; }
+        .category-header { 
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; background: #1a1a2e; border-radius: 6px; cursor: pointer;
+        }
+        .category-header:hover { background: #2a2a4e; }
+        .category-title { font-weight: bold; }
+        .category-count { color: #888; }
+        
+        .issues { padding: 10px 0; }
+        .issue { 
+            display: flex; gap: 15px; padding: 12px; background: #1a1a2e; 
+            border-radius: 6px; margin-bottom: 8px; border-left: 4px solid;
+        }
+        .issue.error { border-color: #e74c3c; }
+        .issue.warning { border-color: #f39c12; }
+        .issue.info { border-color: #3498db; }
+        .issue-icon { font-size: 1.2rem; }
+        .issue-content { flex: 1; }
+        .issue-title { font-weight: bold; margin-bottom: 5px; }
+        .issue-description { color: #888; font-size: 14px; }
+        .issue-fix { 
+            margin-top: 8px; padding: 8px; background: #16213e; 
+            border-radius: 4px; font-size: 13px;
+        }
+        .issue-fix code { 
+            background: #1a1a2e; padding: 2px 6px; border-radius: 3px;
+        }
+        
+        .wcag-levels { display: flex; gap: 15px; margin-bottom: 20px; }
+        .wcag-level { 
+            flex: 1; padding: 15px; background: #1a1a2e; border-radius: 8px; text-align: center;
+        }
+        .wcag-level h3 { margin-bottom: 5px; }
+        .wcag-level .status { font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♿ Accessibility Checker</h1>
+        
+        <div class="panel">
+            <h2>HTML Input</h2>
+            <textarea id="html-input" placeholder="Paste your HTML code here..."></textarea>
+            <div class="toolbar">
+                <button class="check-btn" onclick="checkAccessibility()">🔍 Check Accessibility</button>
+                <button class="example-btn" onclick="loadExample()">📝 Load Example</button>
+                <button class="clear-btn" onclick="clearAll()">🗑️ Clear</button>
+            </div>
+        </div>
+        
+        <div class="panel" id="results-panel" style="display: none;">
+            <h2>Accessibility Report</h2>
+            
+            <div class="score-display">
+                <div class="score-circle" id="score-circle">
+                    <div class="score-value" id="score-value">0</div>
+                    <div class="score-label">Score</div>
+                </div>
+            </div>
+            
+            <div class="wcag-levels">
+                <div class="wcag-level">
+                    <h3>Level A</h3>
+                    <div class="status" id="level-a">-</div>
+                </div>
+                <div class="wcag-level">
+                    <h3>Level AA</h3>
+                    <div class="status" id="level-aa">-</div>
+                </div>
+                <div class="wcag-level">
+                    <h3>Level AAA</h3>
+                    <div class="status" id="level-aaa">-</div>
+                </div>
+            </div>
+            
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+    
+    <script>
+        const checks = [
+            {
+                id: 'img-alt',
+                category: 'Images',
+                level: 'A',
+                test: (doc) => {
+                    const imgs = doc.querySelectorAll('img:not([alt])');
+                    return imgs.length > 0 ? {
+                        type: 'error',
+                        title: 'Images missing alt text',
+                        description: `Found ${imgs.length} image(s) without alt attribute`,
+                        fix: 'Add alt attribute: <img src="image.jpg" alt="Description of image">'
+                    } : null;
+                }
+            },
+            {
+                id: 'empty-alt',
+                category: 'Images',
+                level: 'A',
+                test: (doc) => {
+                    const imgs = doc.querySelectorAll('img[alt=""]:not([role="presentation"])');
+                    return imgs.length > 0 ? {
+                        type: 'warning',
+                        title: 'Images with empty alt',
+                        description: `Found ${imgs.length} image(s) with empty alt (decorative images should have role="presentation")`,
+                        fix: 'For decorative images: <img src="decorative.jpg" alt="" role="presentation">'
+                    } : null;
+                }
+            },
+            {
+                id: 'heading-order',
+                category: 'Structure',
+                level: 'A',
+                test: (doc) => {
+                    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+                    let prevLevel = 0;
+                    let issues = [];
+                    headings.forEach(h => {
+                        const level = parseInt(h.tagName[1]);
+                        if (level > prevLevel + 1 && prevLevel !== 0) {
+                            issues.push(`Skipped from h${prevLevel} to h${level}`);
+                        }
+                        prevLevel = level;
+                    });
+                    return issues.length > 0 ? {
+                        type: 'warning',
+                        title: 'Heading order issue',
+                        description: issues.join(', '),
+                        fix: 'Use headings in order: h1 → h2 → h3 (don\'t skip levels)'
+                    } : null;
+                }
+            },
+            {
+                id: 'page-title',
+                category: 'Structure',
+                level: 'A',
+                test: (doc) => {
+                    const title = doc.querySelector('title');
+                    return (!title || !title.textContent.trim()) ? {
+                        type: 'error',
+                        title: 'Missing page title',
+                        description: 'Page must have a descriptive title',
+                        fix: '<title>Descriptive Page Title | Site Name</title>'
+                    } : null;
+                }
+            },
+            {
+                id: 'lang-attr',
+                category: 'Structure',
+                level: 'A',
+                test: (doc) => {
+                    const html = doc.querySelector('html');
+                    return (!html || !html.getAttribute('lang')) ? {
+                        type: 'error',
+                        title: 'Missing language attribute',
+                        description: 'HTML element must have lang attribute',
+                        fix: '<html lang="en"> or <html lang="zh-CN">'
+                    } : null;
+                }
+            },
+            {
+                id: 'form-labels',
+                category: 'Forms',
+                level: 'A',
+                test: (doc) => {
+                    const inputs = doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), select, textarea');
+                    const unlabeled = [];
+                    inputs.forEach(input => {
+                        const id = input.getAttribute('id');
+                        const hasLabel = id && doc.querySelector(`label[for="${id}"]`);
+                        const hasAriaLabel = input.getAttribute('aria-label') || input.getAttribute('aria-labelledby');
+                        const wrappedLabel = input.closest('label');
+                        if (!hasLabel && !hasAriaLabel && !wrappedLabel) {
+                            unlabeled.push(input);
+                        }
+                    });
+                    return unlabeled.length > 0 ? {
+                        type: 'error',
+                        title: 'Form inputs without labels',
+                        description: `Found ${unlabeled.length} input(s) without associated labels`,
+                        fix: '<label for="email">Email</label>\n<input type="email" id="email">'
+                    } : null;
+                }
+            },
+            {
+                id: 'button-text',
+                category: 'Interactive',
+                level: 'A',
+                test: (doc) => {
+                    const buttons = doc.querySelectorAll('button, [role="button"]');
+                    const empty = [];
+                    buttons.forEach(btn => {
+                        const hasText = btn.textContent.trim() || btn.getAttribute('aria-label') || btn.querySelector('img[alt]');
+                        if (!hasText) empty.push(btn);
+                    });
+                    return empty.length > 0 ? {
+                        type: 'error',
+                        title: 'Buttons without accessible name',
+                        description: `Found ${empty.length} button(s) without text or aria-label`,
+                        fix: '<button aria-label="Close menu">×</button>'
+                    } : null;
+                }
+            },
+            {
+                id: 'link-text',
+                category: 'Interactive',
+                level: 'A',
+                test: (doc) => {
+                    const links = doc.querySelectorAll('a');
+                    const empty = [];
+                    links.forEach(link => {
+                        const hasText = link.textContent.trim() || link.getAttribute('aria-label') || link.querySelector('img[alt]');
+                        if (!hasText && !link.getAttribute('href')?.startsWith('#')) empty.push(link);
+                    });
+                    return empty.length > 0 ? {
+                        type: 'warning',
+                        title: 'Links without descriptive text',
+                        description: `Found ${empty.length} link(s) with no or vague text like "click here"`,
+                        fix: 'Replace "Click here" with descriptive text like "Read our documentation"'
+                    } : null;
+                }
+            },
+            {
+                id: 'color-contrast',
+                category: 'Visual',
+                level: 'AA',
+                test: (doc) => {
+                    const inlineStyles = doc.querySelectorAll('[style*="color"]');
+                    return inlineStyles.length > 0 ? {
+                        type: 'info',
+                        title: 'Check color contrast manually',
+                        description: 'Inline color styles detected. Ensure 4.5:1 contrast ratio for normal text, 3:1 for large text',
+                        fix: 'Use tools like WebAIM Contrast Checker to verify contrast ratios'
+                    } : null;
+                }
+            },
+            {
+                id: 'skip-link',
+                category: 'Navigation',
+                level: 'A',
+                test: (doc) => {
+                    const skipLink = doc.querySelector('a[href="#main"], a[href="#content"], a.skip-link');
+                    return !skipLink ? {
+                        type: 'warning',
+                        title: 'No skip link found',
+                        description: 'Consider adding a skip to main content link for keyboard users',
+                        fix: '<a href="#main" class="skip-link">Skip to main content</a>\n<main id="main">...</main>'
+                    } : null;
+                }
+            },
+            {
+                id: 'aria-roles',
+                category: 'ARIA',
+                level: 'A',
+                test: (doc) => {
+                    const invalidRoles = [];
+                    const validRoles = ['alert', 'alertdialog', 'button', 'checkbox', 'dialog', 'grid', 'gridcell', 'link', 'listbox', 'menu', 'menubar', 'menuitem', 'progressbar', 'radio', 'radiogroup', 'searchbox', 'slider', 'spinbutton', 'switch', 'tab', 'tabpanel', 'textbox', 'toolbar', 'tooltip', 'tree', 'treeitem', 'article', 'cell', 'columnheader', 'definition', 'directory', 'document', 'feed', 'figure', 'group', 'heading', 'img', 'list', 'listitem', 'main', 'math', 'navigation', 'note', 'presentation', 'region', 'row', 'rowgroup', 'rowheader', 'separator', 'table', 'term', 'form', 'banner', 'complementary', 'contentinfo', 'log', 'marquee', 'status', 'timer', 'application'];
+                    doc.querySelectorAll('[role]').forEach(el => {
+                        const role = el.getAttribute('role');
+                        if (!validRoles.includes(role)) {
+                            invalidRoles.push(role);
+                        }
+                    });
+                    return invalidRoles.length > 0 ? {
+                        type: 'error',
+                        title: 'Invalid ARIA roles',
+                        description: `Found invalid roles: ${invalidRoles.join(', ')}`,
+                        fix: 'Use valid ARIA roles from WAI-ARIA specification'
+                    } : null;
+                }
+            },
+            {
+                id: 'table-headers',
+                category: 'Tables',
+                level: 'A',
+                test: (doc) => {
+                    const tables = doc.querySelectorAll('table');
+                    const issues = [];
+                    tables.forEach(table => {
+                        const hasHeaders = table.querySelector('th');
+                        if (!hasHeaders) issues.push('Table missing header cells');
+                    });
+                    return issues.length > 0 ? {
+                        type: 'warning',
+                        title: 'Tables without headers',
+                        description: 'Tables should have header cells for screen readers',
+                        fix: '<table>\n  <tr><th>Header 1</th><th>Header 2</th></tr>\n  <tr><td>Data</td><td>Data</td></tr>\n</table>'
+                    } : null;
+                }
+            }
+        ];
+        
+        function checkAccessibility() {
+            const html = document.getElementById('html-input').value;
+            if (!html.trim()) {
+                alert('Please enter HTML code');
+                return;
+            }
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            let issues = [];
+            checks.forEach(check => {
+                const result = check.test(doc);
+                if (result) {
+                    issues.push({
+                        ...result,
+                        category: check.category,
+                        level: check.level
+                    });
+                }
+            });
+            
+            displayResults(issues);
+        }
+        
+        function displayResults(issues) {
+            document.getElementById('results-panel').style.display = 'block';
+            
+            // Calculate score
+            const errors = issues.filter(i => i.type === 'error').length;
+            const warnings = issues.filter(i => i.type === 'warning').length;
+            const score = Math.max(0, 100 - (errors * 15) - (warnings * 5));
+            
+            const scoreCircle = document.getElementById('score-circle');
+            scoreCircle.className = 'score-circle ' + (score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red');
+            document.getElementById('score-value').textContent = score;
+            
+            // WCAG levels
+            const levelAIssues = issues.filter(i => i.level === 'A' && i.type === 'error');
+            const levelAAIssues = issues.filter(i => i.level === 'AA' && i.type === 'error');
+            
+            document.getElementById('level-a').textContent = levelAIssues.length === 0 ? '✅' : '❌';
+            document.getElementById('level-aa').textContent = levelAAIssues.length === 0 ? '✅' : '❌';
+            document.getElementById('level-aaa').textContent = '⚠️';
+            
+            // Group by category
+            const categories = {};
+            issues.forEach(issue => {
+                if (!categories[issue.category]) categories[issue.category] = [];
+                categories[issue.category].push(issue);
+            });
+            
+            const resultsDiv = document.getElementById('results');
+            if (issues.length === 0) {
+                resultsDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #27ae60;"><h2>✅ No accessibility issues found!</h2></div>';
+            } else {
+                resultsDiv.innerHTML = Object.entries(categories).map(([category, categoryIssues]) => `
+                    <div class="category">
+                        <div class="category-header">
+                            <span class="category-title">${category}</span>
+                            <span class="category-count">${categoryIssues.length} issue(s)</span>
+                        </div>
+                        <div class="issues">
+                            ${categoryIssues.map(issue => `
+                                <div class="issue ${issue.type}">
+                                    <div class="issue-icon">${issue.type === 'error' ? '❌' : issue.type === 'warning' ? '⚠️' : 'ℹ️'}</div>
+                                    <div class="issue-content">
+                                        <div class="issue-title">${issue.title}</div>
+                                        <div class="issue-description">${issue.description}</div>
+                                        <div class="issue-fix"><strong>Fix:</strong> <code>${issue.fix}</code></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function loadExample() {
+            document.getElementById('html-input').value = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Page</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+    
+    <main>
+        <h2>Welcome</h2>
+        <p>This is a sample page with some accessibility issues.</p>
+        
+        <img src="hero.jpg">
+        
+        <form>
+            <input type="text" placeholder="Name">
+            <input type="email" placeholder="Email">
+            <button>×</button>
+        </form>
+        
+        <table>
+            <tr><td>Data 1</td><td>Data 2</td></tr>
+            <tr><td>Data 3</td><td>Data 4</td></tr>
+        </table>
+    </main>
+</body>
+</html>`;
+        }
+        
+        function clearAll() {
+            document.getElementById('html-input').value = '';
+            document.getElementById('results-panel').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

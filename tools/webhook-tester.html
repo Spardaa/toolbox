@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook Tester - Developer Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-hover: #7c3aed;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #475569;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .webhook-url-section {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .webhook-url-display {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .webhook-url-display input {
+            flex: 1;
+            padding: 12px 15px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+        }
+
+        .url-info {
+            display: flex;
+            gap: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .url-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+        }
+
+        .send-panel {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .send-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 10px;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .tab.active {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .headers-editor {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .header-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .add-header-btn {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .add-header-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .templates {
+            margin-top: 20px;
+        }
+
+        .templates h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .template-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .history-panel {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .history-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .history-item:hover {
+            background: var(--border);
+        }
+
+        .history-item.selected {
+            border-left-color: var(--accent);
+            background: var(--border);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-method {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .method-post { background: #8b5cf6; color: white; }
+        .method-get { background: var(--success); color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: var(--error); color: white; }
+
+        .history-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .history-preview {
+            font-size: 12px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .detail-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .detail-panel.active {
+            display: flex;
+        }
+
+        .detail-content {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 25px;
+            width: 800px;
+            max-width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h4 {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .detail-code {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .detail-headers {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+        }
+
+        .detail-header-row {
+            display: flex;
+            gap: 10px;
+            padding: 5px 0;
+            font-size: 13px;
+        }
+
+        .detail-header-key {
+            color: var(--accent);
+            font-weight: 500;
+            min-width: 200px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .history-panel {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>Webhook</span> Tester</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="clearHistory()">Clear History</button>
+                <button class="btn btn-secondary" onclick="exportHistory()">Export</button>
+            </div>
+        </header>
+
+        <div class="webhook-url-section">
+            <div class="webhook-url-display">
+                <input type="text" id="webhookUrl" readonly value="https://your-webhook-url.com/hook/abc123">
+                <button class="btn btn-primary" onclick="copyUrl()">Copy URL</button>
+                <button class="btn btn-secondary" onclick="regenerateUrl()">New URL</button>
+            </div>
+            <div class="url-info">
+                <span>📋 <span id="requestCount">0</span> requests received</span>
+                <span>⏰ Created: <span id="createdTime">Just now</span></span>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div class="send-panel">
+                <h2>Simulate Webhook Request</h2>
+
+                <div class="form-group">
+                    <div class="form-row">
+                        <div>
+                            <label>Method</label>
+                            <select id="method">
+                                <option value="POST">POST</option>
+                                <option value="GET">GET</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Content Type</label>
+                            <select id="contentType" onchange="updateContentTypeHeader()">
+                                <option value="application/json">application/json</option>
+                                <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                                <option value="text/plain">text/plain</option>
+                                <option value="text/xml">text/xml</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('body')">Body</button>
+                    <button class="tab" onclick="switchTab('headers')">Headers</button>
+                </div>
+
+                <div class="tab-content active" id="bodyTab">
+                    <div class="form-group">
+                        <textarea id="requestBody" placeholder='{"event": "user.created", "data": {"id": 123}}'></textarea>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="headersTab">
+                    <div class="headers-editor" id="headersEditor">
+                        <div id="headersList"></div>
+                        <button class="add-header-btn" onclick="addHeader()">+ Add Header</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <button class="btn btn-success" onclick="sendWebhook()">Send Webhook</button>
+                </div>
+
+                <div class="templates">
+                    <h3>Quick Templates</h3>
+                    <div class="template-buttons">
+                        <button class="template-btn" onclick="loadTemplate('stripe')">Stripe Payment</button>
+                        <button class="template-btn" onclick="loadTemplate('github')">GitHub Push</button>
+                        <button class="template-btn" onclick="loadTemplate('slack')">Slack Event</button>
+                        <button class="template-btn" onclick="loadTemplate('shopify')">Shopify Order</button>
+                        <button class="template-btn" onclick="loadTemplate('twilio')">Twilio SMS</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-panel">
+                <h2>
+                    Request History
+                    <span style="font-size: 12px; font-weight: normal;">Click to inspect</span>
+                </h2>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <p>No webhook requests yet</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Send a test webhook to get started</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-content">
+            <div class="detail-header">
+                <div class="detail-title">
+                    <span class="history-method" id="detailMethod"></span>
+                    <span>Webhook Request</span>
+                    <span style="color: var(--text-secondary); font-size: 13px;" id="detailTime"></span>
+                </div>
+                <button class="btn btn-secondary" onclick="closeDetail()">Close</button>
+            </div>
+
+            <div class="detail-section">
+                <h4>Headers</h4>
+                <div class="detail-headers" id="detailHeaders"></div>
+            </div>
+
+            <div class="detail-section">
+                <h4>Body</h4>
+                <div class="detail-code" id="detailBody"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="copyRequest()">Copy Request</button>
+                <button class="btn btn-secondary" onclick="replayRequest()">Replay</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State
+        let history = [];
+        let selectedRequestId = null;
+        let webhookId = generateWebhookId();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            updateWebhookUrl();
+            renderHistory();
+            initDefaultHeaders();
+        });
+
+        // Storage
+        function loadFromStorage() {
+            const stored = localStorage.getItem('webhookHistory');
+            if (stored) {
+                try {
+                    history = JSON.parse(stored);
+                } catch (e) {
+                    history = [];
+                }
+            }
+
+            const storedWebhookId = localStorage.getItem('webhookId');
+            if (storedWebhookId) {
+                webhookId = storedWebhookId;
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('webhookHistory', JSON.stringify(history));
+            localStorage.setItem('webhookId', webhookId);
+        }
+
+        // Webhook URL
+        function generateWebhookId() {
+            return 'wh_' + Math.random().toString(36).substr(2, 12);
+        }
+
+        function updateWebhookUrl() {
+            const url = `${window.location.origin}/webhook/${webhookId}`;
+            document.getElementById('webhookUrl').value = url;
+            document.getElementById('requestCount').textContent = history.length;
+        }
+
+        function regenerateUrl() {
+            webhookId = generateWebhookId();
+            saveToStorage();
+            updateWebhookUrl();
+            showToast('New webhook URL generated');
+        }
+
+        function copyUrl() {
+            const url = document.getElementById('webhookUrl').value;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('URL copied to clipboard');
+            });
+        }
+
+        // Headers
+        function initDefaultHeaders() {
+            const defaultHeaders = [
+                { key: 'Content-Type', value: 'application/json' },
+                { key: 'X-Webhook-Signature', value: 'sha256=...' }
+            ];
+            renderHeaders(defaultHeaders);
+        }
+
+        function renderHeaders(headers) {
+            const list = document.getElementById('headersList');
+            list.innerHTML = headers.map((h, i) => `
+                <div class="header-row">
+                    <input type="text" value="${h.key}" placeholder="Header name" id="header-key-${i}">
+                    <input type="text" value="${h.value}" placeholder="Header value" id="header-val-${i}">
+                    <button class="btn btn-sm btn-danger" onclick="removeHeader(${i})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addHeader() {
+            const list = document.getElementById('headersList');
+            const newIndex = list.children.length;
+            const row = document.createElement('div');
+            row.className = 'header-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Header name" id="header-key-${newIndex}">
+                <input type="text" placeholder="Header value" id="header-val-${newIndex}">
+                <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+            `;
+            list.appendChild(row);
+        }
+
+        function removeHeader(index) {
+            const list = document.getElementById('headersList');
+            if (list.children[index]) {
+                list.children[index].remove();
+            }
+        }
+
+        function getHeaders() {
+            const headers = [];
+            const list = document.getElementById('headersList');
+            const rows = list.querySelectorAll('.header-row');
+            rows.forEach((row, i) => {
+                const key = row.querySelector(`input[id^="header-key"]`)?.value;
+                const value = row.querySelector(`input[id^="header-val"]`)?.value;
+                if (key) {
+                    headers.push({ key, value });
+                }
+            });
+            return headers;
+        }
+
+        function updateContentTypeHeader() {
+            const contentType = document.getElementById('contentType').value;
+            const list = document.getElementById('headersList');
+            const rows = list.querySelectorAll('.header-row');
+            rows.forEach(row => {
+                const keyInput = row.querySelector(`input[id^="header-key"]`);
+                if (keyInput?.value === 'Content-Type') {
+                    const valInput = row.querySelector(`input[id^="header-val"]`);
+                    if (valInput) valInput.value = contentType;
+                }
+            });
+        }
+
+        // Templates
+        const templates = {
+            stripe: {
+                body: JSON.stringify({
+                    id: "evt_1234567890",
+                    object: "event",
+                    type: "payment_intent.succeeded",
+                    data: {
+                        object: {
+                            id: "pi_1234567890",
+                            amount: 2000,
+                            currency: "usd",
+                            status: "succeeded",
+                            customer: "cus_1234567890"
+                        }
+                    },
+                    created: Math.floor(Date.now() / 1000)
+                }, null, 2),
+                headers: [
+                    { key: 'Content-Type', value: 'application/json' },
+                    { key: 'Stripe-Signature', value: 't=1234567890,v1=abc123...' }
+                ]
+            },
+            github: {
+                body: JSON.stringify({
+                    ref: "refs/heads/main",
+                    before: "abc123",
+                    after: "def456",
+                    repository: {
+                        id: 123456,
+                        name: "my-repo",
+                        full_name: "user/my-repo",
+                        html_url: "https://github.com/user/my-repo"
+                    },
+                    pusher: {
+                        name: "developer",
+                        email: "dev@example.com"
+                    },
+                    commits: [{
+                        id: "def456",
+                        message: "Add new feature",
+                        author: { name: "developer" }
+                    }]
+                }, null, 2),
+                headers: [
+                    { key: 'Content-Type', value: 'application/json' },
+                    { key: 'X-GitHub-Event', value: 'push' },
+                    { key: 'X-GitHub-Delivery', value: '12345678-1234-1234-1234-123456789012' }
+                ]
+            },
+            slack: {
+                body: JSON.stringify({
+                    token: "verification_token",
+                    team_id: "T0001",
+                    api_app_id: "A0001",
+                    event: {
+                        type: "message",
+                        user: "U0001",
+                        text: "Hello, world!",
+                        ts: "1234567890.123456",
+                        channel: "C0001"
+                    },
+                    type: "event_callback",
+                    event_id: "Ev0001",
+                    event_time: 1234567890
+                }, null, 2),
+                headers: [
+                    { key: 'Content-Type', value: 'application/json' },
+                    { key: 'X-Slack-Request-Timestamp', value: '1234567890' },
+                    { key: 'X-Slack-Signature', value: 'v0=abc123...' }
+                ]
+            },
+            shopify: {
+                body: JSON.stringify({
+                    id: 1234567890,
+                    email: "customer@example.com",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    order_number: 1001,
+                    total_price: "99.99",
+                    currency: "USD",
+                    financial_status: "paid",
+                    customer: {
+                        id: 123456,
+                        email: "customer@example.com",
+                        first_name: "John",
+                        last_name: "Doe"
+                    },
+                    line_items: [{
+                        id: 1,
+                        title: "Product Name",
+                        quantity: 1,
+                        price: "99.99"
+                    }]
+                }, null, 2),
+                headers: [
+                    { key: 'Content-Type', value: 'application/json' },
+                    { key: 'X-Shopify-Topic', value: 'orders/create' },
+                    { key: 'X-Shopify-Hmac-Sha256', value: 'abc123...' }
+                ]
+            },
+            twilio: {
+                body: JSON.stringify({
+                    SmsSid: "SM1234567890",
+                    SmsStatus: "received",
+                    MessageSid: "SM1234567890",
+                    AccountSid: "AC1234567890",
+                    From: "+1234567890",
+                    To: "+0987654321",
+                    Body: "Hello from Twilio!",
+                    NumMedia: "0"
+                }, null, 2),
+                headers: [
+                    { key: 'Content-Type', value: 'application/x-www-form-urlencoded' }
+                ]
+            }
+        };
+
+        function loadTemplate(name) {
+            const template = templates[name];
+            if (template) {
+                document.getElementById('requestBody').value = template.body;
+                renderHeaders(template.headers);
+                showToast(`Loaded ${name} template`);
+            }
+        }
+
+        // Tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        // Send webhook
+        function sendWebhook() {
+            const method = document.getElementById('method').value;
+            const body = document.getElementById('requestBody').value;
+            const headers = getHeaders();
+
+            const request = {
+                id: 'req_' + Date.now(),
+                method,
+                body,
+                headers,
+                timestamp: new Date().toISOString(),
+                webhookId
+            };
+
+            history.unshift(request);
+            if (history.length > 100) {
+                history = history.slice(0, 100);
+            }
+
+            saveToStorage();
+            renderHistory();
+            updateWebhookUrl();
+            showToast('Webhook received and logged');
+        }
+
+        // History
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <p>No webhook requests yet</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Send a test webhook to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = history.map(req => `
+                <div class="history-item ${req.id === selectedRequestId ? 'selected' : ''}" onclick="showDetail('${req.id}')">
+                    <div class="history-header">
+                        <span class="history-method method-${req.method.toLowerCase()}">${req.method}</span>
+                        <span class="history-time">${formatTime(req.timestamp)}</span>
+                    </div>
+                    <div class="history-preview">${getBodyPreview(req.body)}</div>
+                </div>
+            `).join('');
+        }
+
+        function getBodyPreview(body) {
+            try {
+                const parsed = JSON.parse(body);
+                return JSON.stringify(parsed).substring(0, 50) + '...';
+            } catch {
+                return body.substring(0, 50) + (body.length > 50 ? '...' : '');
+            }
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            return date.toLocaleDateString();
+        }
+
+        // Detail view
+        function showDetail(id) {
+            const request = history.find(r => r.id === id);
+            if (!request) return;
+
+            selectedRequestId = id;
+            renderHistory();
+
+            document.getElementById('detailMethod').textContent = request.method;
+            document.getElementById('detailMethod').className = `history-method method-${request.method.toLowerCase()}`;
+            document.getElementById('detailTime').textContent = new Date(request.timestamp).toLocaleString();
+
+            // Render headers
+            const headersHtml = request.headers.map(h => `
+                <div class="detail-header-row">
+                    <span class="detail-header-key">${escapeHtml(h.key)}</span>
+                    <span>${escapeHtml(h.value)}</span>
+                </div>
+            `).join('');
+            document.getElementById('detailHeaders').innerHTML = headersHtml;
+
+            // Render body
+            let formattedBody = request.body;
+            try {
+                formattedBody = JSON.stringify(JSON.parse(request.body), null, 2);
+            } catch (e) {}
+            document.getElementById('detailBody').textContent = formattedBody;
+
+            document.getElementById('detailPanel').classList.add('active');
+        }
+
+        function closeDetail() {
+            document.getElementById('detailPanel').classList.remove('active');
+        }
+
+        function copyRequest() {
+            const request = history.find(r => r.id === selectedRequestId);
+            if (!request) return;
+
+            const data = {
+                method: request.method,
+                headers: request.headers,
+                body: request.body
+            };
+
+            navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+                showToast('Request copied to clipboard');
+            });
+        }
+
+        function replayRequest() {
+            const request = history.find(r => r.id === selectedRequestId);
+            if (!request) return;
+
+            document.getElementById('method').value = request.method;
+            document.getElementById('requestBody').value = request.body;
+            renderHeaders(request.headers);
+
+            closeDetail();
+            showToast('Request loaded - click Send to replay');
+        }
+
+        // Utils
+        function clearHistory() {
+            if (!confirm('Clear all webhook history?')) return;
+            history = [];
+            saveToStorage();
+            renderHistory();
+            updateWebhookUrl();
+            showToast('History cleared');
+        }
+
+        function exportHistory() {
+            const data = JSON.stringify(history, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'webhook-history.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('History exported');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close modal on outside click
+        document.getElementById('detailPanel').addEventListener('click', (e) => {
+            if (e.target.id === 'detailPanel') {
+                closeDetail();
+            }
+        });
+    </script>
+</body>
+</html>

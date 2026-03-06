@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Response Generator - Developer Toolbox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #f59e0b;
+            --accent-hover: #d97706;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+            --border: #475569;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h2 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        textarea {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            min-height: 400px;
+            resize: vertical;
+        }
+
+        .category-section {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .template-btn {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .template-btn:hover {
+            border-color: var(--accent);
+            background: var(--bg-secondary);
+        }
+
+        .template-btn-icon {
+            font-size: 16px;
+            margin-right: 5px;
+        }
+
+        .template-btn-name {
+            font-weight: 500;
+        }
+
+        .template-btn-desc {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-code-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-2xx { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .status-4xx { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .status-5xx { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .history-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .history-item:hover {
+            background: var(--border);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .code-block {
+            position: relative;
+        }
+
+        .code-block pre {
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span>API Response</span> Generator</h1>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" onclick="copyOutput()">Copy</button>
+                <button class="btn btn-secondary" onclick="downloadOutput()">Download</button>
+                <button class="btn btn-primary" onclick="regenerate()">Regenerate</button>
+            </div>
+        </header>
+
+        <div class="main-layout">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Response Templates</h2>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">📦 Success Responses</div>
+                    <div class="template-grid">
+                        <button class="template-btn" onclick="generateTemplate('single')">
+                            <span class="template-btn-icon">📄</span>
+                            <span class="template-btn-name">Single Item</span>
+                            <div class="template-btn-desc">Get single resource</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('list')">
+                            <span class="template-btn-icon">📋</span>
+                            <span class="template-btn-name">List/Pagination</span>
+                            <div class="template-btn-desc">Paginated list</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('created')">
+                            <span class="template-btn-icon">✅</span>
+                            <span class="template-btn-name">Created</span>
+                            <div class="template-btn-desc">Resource created</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('updated')">
+                            <span class="template-btn-icon">🔄</span>
+                            <span class="template-btn-name">Updated</span>
+                            <div class="template-btn-desc">Resource updated</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('deleted')">
+                            <span class="template-btn-icon">🗑️</span>
+                            <span class="template-btn-name">Deleted</span>
+                            <div class="template-btn-desc">Resource deleted</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('bulk')">
+                            <span class="template-btn-icon">📚</span>
+                            <span class="template-btn-name">Bulk Operation</span>
+                            <div class="template-btn-desc">Batch results</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">❌ Error Responses</div>
+                    <div class="template-grid">
+                        <button class="template-btn" onclick="generateTemplate('badRequest')">
+                            <span class="template-btn-icon">⚠️</span>
+                            <span class="template-btn-name">Bad Request</span>
+                            <div class="template-btn-desc">400 validation error</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('unauthorized')">
+                            <span class="template-btn-icon">🔒</span>
+                            <span class="template-btn-name">Unauthorized</span>
+                            <div class="template-btn-desc">401 auth required</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('forbidden')">
+                            <span class="template-btn-icon">🚫</span>
+                            <span class="template-btn-name">Forbidden</span>
+                            <div class="template-btn-desc">403 no permission</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('notFound')">
+                            <span class="template-btn-icon">🔍</span>
+                            <span class="template-btn-name">Not Found</span>
+                            <div class="template-btn-desc">404 missing</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('conflict')">
+                            <span class="template-btn-icon">⚔️</span>
+                            <span class="template-btn-name">Conflict</span>
+                            <div class="template-btn-desc">409 duplicate</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('serverError')">
+                            <span class="template-btn-icon">💥</span>
+                            <span class="template-btn-name">Server Error</span>
+                            <div class="template-btn-desc">500 internal</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">🔐 Auth Responses</div>
+                    <div class="template-grid">
+                        <button class="template-btn" onclick="generateTemplate('login')">
+                            <span class="template-btn-icon">🔑</span>
+                            <span class="template-btn-name">Login Success</span>
+                            <div class="template-btn-desc">Token response</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('register')">
+                            <span class="template-btn-icon">📝</span>
+                            <span class="template-btn-name">Register</span>
+                            <div class="template-btn-desc">New user created</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('refresh')">
+                            <span class="template-btn-icon">🔄</span>
+                            <span class="template-btn-name">Token Refresh</span>
+                            <div class="template-btn-desc">New tokens</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('logout')">
+                            <span class="template-btn-icon">👋</span>
+                            <span class="template-btn-name">Logout</span>
+                            <div class="template-btn-desc">Session ended</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="category-section">
+                    <div class="category-title">🌐 Common Patterns</div>
+                    <div class="template-grid">
+                        <button class="template-btn" onclick="generateTemplate('search')">
+                            <span class="template-btn-icon">🔎</span>
+                            <span class="template-btn-name">Search Results</span>
+                            <div class="template-btn-desc">With facets</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('upload')">
+                            <span class="template-btn-icon">📤</span>
+                            <span class="template-btn-name">File Upload</span>
+                            <div class="template-btn-desc">Upload response</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('health')">
+                            <span class="template-btn-icon">💚</span>
+                            <span class="template-btn-name">Health Check</span>
+                            <div class="template-btn-desc">Service status</div>
+                        </button>
+                        <button class="template-btn" onclick="generateTemplate('rateLimit')">
+                            <span class="template-btn-icon">⏱️</span>
+                            <span class="template-btn-name">Rate Limited</span>
+                            <div class="template-btn-desc">429 too many</div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="config-row" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Response Size</label>
+                        <select id="responseSize">
+                            <option value="minimal">Minimal</option>
+                            <option value="standard" selected>Standard</option>
+                            <option value="detailed">Detailed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Items Count</label>
+                        <input type="number" id="itemsCount" value="5" min="1" max="50">
+                    </div>
+                </div>
+
+                <div class="history-section">
+                    <div class="category-title">📜 Recent</div>
+                    <div class="history-list" id="historyList">
+                        <div style="color: var(--text-secondary); font-size: 12px; text-align: center; padding: 10px;">
+                            No history yet
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Generated Response</h2>
+                    <div class="status-code-display status-2xx" id="statusDisplay">
+                        <span id="statusCode">200</span>
+                        <span id="statusText">OK</span>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="setView('json')">JSON</button>
+                    <button class="tab" onclick="setView('raw')">Raw</button>
+                    <button class="tab" onclick="setView('curl')">cURL</button>
+                    <button class="tab" onclick="setView('headers')">Headers</button>
+                </div>
+
+                <div class="code-block">
+                    <textarea id="output" readonly placeholder="Select a template to generate an API response..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // State
+        let currentTemplate = null;
+        let currentView = 'json';
+        let history = [];
+        let generatedResponse = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            generateTemplate('single'); // Default template
+        });
+
+        // Templates
+        const templates = {
+            single: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    id: generateId(),
+                    name: generateName(),
+                    email: generateEmail(),
+                    createdAt: generateDate(),
+                    updatedAt: generateDate(),
+                    status: randomFrom(['active', 'inactive', 'pending'])
+                }
+            }),
+
+            list: () => {
+                const count = parseInt(document.getElementById('itemsCount').value) || 5;
+                const items = [];
+                for (let i = 0; i < count; i++) {
+                    items.push({
+                        id: generateId(),
+                        name: generateName(),
+                        email: generateEmail(),
+                        status: randomFrom(['active', 'inactive'])
+                    });
+                }
+                return {
+                    status: 200,
+                    statusText: 'OK',
+                    response: {
+                        data: items,
+                        pagination: {
+                            page: 1,
+                            perPage: count,
+                            total: Math.floor(Math.random() * 100) + count,
+                            totalPages: Math.ceil((Math.random() * 100 + count) / count)
+                        }
+                    }
+                };
+            },
+
+            created: () => ({
+                status: 201,
+                statusText: 'Created',
+                response: {
+                    success: true,
+                    message: 'Resource created successfully',
+                    data: {
+                        id: generateId(),
+                        name: generateName(),
+                        createdAt: generateDate()
+                    }
+                }
+            }),
+
+            updated: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    success: true,
+                    message: 'Resource updated successfully',
+                    data: {
+                        id: generateId(),
+                        name: generateName(),
+                        updatedAt: generateDate()
+                    }
+                }
+            }),
+
+            deleted: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    success: true,
+                    message: 'Resource deleted successfully',
+                    deletedId: generateId()
+                }
+            }),
+
+            bulk: () => {
+                const count = parseInt(document.getElementById('itemsCount').value) || 5;
+                const results = [];
+                for (let i = 0; i < count; i++) {
+                    results.push({
+                        id: generateId(),
+                        status: Math.random() > 0.2 ? 'success' : 'failed',
+                        message: Math.random() > 0.2 ? 'Processed' : 'Error: Invalid data'
+                    });
+                }
+                return {
+                    status: 200,
+                    statusText: 'OK',
+                    response: {
+                        summary: {
+                            total: count,
+                            succeeded: results.filter(r => r.status === 'success').length,
+                            failed: results.filter(r => r.status === 'failed').length
+                        },
+                        results
+                    }
+                };
+            },
+
+            badRequest: () => ({
+                status: 400,
+                statusText: 'Bad Request',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'VALIDATION_ERROR',
+                        message: 'The request contains invalid data',
+                        details: [
+                            { field: 'email', message: 'Invalid email format' },
+                            { field: 'password', message: 'Password must be at least 8 characters' }
+                        ]
+                    }
+                }
+            }),
+
+            unauthorized: () => ({
+                status: 401,
+                statusText: 'Unauthorized',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'AUTHENTICATION_REQUIRED',
+                        message: 'Authentication credentials are required',
+                        wwwAuthenticate: 'Bearer realm="api"'
+                    }
+                }
+            }),
+
+            forbidden: () => ({
+                status: 403,
+                statusText: 'Forbidden',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'ACCESS_DENIED',
+                        message: 'You do not have permission to access this resource',
+                        requiredRole: 'admin'
+                    }
+                }
+            }),
+
+            notFound: () => ({
+                status: 404,
+                statusText: 'Not Found',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'RESOURCE_NOT_FOUND',
+                        message: 'The requested resource could not be found',
+                        resourceId: generateId()
+                    }
+                }
+            }),
+
+            conflict: () => ({
+                status: 409,
+                statusText: 'Conflict',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'DUPLICATE_ENTRY',
+                        message: 'A resource with this identifier already exists',
+                        conflictingField: 'email',
+                        existingId: generateId()
+                    }
+                }
+            }),
+
+            serverError: () => ({
+                status: 500,
+                statusText: 'Internal Server Error',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'INTERNAL_ERROR',
+                        message: 'An unexpected error occurred',
+                        requestId: generateUUID(),
+                        timestamp: new Date().toISOString()
+                    }
+                }
+            }),
+
+            login: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    success: true,
+                    message: 'Login successful',
+                    data: {
+                        user: {
+                            id: generateId(),
+                            email: generateEmail(),
+                            name: generateName(),
+                            role: randomFrom(['user', 'admin', 'moderator'])
+                        },
+                        tokens: {
+                            accessToken: generateJWT(),
+                            refreshToken: generateUUID(),
+                            expiresIn: 3600,
+                            tokenType: 'Bearer'
+                        }
+                    }
+                }
+            }),
+
+            register: () => ({
+                status: 201,
+                statusText: 'Created',
+                response: {
+                    success: true,
+                    message: 'User registered successfully',
+                    data: {
+                        user: {
+                            id: generateId(),
+                            email: generateEmail(),
+                            name: generateName(),
+                            createdAt: generateDate()
+                        },
+                        verificationRequired: true
+                    }
+                }
+            }),
+
+            refresh: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    success: true,
+                    data: {
+                        accessToken: generateJWT(),
+                        refreshToken: generateUUID(),
+                        expiresIn: 3600,
+                        tokenType: 'Bearer'
+                    }
+                }
+            }),
+
+            logout: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    success: true,
+                    message: 'Logged out successfully'
+                }
+            }),
+
+            search: () => {
+                const count = parseInt(document.getElementById('itemsCount').value) || 5;
+                const items = [];
+                for (let i = 0; i < count; i++) {
+                    items.push({
+                        id: generateId(),
+                        title: randomFrom(['Product A', 'Service B', 'Item C', 'Tool D']),
+                        description: 'Search result description text',
+                        score: (Math.random() * 10).toFixed(2),
+                        highlights: ['matched <em>keyword</em>']
+                    });
+                }
+                return {
+                    status: 200,
+                    statusText: 'OK',
+                    response: {
+                        query: 'search term',
+                        results: items,
+                        facets: {
+                            category: [
+                                { name: 'Electronics', count: Math.floor(Math.random() * 50) },
+                                { name: 'Clothing', count: Math.floor(Math.random() * 50) }
+                            ],
+                            price: {
+                                min: 0,
+                                max: 1000
+                            }
+                        },
+                        total: Math.floor(Math.random() * 200) + count
+                    }
+                };
+            },
+
+            upload: () => ({
+                status: 201,
+                statusText: 'Created',
+                response: {
+                    success: true,
+                    message: 'File uploaded successfully',
+                    data: {
+                        id: generateId(),
+                        filename: 'document.pdf',
+                        originalName: 'My Document.pdf',
+                        mimeType: 'application/pdf',
+                        size: Math.floor(Math.random() * 10000000),
+                        url: `https://storage.example.com/files/${generateId()}.pdf`,
+                        uploadedAt: generateDate()
+                    }
+                }
+            }),
+
+            health: () => ({
+                status: 200,
+                statusText: 'OK',
+                response: {
+                    status: 'healthy',
+                    version: '1.0.0',
+                    uptime: Math.floor(Math.random() * 1000000),
+                    timestamp: new Date().toISOString(),
+                    services: {
+                        database: { status: 'healthy', latency: Math.floor(Math.random() * 50) },
+                        cache: { status: 'healthy', latency: Math.floor(Math.random() * 10) },
+                        storage: { status: 'healthy', latency: Math.floor(Math.random() * 100) }
+                    }
+                }
+            }),
+
+            rateLimit: () => ({
+                status: 429,
+                statusText: 'Too Many Requests',
+                response: {
+                    success: false,
+                    error: {
+                        code: 'RATE_LIMIT_EXCEEDED',
+                        message: 'You have exceeded the rate limit',
+                        retryAfter: 60
+                    }
+                }
+            })
+        };
+
+        // Generate
+        function generateTemplate(templateName) {
+            const template = templates[templateName];
+            if (!template) return;
+
+            currentTemplate = templateName;
+            generatedResponse = template();
+
+            updateStatusDisplay(generatedResponse.status, generatedResponse.statusText);
+            renderOutput();
+            addToHistory(templateName, generatedResponse.status);
+        }
+
+        function regenerate() {
+            if (currentTemplate) {
+                generateTemplate(currentTemplate);
+            }
+        }
+
+        function updateStatusDisplay(status, statusText) {
+            const display = document.getElementById('statusDisplay');
+            document.getElementById('statusCode').textContent = status;
+            document.getElementById('statusText').textContent = statusText;
+
+            display.className = 'status-code-display';
+            if (status >= 200 && status < 300) display.classList.add('status-2xx');
+            else if (status >= 400 && status < 500) display.classList.add('status-4xx');
+            else display.classList.add('status-5xx');
+        }
+
+        function renderOutput() {
+            const output = document.getElementById('output');
+            let content = '';
+
+            switch (currentView) {
+                case 'json':
+                    content = JSON.stringify(generatedResponse.response, null, 2);
+                    break;
+                case 'raw':
+                    content = JSON.stringify(generatedResponse.response);
+                    break;
+                case 'curl':
+                    content = generateCurl();
+                    break;
+                case 'headers':
+                    content = generateHeaders();
+                    break;
+            }
+
+            output.value = content;
+        }
+
+        function generateCurl() {
+            const url = 'https://api.example.com/v1/resource';
+            return `curl -X GET "${url}" \\
+  -H "Authorization: Bearer ${generateJWT().substring(0, 30)}..." \\
+  -H "Content-Type: application/json" \\
+  -H "Accept: application/json"
+
+# Response (${generatedResponse.status} ${generatedResponse.statusText}):
+${JSON.stringify(generatedResponse.response, null, 2)}`;
+        }
+
+        function generateHeaders() {
+            return `HTTP/1.1 ${generatedResponse.status} ${generatedResponse.statusText}
+Content-Type: application/json
+Content-Length: ${JSON.stringify(generatedResponse.response).length}
+Date: ${new Date().toUTCString()}
+X-Request-Id: ${generateUUID()}
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: ${Math.floor(Math.random() * 900)}
+X-Response-Time: ${Math.floor(Math.random() * 500)}ms
+Cache-Control: no-cache
+
+${JSON.stringify(generatedResponse.response, null, 2)}`;
+        }
+
+        function setView(view) {
+            currentView = view;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent.toLowerCase().includes(view));
+            });
+            renderOutput();
+        }
+
+        // History
+        function addToHistory(templateName, status) {
+            history.unshift({
+                template: templateName,
+                status,
+                time: new Date().toISOString()
+            });
+            history = history.slice(0, 10);
+            renderHistory();
+            saveHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-secondary); font-size: 12px; text-align: center; padding: 10px;">No history yet</div>';
+                return;
+            }
+
+            list.innerHTML = history.map((item, i) => `
+                <div class="history-item" onclick="generateTemplate('${item.template}')">
+                    <span>${item.template}</span>
+                    <span class="status-code-display status-${item.status >= 400 ? '4xx' : '2xx'}" style="padding: 2px 8px; font-size: 11px;">
+                        ${item.status}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function saveHistory() {
+            localStorage.setItem('apiResponseHistory', JSON.stringify(history));
+        }
+
+        function loadHistory() {
+            const stored = localStorage.getItem('apiResponseHistory');
+            if (stored) {
+                try {
+                    history = JSON.parse(stored);
+                    renderHistory();
+                } catch (e) {}
+            }
+        }
+
+        // Copy & Download
+        function copyOutput() {
+            const output = document.getElementById('output');
+            navigator.clipboard.writeText(output.value).then(() => {
+                showToast('Copied to clipboard');
+            }).catch(() => {
+                output.select();
+                document.execCommand('copy');
+                showToast('Copied to clipboard');
+            });
+        }
+
+        function downloadOutput() {
+            const output = document.getElementById('output').value;
+            const blob = new Blob([output], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `api-response-${currentTemplate}-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded file');
+        }
+
+        // Utility functions
+        function randomFrom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function generateId() {
+            return Math.floor(Math.random() * 10000) + 1;
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
+        function generateName() {
+            const first = ['John', 'Jane', 'Mike', 'Sarah', 'David', 'Emma', 'Alex', 'Lisa'];
+            const last = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
+            return `${randomFrom(first)} ${randomFrom(last)}`;
+        }
+
+        function generateEmail() {
+            const names = ['john', 'jane', 'mike', 'sarah'];
+            const domains = ['example.com', 'test.com', 'sample.org'];
+            return `${randomFrom(names)}${Math.floor(Math.random() * 100)}@${randomFrom(domains)}`;
+        }
+
+        function generateDate() {
+            const year = 2024;
+            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+            return `${year}-${month}-${day}T${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}Z`;
+        }
+
+        function generateJWT() {
+            const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+            const payload = btoa(JSON.stringify({
+                sub: generateId(),
+                iat: Math.floor(Date.now() / 1000),
+                exp: Math.floor(Date.now() / 1000) + 3600
+            }));
+            const signature = Math.random().toString(36).substring(2, 30);
+            return `${header}.${payload}.${signature}`;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>
