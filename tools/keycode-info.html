@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keycode Info - Developer Toolbox</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .tester {
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .tester:hover, .tester.active {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .tester-icon {
+            font-size: 3rem;
+            color: #6366f1;
+            margin-bottom: 15px;
+        }
+        .tester-text {
+            color: #888;
+            font-size: 1rem;
+        }
+        .key-display {
+            display: none;
+            margin-top: 30px;
+        }
+        .key-display.show {
+            display: block;
+        }
+        .key-main {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .key-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .key-info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .key-info-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .key-info-value {
+            font-size: 1.2rem;
+            color: #fff;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto 30px;
+            position: relative;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(255,255,255,0.1);
+        }
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        .table-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            background: rgba(99, 102, 241, 0.2);
+            color: #fff;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .key-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: #a5b4fc;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+        }
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+        }
+        .back-link:hover {
+            background: #6366f1;
+        }
+        .modifier-keys {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .modifier-key {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .modifier-key.active {
+            background: #6366f1;
+            color: #fff;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .copy-btn {
+            background: rgba(99, 102, 241, 0.2);
+            border: none;
+            color: #a5b4fc;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #6366f1;
+            color: #fff;
+        }
+        @media (max-width: 768px) {
+            .key-main {
+                font-size: 2.5rem;
+            }
+            th, td {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            .back-link {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Toolbox
+    </a>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-keyboard"></i> Keycode Info</h1>
+            <p>Interactive keyboard event codes reference</p>
+        </header>
+
+        <div class="tester" id="tester" tabindex="0">
+            <div class="tester-icon"><i class="fas fa-hand-pointer"></i></div>
+            <div class="tester-text">Click here and press any key to test</div>
+            <div class="key-display" id="key-display">
+                <div class="key-main" id="key-name">-</div>
+                <div class="modifier-keys" id="modifier-keys"></div>
+                <div class="key-info-grid" id="key-info-grid"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="total-keys">0</div>
+                <div class="stat-label">Key Codes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="total-categories">0</div>
+                <div class="stat-label">Categories</div>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search" placeholder="Search keys...">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Key Code</th>
+                        <th>Code</th>
+                        <th>Category</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="key-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const keyData = [
+            // Letters
+            { key: 'A', keyCode: 65, code: 'KeyA', category: 'Letters' },
+            { key: 'B', keyCode: 66, code: 'KeyB', category: 'Letters' },
+            { key: 'C', keyCode: 67, code: 'KeyC', category: 'Letters' },
+            { key: 'D', keyCode: 68, code: 'KeyD', category: 'Letters' },
+            { key: 'E', keyCode: 69, code: 'KeyE', category: 'Letters' },
+            { key: 'F', keyCode: 70, code: 'KeyF', category: 'Letters' },
+            { key: 'G', keyCode: 71, code: 'KeyG', category: 'Letters' },
+            { key: 'H', keyCode: 72, code: 'KeyH', category: 'Letters' },
+            { key: 'I', keyCode: 73, code: 'KeyI', category: 'Letters' },
+            { key: 'J', keyCode: 74, code: 'KeyJ', category: 'Letters' },
+            { key: 'K', keyCode: 75, code: 'KeyK', category: 'Letters' },
+            { key: 'L', keyCode: 76, code: 'KeyL', category: 'Letters' },
+            { key: 'M', keyCode: 77, code: 'KeyM', category: 'Letters' },
+            { key: 'N', keyCode: 78, code: 'KeyN', category: 'Letters' },
+            { key: 'O', keyCode: 79, code: 'KeyO', category: 'Letters' },
+            { key: 'P', keyCode: 80, code: 'KeyP', category: 'Letters' },
+            { key: 'Q', keyCode: 81, code: 'KeyQ', category: 'Letters' },
+            { key: 'R', keyCode: 82, code: 'KeyR', category: 'Letters' },
+            { key: 'S', keyCode: 83, code: 'KeyS', category: 'Letters' },
+            { key: 'T', keyCode: 84, code: 'KeyT', category: 'Letters' },
+            { key: 'U', keyCode: 85, code: 'KeyU', category: 'Letters' },
+            { key: 'V', keyCode: 86, code: 'KeyV', category: 'Letters' },
+            { key: 'W', keyCode: 87, code: 'KeyW', category: 'Letters' },
+            { key: 'X', keyCode: 88, code: 'KeyX', category: 'Letters' },
+            { key: 'Y', keyCode: 89, code: 'KeyY', category: 'Letters' },
+            { key: 'Z', keyCode: 90, code: 'KeyZ', category: 'Letters' },
+
+            // Numbers
+            { key: '0', keyCode: 48, code: 'Digit0', category: 'Numbers' },
+            { key: '1', keyCode: 49, code: 'Digit1', category: 'Numbers' },
+            { key: '2', keyCode: 50, code: 'Digit2', category: 'Numbers' },
+            { key: '3', keyCode: 51, code: 'Digit3', category: 'Numbers' },
+            { key: '4', keyCode: 52, code: 'Digit4', category: 'Numbers' },
+            { key: '5', keyCode: 53, code: 'Digit5', category: 'Numbers' },
+            { key: '6', keyCode: 54, code: 'Digit6', category: 'Numbers' },
+            { key: '7', keyCode: 55, code: 'Digit7', category: 'Numbers' },
+            { key: '8', keyCode: 56, code: 'Digit8', category: 'Numbers' },
+            { key: '9', keyCode: 57, code: 'Digit9', category: 'Numbers' },
+
+            // Numpad
+            { key: '0', keyCode: 96, code: 'Numpad0', category: 'Numpad' },
+            { key: '1', keyCode: 97, code: 'Numpad1', category: 'Numpad' },
+            { key: '2', keyCode: 98, code: 'Numpad2', category: 'Numpad' },
+            { key: '3', keyCode: 99, code: 'Numpad3', category: 'Numpad' },
+            { key: '4', keyCode: 100, code: 'Numpad4', category: 'Numpad' },
+            { key: '5', keyCode: 101, code: 'Numpad5', category: 'Numpad' },
+            { key: '6', keyCode: 102, code: 'Numpad6', category: 'Numpad' },
+            { key: '7', keyCode: 103, code: 'Numpad7', category: 'Numpad' },
+            { key: '8', keyCode: 104, code: 'Numpad8', category: 'Numpad' },
+            { key: '9', keyCode: 105, code: 'Numpad9', category: 'Numpad' },
+            { key: '*', keyCode: 106, code: 'NumpadMultiply', category: 'Numpad' },
+            { key: '+', keyCode: 107, code: 'NumpadAdd', category: 'Numpad' },
+            { key: '-', keyCode: 109, code: 'NumpadSubtract', category: 'Numpad' },
+            { key: '.', keyCode: 110, code: 'NumpadDecimal', category: 'Numpad' },
+            { key: '/', keyCode: 111, code: 'NumpadDivide', category: 'Numpad' },
+
+            // Function Keys
+            { key: 'F1', keyCode: 112, code: 'F1', category: 'Function Keys' },
+            { key: 'F2', keyCode: 113, code: 'F2', category: 'Function Keys' },
+            { key: 'F3', keyCode: 114, code: 'F3', category: 'Function Keys' },
+            { key: 'F4', keyCode: 115, code: 'F4', category: 'Function Keys' },
+            { key: 'F5', keyCode: 116, code: 'F5', category: 'Function Keys' },
+            { key: 'F6', keyCode: 117, code: 'F6', category: 'Function Keys' },
+            { key: 'F7', keyCode: 118, code: 'F7', category: 'Function Keys' },
+            { key: 'F8', keyCode: 119, code: 'F8', category: 'Function Keys' },
+            { key: 'F9', keyCode: 120, code: 'F9', category: 'Function Keys' },
+            { key: 'F10', keyCode: 121, code: 'F10', category: 'Function Keys' },
+            { key: 'F11', keyCode: 122, code: 'F11', category: 'Function Keys' },
+            { key: 'F12', keyCode: 123, code: 'F12', category: 'Function Keys' },
+
+            // Navigation
+            { key: 'ArrowUp', keyCode: 38, code: 'ArrowUp', category: 'Navigation' },
+            { key: 'ArrowDown', keyCode: 40, code: 'ArrowDown', category: 'Navigation' },
+            { key: 'ArrowLeft', keyCode: 37, code: 'ArrowLeft', category: 'Navigation' },
+            { key: 'ArrowRight', keyCode: 39, code: 'ArrowRight', category: 'Navigation' },
+            { key: 'Home', keyCode: 36, code: 'Home', category: 'Navigation' },
+            { key: 'End', keyCode: 35, code: 'End', category: 'Navigation' },
+            { key: 'PageUp', keyCode: 33, code: 'PageUp', category: 'Navigation' },
+            { key: 'PageDown', keyCode: 34, code: 'PageDown', category: 'Navigation' },
+
+            // Editing
+            { key: 'Backspace', keyCode: 8, code: 'Backspace', category: 'Editing' },
+            { key: 'Delete', keyCode: 46, code: 'Delete', category: 'Editing' },
+            { key: 'Insert', keyCode: 45, code: 'Insert', category: 'Editing' },
+            { key: 'Enter', keyCode: 13, code: 'Enter', category: 'Editing' },
+            { key: 'Tab', keyCode: 9, code: 'Tab', category: 'Editing' },
+            { key: 'Escape', keyCode: 27, code: 'Escape', category: 'Editing' },
+            { key: 'Space', keyCode: 32, code: 'Space', category: 'Editing' },
+
+            // Modifiers
+            { key: 'Shift', keyCode: 16, code: 'ShiftLeft', category: 'Modifiers' },
+            { key: 'Control', keyCode: 17, code: 'ControlLeft', category: 'Modifiers' },
+            { key: 'Alt', keyCode: 18, code: 'AltLeft', category: 'Modifiers' },
+            { key: 'Meta', keyCode: 91, code: 'MetaLeft', category: 'Modifiers' },
+            { key: 'CapsLock', keyCode: 20, code: 'CapsLock', category: 'Modifiers' },
+
+            // Symbols
+            { key: ';', keyCode: 186, code: 'Semicolon', category: 'Symbols' },
+            { key: '=', keyCode: 187, code: 'Equal', category: 'Symbols' },
+            { key: ',', keyCode: 188, code: 'Comma', category: 'Symbols' },
+            { key: '-', keyCode: 189, code: 'Minus', category: 'Symbols' },
+            { key: '.', keyCode: 190, code: 'Period', category: 'Symbols' },
+            { key: '/', keyCode: 191, code: 'Slash', category: 'Symbols' },
+            { key: '`', keyCode: 192, code: 'Backquote', category: 'Symbols' },
+            { key: '[', keyCode: 219, code: 'BracketLeft', category: 'Symbols' },
+            { key: '\\', keyCode: 220, code: 'Backslash', category: 'Symbols' },
+            { key: ']', keyCode: 221, code: 'BracketRight', category: 'Symbols' },
+            { key: "'", keyCode: 222, code: 'Quote', category: 'Symbols' },
+
+            // Media
+            { key: 'AudioVolumeMute', keyCode: 173, code: 'AudioVolumeMute', category: 'Media' },
+            { key: 'AudioVolumeDown', keyCode: 174, code: 'AudioVolumeDown', category: 'Media' },
+            { key: 'AudioVolumeUp', keyCode: 175, code: 'AudioVolumeUp', category: 'Media' },
+            { key: 'MediaTrackNext', keyCode: 176, code: 'MediaTrackNext', category: 'Media' },
+            { key: 'MediaTrackPrevious', keyCode: 177, code: 'MediaTrackPrevious', category: 'Media' },
+            { key: 'MediaStop', keyCode: 178, code: 'MediaStop', category: 'Media' },
+            { key: 'MediaPlayPause', keyCode: 179, code: 'MediaPlayPause', category: 'Media' },
+
+            // Browser
+            { key: 'BrowserBack', keyCode: 166, code: 'BrowserBack', category: 'Browser' },
+            { key: 'BrowserForward', keyCode: 167, code: 'BrowserForward', category: 'Browser' },
+            { key: 'BrowserRefresh', keyCode: 168, code: 'BrowserRefresh', category: 'Browser' }
+        ];
+
+        // Update stats
+        const categories = [...new Set(keyData.map(k => k.category))];
+        document.getElementById('total-keys').textContent = keyData.length;
+        document.getElementById('total-categories').textContent = categories.length;
+
+        // Render table
+        function renderTable(filter = '') {
+            const tbody = document.getElementById('key-table');
+            tbody.innerHTML = '';
+
+            keyData.forEach(k => {
+                const matches = filter === '' ||
+                    k.key.toLowerCase().includes(filter.toLowerCase()) ||
+                    k.code.toLowerCase().includes(filter.toLowerCase()) ||
+                    k.keyCode.toString().includes(filter) ||
+                    k.category.toLowerCase().includes(filter.toLowerCase());
+
+                if (matches) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><span class="key-badge">${escapeHtml(k.key)}</span></td>
+                            <td>${k.keyCode}</td>
+                            <td><code>${k.code}</code></td>
+                            <td><span class="category-badge">${k.category}</span></td>
+                            <td>
+                                <button class="copy-btn" onclick="copyCode('${k.code}')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                // Visual feedback handled by button
+            });
+        }
+
+        // Search filter
+        document.getElementById('search').addEventListener('input', (e) => {
+            renderTable(e.target.value);
+        });
+
+        // Key tester
+        const tester = document.getElementById('tester');
+        const keyDisplay = document.getElementById('key-display');
+        const keyName = document.getElementById('key-name');
+        const modifierKeys = document.getElementById('modifier-keys');
+        const keyInfoGrid = document.getElementById('key-info-grid');
+
+        tester.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            tester.classList.add('active');
+            keyDisplay.classList.add('show');
+
+            keyName.textContent = e.key;
+
+            // Modifier keys
+            const modifiers = [];
+            if (e.ctrlKey) modifiers.push({ name: 'Ctrl', active: true });
+            if (e.shiftKey) modifiers.push({ name: 'Shift', active: true });
+            if (e.altKey) modifiers.push({ name: 'Alt', active: true });
+            if (e.metaKey) modifiers.push({ name: 'Meta', active: true });
+
+            modifierKeys.innerHTML = modifiers.map(m =>
+                `<div class="modifier-key ${m.active ? 'active' : ''}">${m.name}</div>`
+            ).join('');
+
+            // Key info
+            keyInfoGrid.innerHTML = `
+                <div class="key-info-item">
+                    <div class="key-info-label">Key</div>
+                    <div class="key-info-value">${escapeHtml(e.key)}</div>
+                </div>
+                <div class="key-info-item">
+                    <div class="key-info-label">KeyCode</div>
+                    <div class="key-info-value">${e.keyCode}</div>
+                </div>
+                <div class="key-info-item">
+                    <div class="key-info-label">Code</div>
+                    <div class="key-info-value">${e.code}</div>
+                </div>
+                <div class="key-info-item">
+                    <div class="key-info-label">which</div>
+                    <div class="key-info-value">${e.which}</div>
+                </div>
+                <div class="key-info-item">
+                    <div class="key-info-label">Location</div>
+                    <div class="key-info-value">${getLocationName(e.location)}</div>
+                </div>
+                <div class="key-info-item">
+                    <div class="key-info-label">Repeat</div>
+                    <div class="key-info-value">${e.repeat ? 'Yes' : 'No'}</div>
+                </div>
+            `;
+        });
+
+        tester.addEventListener('keyup', () => {
+            tester.classList.remove('active');
+        });
+
+        function getLocationName(location) {
+            switch(location) {
+                case 0: return 'Standard';
+                case 1: return 'Left';
+                case 2: return 'Right';
+                case 3: return 'Numpad';
+                default: return location;
+            }
+        }
+
+        // Focus tester on click
+        tester.addEventListener('click', () => {
+            tester.focus();
+        });
+
+        // Initial render
+        renderTable();
+    </script>
+</body>
+</html>
