@@ -517,6 +517,26 @@
       "url": "/tools/css-transform-generator.html",
       "icon": "🔄",
       "popular": true
+    },
+    {
+      "id": "git-command-reference",
+      "name": {"zh": "Git 命令参考", "en": "Git Command Reference"},
+      "category": "dev-tools",
+      "tags": ["Git", "命令", "参考", "Cheat Sheet"],
+      "description": {"zh": "交互式 Git 命令速查表，支持搜索和分类", "en": "Interactive Git command cheat sheet with search and categories"},
+      "url": "/tools/git-command-reference.html",
+      "icon": "📦",
+      "popular": true
+    },
+    {
+      "id": "keycode-info",
+      "name": {"zh": "键盘码查询", "en": "Keycode Info"},
+      "category": "dev-tools",
+      "tags": ["Keycode", "键盘", "事件", "JavaScript"],
+      "description": {"zh": "键盘事件代码参考，支持实时按键测试", "en": "Keyboard event codes reference with live key tester"},
+      "url": "/tools/keycode-info.html",
+      "icon": "⌨️",
+      "popular": true
     }
   ]
 }
