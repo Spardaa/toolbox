@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Command Reference - Developer Toolbox</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #f05033, #ff7a59);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        header p {
+            color: #888;
+            font-size: 1.1rem;
+        }
+        .search-bar {
+            max-width: 600px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #f05033;
+            background: rgba(255,255,255,0.1);
+        }
+        .search-bar i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .category-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        .category-btn:hover, .category-btn.active {
+            background: #f05033;
+            border-color: #f05033;
+            color: #fff;
+        }
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        .command-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        .command-card:hover {
+            border-color: #f05033;
+            transform: translateY(-2px);
+        }
+        .command-card.hidden {
+            display: none;
+        }
+        .command-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .command-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .command-category {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(240, 80, 51, 0.2);
+            color: #f05033;
+        }
+        .command-code {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: #58a6ff;
+            position: relative;
+            overflow-x: auto;
+        }
+        .command-code code {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #888;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #f05033;
+            color: #fff;
+        }
+        .copy-btn.copied {
+            background: #2ea043;
+            color: #fff;
+        }
+        .command-desc {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f05033;
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-link:hover {
+            background: #f05033;
+        }
+        @media (max-width: 768px) {
+            .commands-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+            .back-link {
+                position: static;
+                display: inline-flex;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Toolbox
+    </a>
+    <div class="container">
+        <header>
+            <h1><i class="fab fa-git-alt"></i> Git Command Reference</h1>
+            <p>Interactive cheat sheet for Git commands</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="total-commands">0</div>
+                <div class="stat-label">Commands</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="total-categories">0</div>
+                <div class="stat-label">Categories</div>
+            </div>
+        </div>
+
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search" placeholder="Search commands...">
+        </div>
+
+        <div class="categories" id="categories"></div>
+
+        <div class="commands-grid" id="commands"></div>
+    </div>
+
+    <script>
+        const gitCommands = [
+            // Setup & Init
+            { category: 'Setup & Init', title: 'Initialize Repository', code: 'git init', desc: 'Create a new Git repository in the current directory' },
+            { category: 'Setup & Init', title: 'Clone Repository', code: 'git clone <url>', desc: 'Clone a remote repository to your local machine' },
+            { category: 'Setup & Init', title: 'Clone with Custom Name', code: 'git clone <url> <directory>', desc: 'Clone repository into a specific directory' },
+            { category: 'Setup & Init', title: 'Clone Specific Branch', code: 'git clone -b <branch> <url>', desc: 'Clone a specific branch from repository' },
+            { category: 'Setup & Init', title: 'Configure Username', code: 'git config --global user.name "Your Name"', desc: 'Set your Git username globally' },
+            { category: 'Setup & Init', title: 'Configure Email', code: 'git config --global user.email "email@example.com"', desc: 'Set your Git email globally' },
+
+            // Stage & Snapshot
+            { category: 'Stage & Snapshot', title: 'Check Status', code: 'git status', desc: 'Show working directory status and staging area' },
+            { category: 'Stage & Snapshot', title: 'Stage File', code: 'git add <file>', desc: 'Stage a specific file for commit' },
+            { category: 'Stage & Snapshot', title: 'Stage All Changes', code: 'git add .', desc: 'Stage all changes in current directory' },
+            { category: 'Stage & Snapshot', title: 'Stage All Files', code: 'git add -A', desc: 'Stage all changes in the entire repository' },
+            { category: 'Stage & Snapshot', title: 'Interactive Staging', code: 'git add -p', desc: 'Interactively stage parts of changes' },
+            { category: 'Stage & Snapshot', title: 'Unstage File', code: 'git reset <file>', desc: 'Remove file from staging area' },
+            { category: 'Stage & Snapshot', title: 'Discard Changes', code: 'git checkout -- <file>', desc: 'Discard changes in working directory' },
+            { category: 'Stage & Snapshot', title: 'Commit Changes', code: 'git commit -m "message"', desc: 'Commit staged changes with a message' },
+            { category: 'Stage & Snapshot', title: 'Stage & Commit', code: 'git commit -am "message"', desc: 'Stage all tracked files and commit' },
+            { category: 'Stage & Snapshot', title: 'Amend Last Commit', code: 'git commit --amend', desc: 'Modify the most recent commit' },
+
+            // Branch & Merge
+            { category: 'Branch & Merge', title: 'List Branches', code: 'git branch', desc: 'List all local branches' },
+            { category: 'Branch & Merge', title: 'List All Branches', code: 'git branch -a', desc: 'List all local and remote branches' },
+            { category: 'Branch & Merge', title: 'Create Branch', code: 'git branch <branch-name>', desc: 'Create a new branch' },
+            { category: 'Branch & Merge', title: 'Switch Branch', code: 'git checkout <branch>', desc: 'Switch to a different branch' },
+            { category: 'Branch & Merge', title: 'Create & Switch', code: 'git checkout -b <branch>', desc: 'Create and switch to new branch' },
+            { category: 'Branch & Merge', title: 'Delete Branch', code: 'git branch -d <branch>', desc: 'Delete a merged branch' },
+            { category: 'Branch & Merge', title: 'Force Delete Branch', code: 'git branch -D <branch>', desc: 'Force delete a branch' },
+            { category: 'Branch & Merge', title: 'Merge Branch', code: 'git merge <branch>', desc: 'Merge a branch into current branch' },
+            { category: 'Branch & Merge', title: 'Abort Merge', code: 'git merge --abort', desc: 'Abort the current merge conflict' },
+            { category: 'Branch & Merge', title: 'Rename Branch', code: 'git branch -m <old> <new>', desc: 'Rename a branch' },
+
+            // Remote
+            { category: 'Remote', title: 'List Remotes', code: 'git remote -v', desc: 'Show all remote repositories' },
+            { category: 'Remote', title: 'Add Remote', code: 'git remote add <name> <url>', desc: 'Add a new remote repository' },
+            { category: 'Remote', title: 'Remove Remote', code: 'git remote remove <name>', desc: 'Remove a remote repository' },
+            { category: 'Remote', title: 'Fetch Remote', code: 'git fetch <remote>', desc: 'Fetch changes from remote without merging' },
+            { category: 'Remote', title: 'Fetch All', code: 'git fetch --all', desc: 'Fetch changes from all remotes' },
+            { category: 'Remote', title: 'Pull Changes', code: 'git pull <remote> <branch>', desc: 'Fetch and merge remote changes' },
+            { category: 'Remote', title: 'Push Branch', code: 'git push <remote> <branch>', desc: 'Push local branch to remote' },
+            { category: 'Remote', title: 'Push & Set Upstream', code: 'git push -u origin <branch>', desc: 'Push and set upstream tracking' },
+            { category: 'Remote', title: 'Push All Branches', code: 'git push --all', desc: 'Push all branches to remote' },
+            { category: 'Remote', title: 'Delete Remote Branch', code: 'git push <remote> --delete <branch>', desc: 'Delete a remote branch' },
+
+            // History & Log
+            { category: 'History & Log', title: 'View Log', code: 'git log', desc: 'Show commit history' },
+            { category: 'History & Log', title: 'Compact Log', code: 'git log --oneline', desc: 'Show compact commit history' },
+            { category: 'History & Log', title: 'Graph Log', code: 'git log --oneline --graph --all', desc: 'Show branch history as graph' },
+            { category: 'History & Log', title: 'Show File History', code: 'git log -p <file>', desc: 'Show commit history for a file' },
+            { category: 'History & Log', title: 'Search Commits', code: 'git log -S "search term"', desc: 'Search commits by content' },
+            { category: 'History & Log', title: 'Author Commits', code: 'git log --author="name"', desc: 'Show commits by author' },
+            { category: 'History & Log', title: 'Date Range Log', code: 'git log --since="2 weeks ago"', desc: 'Show commits since date' },
+            { category: 'History & Log', title: 'Show Changes', code: 'git show <commit>', desc: 'Show changes in a commit' },
+            { category: 'History & Log', title: 'File Changes', code: 'git diff', desc: 'Show unstaged changes' },
+            { category: 'History & Log', title: 'Staged Changes', code: 'git diff --staged', desc: 'Show staged changes' },
+
+            // Undo & Reset
+            { category: 'Undo & Reset', title: 'Undo Last Commit', code: 'git reset HEAD~1', desc: 'Undo last commit, keep changes' },
+            { category: 'Undo & Reset', title: 'Soft Reset', code: 'git reset --soft HEAD~1', desc: 'Undo commit, keep staged changes' },
+            { category: 'Undo & Reset', title: 'Hard Reset', code: 'git reset --hard HEAD~1', desc: 'Undo commit, discard all changes' },
+            { category: 'Undo & Reset', title: 'Revert Commit', code: 'git revert <commit>', desc: 'Create new commit undoing changes' },
+            { category: 'Undo & Reset', title: 'Clean Untracked', code: 'git clean -f', desc: 'Remove untracked files' },
+            { category: 'Undo & Reset', title: 'Clean Directory', code: 'git clean -fd', desc: 'Remove untracked files and directories' },
+            { category: 'Undo & Reset', title: 'Restore File', code: 'git restore <file>', desc: 'Restore file from last commit' },
+            { category: 'Undo & Reset', title: 'Restore Staged', code: 'git restore --staged <file>', desc: 'Unstage a file' },
+
+            // Stash
+            { category: 'Stash', title: 'Create Stash', code: 'git stash', desc: 'Stash current changes' },
+            { category: 'Stash', title: 'Stash with Message', code: 'git stash save "message"', desc: 'Stash with a description' },
+            { category: 'Stash', title: 'List Stashes', code: 'git stash list', desc: 'List all stashes' },
+            { category: 'Stash', title: 'Apply Stash', code: 'git stash apply', desc: 'Apply most recent stash' },
+            { category: 'Stash', title: 'Apply Specific Stash', code: 'git stash apply stash@{n}', desc: 'Apply specific stash' },
+            { category: 'Stash', title: 'Pop Stash', code: 'git stash pop', desc: 'Apply and remove stash' },
+            { category: 'Stash', title: 'Drop Stash', code: 'git stash drop', desc: 'Remove most recent stash' },
+            { category: 'Stash', title: 'Clear All Stashes', code: 'git stash clear', desc: 'Remove all stashes' },
+
+            // Tag
+            { category: 'Tag', title: 'List Tags', code: 'git tag', desc: 'List all tags' },
+            { category: 'Tag', title: 'Create Tag', code: 'git tag <tag-name>', desc: 'Create a lightweight tag' },
+            { category: 'Tag', title: 'Annotated Tag', code: 'git tag -a <tag> -m "message"', desc: 'Create annotated tag with message' },
+            { category: 'Tag', title: 'Tag Specific Commit', code: 'git tag <tag> <commit>', desc: 'Tag a specific commit' },
+            { category: 'Tag', title: 'Push Tags', code: 'git push --tags', desc: 'Push all tags to remote' },
+            { category: 'Tag', title: 'Delete Tag', code: 'git tag -d <tag>', desc: 'Delete a local tag' },
+            { category: 'Tag', title: 'Delete Remote Tag', code: 'git push origin --delete <tag>', desc: 'Delete a remote tag' },
+
+            // Rebase
+            { category: 'Rebase', title: 'Rebase Branch', code: 'git rebase <branch>', desc: 'Rebase current branch onto another' },
+            { category: 'Rebase', title: 'Interactive Rebase', code: 'git rebase -i HEAD~n', desc: 'Interactive rebase last n commits' },
+            { category: 'Rebase', title: 'Continue Rebase', code: 'git rebase --continue', desc: 'Continue after resolving conflicts' },
+            { category: 'Rebase', title: 'Abort Rebase', code: 'git rebase --abort', desc: 'Abort the rebase operation' },
+            { category: 'Rebase', title: 'Skip Commit', code: 'git rebase --skip', desc: 'Skip current commit during rebase' },
+
+            // Inspect & Compare
+            { category: 'Inspect & Compare', title: 'Compare Branches', code: 'git diff <branch1> <branch2>', desc: 'Show differences between branches' },
+            { category: 'Inspect & Compare', title: 'Compare Commits', code: 'git diff <commit1> <commit2>', desc: 'Show differences between commits' },
+            { category: 'Inspect & Compare', title: 'Who Changed Line', code: 'git blame <file>', desc: 'Show who changed each line' },
+            { category: 'Inspect & Compare', title: 'Find Bug Commit', code: 'git bisect start', desc: 'Start binary search for bug' },
+            { category: 'Inspect & Compare', title: 'Mark Good Commit', code: 'git bisect good <commit>', desc: 'Mark commit as good (no bug)' },
+            { category: 'Inspect & Compare', title: 'Mark Bad Commit', code: 'git bisect bad <commit>', desc: 'Mark commit as bad (has bug)' },
+            { category: 'Inspect & Compare', title: 'End Bisect', code: 'git bisect reset', desc: 'End bisect session' }
+        ];
+
+        // Get unique categories
+        const categories = [...new Set(gitCommands.map(cmd => cmd.category))];
+
+        // Update stats
+        document.getElementById('total-commands').textContent = gitCommands.length;
+        document.getElementById('total-categories').textContent = categories.length;
+
+        // Render category buttons
+        const categoriesContainer = document.getElementById('categories');
+        categoriesContainer.innerHTML = `<button class="category-btn active" data-category="all">All</button>`;
+        categories.forEach(cat => {
+            categoriesContainer.innerHTML += `<button class="category-btn" data-category="${cat}">${cat}</button>`;
+        });
+
+        // Render commands
+        function renderCommands(filter = 'all', search = '') {
+            const container = document.getElementById('commands');
+            container.innerHTML = '';
+
+            gitCommands.forEach((cmd, index) => {
+                const matchesCategory = filter === 'all' || cmd.category === filter;
+                const matchesSearch = search === '' ||
+                    cmd.title.toLowerCase().includes(search.toLowerCase()) ||
+                    cmd.code.toLowerCase().includes(search.toLowerCase()) ||
+                    cmd.desc.toLowerCase().includes(search.toLowerCase()) ||
+                    cmd.category.toLowerCase().includes(search.toLowerCase());
+
+                if (matchesCategory && matchesSearch) {
+                    container.innerHTML += `
+                        <div class="command-card" data-category="${cmd.category}">
+                            <div class="command-header">
+                                <div class="command-title">${cmd.title}</div>
+                                <div class="command-category">${cmd.category}</div>
+                            </div>
+                            <div class="command-code">
+                                <code>${escapeHtml(cmd.code)}</code>
+                                <button class="copy-btn" onclick="copyCode(this, '${escapeForJs(cmd.code)}')">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <div class="command-desc">${cmd.desc}</div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeForJs(text) {
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        function copyCode(btn, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Category filter
+        document.getElementById('categories').addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-btn')) {
+                document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                renderCommands(e.target.dataset.category, document.getElementById('search').value);
+            }
+        });
+
+        // Search filter
+        document.getElementById('search').addEventListener('input', (e) => {
+            const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+            renderCommands(activeCategory, e.target.value);
+        });
+
+        // Initial render
+        renderCommands();
+    </script>
+</body>
+</html>
