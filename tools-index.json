@@ -339,7 +339,7 @@
       "popular": true
     },
     {
-      "id": "performance-budget-calculator",
+      "id": "performance-budget",
       "name": {"zh": "性能预算计算器", "en": "Performance Budget Calculator"},
       "category": "calculator",
       "tags": ["性能", "预算", "优化"],
